@@ -9,6 +9,21 @@
 <body>
   <script src="https://unpkg.com/decap-cms@^3.0.0/dist/decap-cms.js"></script>
   <script src="/admin/editar/preview.js"></script>
+  <script>
+    // A tela de lista do editor foi substituída pela tabela em /admin.
+    // Sempre que o editor (ou o botão "voltar" do navegador) cair numa lista, vai para a tabela.
+    (function () {
+      var paraTabela = function () {
+        var h = location.hash || "";
+        if (h === "" || h === "#" || h === "#/" || /^#\/collections\/[^/]+\/?(\?.*)?$/.test(h) || /^#\/search\//.test(h)) {
+          if (document.querySelector("[class*='AuthenticationPage'], [class*='LoginButton']")) return; // ainda no login
+          location.replace("/admin/");
+        }
+      };
+      window.addEventListener("hashchange", paraTabela);
+      setInterval(paraTabela, 800); // cobre o redirecionamento feito pelo próprio editor após o login
+    })();
+  </script>
   <a href="/admin/" style="position:fixed;left:16px;bottom:16px;z-index:9999;background:#300A15;color:#fff;font:500 12px/1 system-ui,sans-serif;letter-spacing:.04em;text-decoration:none;padding:11px 16px;border-radius:999px;box-shadow:0 4px 14px rgba(0,0,0,.18)">▦ Voltar para a tabela</a>
 </body>
 </html>
