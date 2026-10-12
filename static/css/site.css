@@ -283,3 +283,25 @@ main:has(> .faixa:last-child) + .rodape .rodape__in { border-top: 1px solid rgba
 .wa-float:hover { background: #18633E; }
 
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+
+/* ---------- celular ---------- */
+.cta-fixo { display: none; }
+@media (max-width: 860px) {
+  .acervo { row-gap: 0; }
+  .lateral.aberta { margin-top: 16px; }
+  .contagem { margin: 14px 0 20px; }
+}
+@media (max-width: 760px) {
+  .wa-float { right: 14px; bottom: 14px; width: 46px; height: 46px; }
+  /* Página da peça: botão "Tenho interesse" sempre visível no rodapé da tela */
+  .cta-fixo { display: block; position: fixed; left: 0; right: 0; bottom: 0; z-index: 31; padding: 10px 16px calc(10px + env(safe-area-inset-bottom)); background: rgba(255,255,255,.96); border-top: 1px solid var(--linha); }
+  .cta-fixo .botao { display: block; width: 100%; text-align: center; }
+  body:has(.cta-fixo) { padding-bottom: 72px; }
+  body:has(.cta-fixo) .wa-float { display: none; }
+  .galeria__principal { touch-action: pan-y; }
+}
+@media (max-width: 600px) {
+  .indice:not(.indice--pagina) .indice__lista { columns: 2; column-gap: 20px; }
+  .indice:not(.indice--pagina) .indice__lista a { padding: 9px 0; }
+  .indice:not(.indice--pagina) .indice__nome { font-size: 13px; }
+}

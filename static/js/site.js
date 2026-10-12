@@ -47,6 +47,20 @@ document.querySelectorAll(".galeria__mini button").forEach(b => {
   });
 });
 
+// Galeria: no celular, arrastar a foto principal para o lado troca a foto
+const minis = [...document.querySelectorAll(".galeria__mini button")];
+if (principal && minis.length > 1) {
+  let x0 = null, y0 = null;
+  principal.parentElement.addEventListener("touchstart", e => { x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; }, { passive: true });
+  principal.parentElement.addEventListener("touchend", e => {
+    if (x0 === null) return;
+    const dx = e.changedTouches[0].clientX - x0, dy = e.changedTouches[0].clientY - y0; x0 = null;
+    if (Math.abs(dx) < 40 || Math.abs(dx) < Math.abs(dy)) return;
+    const atual = Math.max(0, minis.findIndex(m => m.hasAttribute("aria-current")));
+    minis[(atual + (dx < 0 ? 1 : -1) + minis.length) % minis.length].click();
+  }, { passive: true });
+}
+
 // Conversão: clique em "Tenho interesse" (GA4 + Meta, se configurados)
 document.querySelectorAll('[data-evento="interesse"]').forEach(a => {
   a.addEventListener("click", () => {

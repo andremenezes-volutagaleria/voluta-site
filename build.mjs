@@ -288,7 +288,8 @@ pecas.forEach((p, i) => {
     <p class="ficha__preco">${esc(precoTexto(p))}</p>
     ${p.status === "vendido"
       ? `<a class="botao botao--linha" href="${wa(`Olá! Vi a peça vendida "${p.titulo}" no site. Vocês têm algo parecido?`)}">Procurar peça parecida</a>`
-      : `<a class="botao botao--wa" href="${wa(msg)}" data-evento="interesse">Tenho interesse</a>`}
+      : `<a class="botao botao--wa" href="${wa(msg)}" data-evento="interesse">Tenho interesse</a>
+         <div class="cta-fixo"><a class="botao botao--wa" href="${wa(msg)}" data-evento="interesse">Tenho interesse</a></div>`}
     <dl class="ficha__dados">
       ${p.dimensoes ? `<dt>Dimensões</dt><dd>${esc(p.dimensoes)}</dd>` : ""}
       ${p.materiais ? `<dt>Materiais</dt><dd>${esc(p.materiais)}</dd>` : ""}
