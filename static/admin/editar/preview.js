@@ -5,11 +5,7 @@
   CMS.registerPreviewStyle("/css/site.css");
 
   const brl = n => "R$ " + Number(n).toLocaleString("pt-BR", { maximumFractionDigits: 0 });
-  const precoTexto = d => {
-    if (d.status === "vendido") return "Vendido";
-    if (!d.preco) return "Preço sob consulta";
-    return `${brl(d.preco)} à vista${d.parcelamento ? ` · ${d.parcelamento}` : ""}`;
-  };
+  const precoTexto = d => d.status === "vendido" ? "Vendida" : "Valor sob consulta";
 
   // Fotos salvas no painel ("/uploads/...") ainda podem não estar no site: busca a versão salva no GitHub
   const Foto = createClass({
@@ -41,7 +37,7 @@
             h("div", { className: "card__img" }, img(capa), d.status === "vendido" ? h("span", { className: "selo" }, "Vendida") : null),
             h("p", { className: "card__designer" }, d.designer || "Designer"),
             h("h3", { className: "card__titulo" }, d.titulo || "Nome da peça", d.ano ? h("span", { className: "card__ano" }, ", " + d.ano) : null),
-            h("p", { className: "card__preco" }, precoTexto(d))
+            null
           )
         )
       ),
@@ -56,7 +52,6 @@
           h("h1", { className: "ficha__titulo" }, d.titulo || "Nome da peça"),
           d.ano ? h("p", { className: "ficha__ano" }, d.ano) : null,
           h("p", { className: "ficha__preco" }, precoTexto(d)),
-          d.preco_obs && d.status !== "vendido" ? h("p", { className: "ficha__obs" }, d.preco_obs) : null,
           h("a", { className: "botao " + (d.status === "vendido" ? "botao--linha" : "botao--wa"), href: "#" }, d.status === "vendido" ? "Procurar peça parecida" : "Tenho interesse"),
           h("dl", { className: "ficha__dados" },
             d.dimensoes ? [h("dt", { key: "a" }, "Dimensões"), h("dd", { key: "b" }, d.dimensoes)] : null,

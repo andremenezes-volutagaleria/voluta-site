@@ -38,9 +38,8 @@ const fotoCategoria = Object.fromEntries(site.categorias.filter(c => c.foto).map
 const categorias = site.categorias.map(c => c.nome).filter(c => fotoCategoria[c] || pecas.some(p => p.categoria === c)); // tipo sem peça nenhuma só aparece se tiver foto escolhida
 
 const precoTexto = p => {
-  if (p.status === "vendido") return "Vendido";
-  if (!p.preco) return "Preço sob consulta";
-  return `${brl(p.preco)} à vista${p.parcelamento ? ` · ${p.parcelamento}` : ""}`;
+  // Preços não aparecem no site: o cliente entra em contato pelo WhatsApp
+  return p.status === "vendido" ? "Vendida" : "Valor sob consulta";
 };
 
 // ---------- layout ----------
@@ -128,12 +127,11 @@ ${body}
 </html>`;
 
 // ---------- componentes ----------
-const card = p => `<li class="card${p.status === "vendido" ? " card--vendido" : ""}" data-preco="${p.preco || ""}" data-data="${esc(p.data || "")}">
+const card = p => `<li class="card${p.status === "vendido" ? " card--vendido" : ""}" data-data="${esc(p.data || "")}">
   <a href="/acervo/${p.slug}/">
     <div class="card__img"><img src="${esc(thumb(p.imagens[0], 800))}" alt="${esc(`${p.titulo}, ${p.designer}`)}" loading="lazy">${p.status === "vendido" ? `<span class="selo">Vendida</span>` : ""}</div>
     <p class="card__designer">${esc(p.designer)}</p>
     <h3 class="card__titulo">${esc(p.titulo)}${p.ano ? `, <span class="card__ano">${esc(p.ano)}</span>` : ""}</h3>
-    <p class="card__preco">${esc(precoTexto(p))}</p>
   </a>
 </li>`;
 
@@ -242,13 +240,6 @@ const listagem = ({ rel, url, titulo, sub = "", lista, ativo, desc, current = "/
       </div>
       <div class="acervo__ferramentas">
         <button class="filtrar-btn" aria-expanded="false" aria-controls="lateral">Filtrar</button>
-        <label class="ordem"><span>Ordenar</span>
-          <select id="ordenar">
-            <option value="recentes">Mais recentes</option>
-            <option value="menor">Menor preço</option>
-            <option value="maior">Maior preço</option>
-          </select>
-        </label>
       </div>
     </div>
     <p class="contagem">${lista.length} ${lista.length === 1 ? "peça" : "peças"}</p>
@@ -278,7 +269,7 @@ pecas.forEach((p, i) => {
   const mesmos = pecas.filter(o => o !== p && o.designer === p.designer && o.status !== "vendido").slice(0, 3);
   const outros = mesmos.length ? mesmos : pecas.filter(o => o !== p && o.categoria === p.categoria && o.status !== "vendido").slice(0, 3);
   const ant = pecas[(i - 1 + pecas.length) % pecas.length], prox = pecas[(i + 1) % pecas.length];
-  const ld = { "@context": "https://schema.org", "@type": "Product", name: p.titulo, description: p.descricao, image: p.imagens.map(u => thumb(u, 1600)), brand: { "@type": "Brand", name: p.designer }, ...(p.preco ? { offers: { "@type": "Offer", priceCurrency: "BRL", price: p.preco, availability: p.status === "vendido" ? "https://schema.org/SoldOut" : "https://schema.org/InStock", url: site.url + url } } : {}) };
+  const ld = { "@context": "https://schema.org", "@type": "Product", name: p.titulo, description: p.descricao, image: p.imagens.map(u => thumb(u, 1600)), brand: { "@type": "Brand", name: p.designer } };
   write(`acervo/${p.slug}/index.html`, page({
     title: `${p.titulo}, ${p.designer}`, url, current: "/acervo/", img: p.imagens[0],
     desc: p.descricao.slice(0, 155),
@@ -295,7 +286,6 @@ pecas.forEach((p, i) => {
     <h1 class="ficha__titulo">${esc(p.titulo)}</h1>
     ${p.ano ? `<p class="ficha__ano">${esc(p.ano)}</p>` : ""}
     <p class="ficha__preco">${esc(precoTexto(p))}</p>
-    ${p.preco_obs && p.status !== "vendido" ? `<p class="ficha__obs">${esc(p.preco_obs)}</p>` : ""}
     ${p.status === "vendido"
       ? `<a class="botao botao--linha" href="${wa(`Olá! Vi a peça vendida "${p.titulo}" no site. Vocês têm algo parecido?`)}">Procurar peça parecida</a>`
       : `<a class="botao botao--wa" href="${wa(msg)}" data-evento="interesse">Tenho interesse</a>`}

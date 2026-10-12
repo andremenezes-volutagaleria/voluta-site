@@ -64,9 +64,9 @@ collections:
           - { label: "Disponível", value: disponivel }
           - { label: "Vendido", value: vendido }
           - { label: "Oculto (não aparece no site)", value: oculto }
-      - { name: preco, label: "Preço à vista (R$)", widget: number, value_type: int, required: false, hint: "Deixe vazio para mostrar 'Preço sob consulta'." }
-      - { name: preco_obs, label: Observação do preço, widget: string, required: false, hint: "ex.: o par, cada unidade" }
-      - { name: parcelamento, label: Parcelamento, widget: string, default: "em até 12x", required: false }
+      - { name: preco, label: preco, widget: hidden, required: false }   # preço não aparece no site
+      - { name: preco_obs, label: preco_obs, widget: hidden, required: false }   # preço não aparece no site
+      - { name: parcelamento, label: parcelamento, widget: hidden, required: false }   # preço não aparece no site
       - { name: dimensoes, label: Dimensões, widget: string, required: false, hint: "ex.: L 86 × P 75 × A 70 cm" }
       - { name: materiais, label: Materiais, widget: string, required: false }
       - { name: descricao, label: Descrição, widget: text, required: false }
