@@ -11,12 +11,27 @@
     return `${brl(d.preco)} à vista${d.parcelamento ? ` · ${d.parcelamento}` : ""}`;
   };
 
+  // Fotos salvas no painel ("/uploads/...") ainda podem não estar no site: busca a versão salva no GitHub
+  const Foto = createClass({
+    getInitialState() { return { url: "" }; },
+    resolver(src) {
+      if (!src || /^(blob:|data:|https?:)/.test(src) && !src.includes(location.host)) { this.setState({ url: src }); return; }
+      const atual = src;
+      (window.voltaUrlFoto ? window.voltaUrlFoto(src) : Promise.resolve(src))
+        .then(u => { if (this.props.src === atual) this.setState({ url: u }); })
+        .catch(() => this.setState({ url: src }));
+    },
+    componentDidMount() { this.resolver(this.props.src); },
+    componentDidUpdate(prev) { if (prev.src !== this.props.src) this.resolver(this.props.src); },
+    render() { return this.state.url ? h("img", { src: this.state.url, alt: "" }) : h("div", { style: { width: "100%", height: "100%", background: "#F4F4F4" } }); },
+  });
+
   CMS.registerPreviewTemplate("pecas", ({ entry, getAsset }) => {
     const d = entry.get("data").toJS();
     const fotos = (d.imagens || []).filter(Boolean).map(f => getAsset(f).toString());
     const capa = fotos[0];
     const erro = ev => window.voltaConsertarFoto && window.voltaConsertarFoto(ev.target);
-    const img = (src, extra) => src ? h("img", Object.assign({ src, alt: "", onError: erro }, extra || {})) : h("div", { style: { aspectRatio: "4/5", background: "#F4F4F4" } });
+    const img = (src, extra) => src ? h(Foto, Object.assign({ src }, extra || {})) : h("div", { style: { aspectRatio: "4/5", background: "#F4F4F4" } });
 
     return h("div", { style: { padding: "32px", maxWidth: "1100px", margin: "0 auto" } },
       h("p", { className: "subtitulo", style: { marginBottom: "16px" } }, "Como aparece na lista do acervo:"),
@@ -34,7 +49,7 @@
       h("div", { className: "peca", style: { padding: 0 } },
         h("div", { className: "galeria" },
           h("div", { className: "galeria__principal" }, img(capa)),
-          fotos.length > 1 ? h("ul", { className: "galeria__mini" }, fotos.map((f, i) => h("li", { key: i }, h("button", null, h("img", { src: f, alt: "", onError: erro }))))) : null
+          fotos.length > 1 ? h("ul", { className: "galeria__mini" }, fotos.map((f, i) => h("li", { key: i }, h("button", null, h(Foto, { src: f }))))) : null
         ),
         h("div", { className: "ficha", style: { position: "static" } },
           h("p", { className: "ficha__designer" }, h("a", { href: "#" }, d.designer || "Designer")),

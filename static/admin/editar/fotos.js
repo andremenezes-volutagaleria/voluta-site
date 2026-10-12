@@ -41,4 +41,9 @@
   document.addEventListener("error", function (ev) { if (ev.target && ev.target.tagName === "IMG") consertar(ev.target); }, true);
   // Usado também pela pré-visualização (que roda num iframe)
   window.voltaConsertarFoto = consertar;
+  // Para a pré-visualização: devolve um endereço que funciona para "/uploads/..." (busca no GitHub)
+  window.voltaUrlFoto = function (src) {
+    var caminho = caminhoNoRepo(src);
+    return caminho ? buscar(caminho) : Promise.resolve(src);
+  };
 })();
