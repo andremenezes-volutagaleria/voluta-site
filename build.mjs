@@ -129,7 +129,7 @@ ${body}
 // ---------- componentes ----------
 const card = p => `<li class="card${p.status === "vendido" ? " card--vendido" : ""}" data-data="${esc(p.data || "")}">
   <a href="/acervo/${p.slug}/">
-    <div class="card__img"><img src="${esc(thumb(p.imagens[0], 800))}" alt="${esc(`${p.titulo}, ${p.designer}`)}" loading="lazy">${p.status === "vendido" ? `<span class="selo">Vendida</span>` : ""}</div>
+    <div class="card__img${p.imagens[1] ? " card__img--troca" : ""}"><img src="${esc(thumb(p.imagens[0], 800))}" alt="${esc(`${p.titulo}, ${p.designer}`)}" loading="lazy">${p.imagens[1] ? `<img class="card__img2" src="${esc(thumb(p.imagens[1], 800))}" alt="" loading="lazy" aria-hidden="true">` : ""}${p.status === "vendido" ? `<span class="selo">Vendida</span>` : ""}</div>
     <p class="card__designer">${esc(p.designer)}</p>
     <h3 class="card__titulo">${esc(p.titulo)}${p.ano ? `, <span class="card__ano">${esc(p.ano)}</span>` : ""}</h3>
   </a>

@@ -319,3 +319,10 @@ main:has(> .faixa:last-child) + .rodape .rodape__in { border-top: 1px solid rgba
 .vitrine__trilho a:hover img { transform: scale(1.03); }
 @media (max-width: 1000px) { .vitrine__trilho li { flex-basis: calc((100% - 28px) / 3); } }
 @media (max-width: 600px) { .vitrine__trilho li { flex-basis: 72%; } .vitrine__trilho { gap: 10px; } }
+
+/* Card: ao passar o mouse, mostra a segunda foto (só em telas com mouse) */
+.card__img { position: relative; }
+.card__img2 { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity .5s ease; }
+@media (hover: hover) { .card a:hover .card__img2, .card a:focus-visible .card__img2 { opacity: 1; } }
+.card a:hover .card__img--troca img { transform: none; }
+.card__img .selo { z-index: 1; }
