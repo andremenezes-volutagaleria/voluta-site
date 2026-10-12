@@ -15,6 +15,11 @@ backend:
     uploadMedia: "Foto enviada: {{path}} [skip netlify]"
     deleteMedia: "Foto removida: {{path}} [skip netlify]"
 
+# Nomes de arquivo limpos (sem acento nem espaço) para fotos e fichas
+slug:
+  encoding: ascii
+  clean_accents: true
+  sanitize_replacement: "-"
 locale: pt
 media_folder: static/uploads
 public_folder: /uploads
@@ -25,6 +30,8 @@ collections:
     label: Peças do acervo
     label_singular: Peça
     folder: content/pecas
+    media_folder: "/static/uploads/pecas/{{filename}}"   # uma pasta de fotos por peça
+    public_folder: "/uploads/pecas/{{filename}}"
     extension: json
     format: json
     create: true

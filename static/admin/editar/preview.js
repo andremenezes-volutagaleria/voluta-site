@@ -15,7 +15,8 @@
     const d = entry.get("data").toJS();
     const fotos = (d.imagens || []).filter(Boolean).map(f => getAsset(f).toString());
     const capa = fotos[0];
-    const img = (src, extra) => src ? h("img", Object.assign({ src, alt: "" }, extra || {})) : h("div", { style: { aspectRatio: "4/5", background: "#F4F4F4" } });
+    const erro = ev => window.voltaConsertarFoto && window.voltaConsertarFoto(ev.target);
+    const img = (src, extra) => src ? h("img", Object.assign({ src, alt: "", onError: erro }, extra || {})) : h("div", { style: { aspectRatio: "4/5", background: "#F4F4F4" } });
 
     return h("div", { style: { padding: "32px", maxWidth: "1100px", margin: "0 auto" } },
       h("p", { className: "subtitulo", style: { marginBottom: "16px" } }, "Como aparece na lista do acervo:"),
@@ -33,7 +34,7 @@
       h("div", { className: "peca", style: { padding: 0 } },
         h("div", { className: "galeria" },
           h("div", { className: "galeria__principal" }, img(capa)),
-          fotos.length > 1 ? h("ul", { className: "galeria__mini" }, fotos.map((f, i) => h("li", { key: i }, h("button", null, h("img", { src: f, alt: "" }))))) : null
+          fotos.length > 1 ? h("ul", { className: "galeria__mini" }, fotos.map((f, i) => h("li", { key: i }, h("button", null, h("img", { src: f, alt: "", onError: erro }))))) : null
         ),
         h("div", { className: "ficha", style: { position: "static" } },
           h("p", { className: "ficha__designer" }, h("a", { href: "#" }, d.designer || "Designer")),
