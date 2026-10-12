@@ -305,3 +305,17 @@ main:has(> .faixa:last-child) + .rodape .rodape__in { border-top: 1px solid rgba
   .indice:not(.indice--pagina) .indice__lista a { padding: 9px 0; }
   .indice:not(.indice--pagina) .indice__nome { font-size: 13px; }
 }
+
+/* ---------- home simples: capa sorteada + vitrine que passa sozinha ---------- */
+.capa { background: var(--fundo-foto); height: min(80vh, 780px); min-height: 420px; overflow: hidden; }
+.capa img { width: 100%; height: 100%; object-fit: cover; display: block; }
+@media (max-width: 760px) { .capa { height: auto; aspect-ratio: 1 / 1; min-height: 0; } }
+.vitrine { margin-top: clamp(56px, 7vw, 96px); overflow: hidden; }
+.vitrine__trilho { list-style: none; margin: 0; padding: 0 var(--lateral); display: flex; gap: 14px; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; scroll-behavior: smooth; }
+.vitrine__trilho::-webkit-scrollbar { display: none; }
+.vitrine__trilho li { flex: 0 0 calc((100% - 42px) / 4); scroll-snap-align: start; aspect-ratio: 3 / 4; background: var(--fundo-foto); overflow: hidden; }
+.vitrine__trilho a, .vitrine__trilho img { display: block; width: 100%; height: 100%; }
+.vitrine__trilho img { object-fit: cover; transition: transform .6s ease; }
+.vitrine__trilho a:hover img { transform: scale(1.03); }
+@media (max-width: 1000px) { .vitrine__trilho li { flex-basis: calc((100% - 28px) / 3); } }
+@media (max-width: 600px) { .vitrine__trilho li { flex-basis: 72%; } .vitrine__trilho { gap: 10px; } }

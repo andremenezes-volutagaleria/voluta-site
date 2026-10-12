@@ -139,3 +139,23 @@ if (buscaBtn && busca) {
     if (e.key === "/" && busca.hidden && !/input|textarea|select/i.test(document.activeElement.tagName)) { e.preventDefault(); abrir(); }
   });
 }
+
+// Vitrine da home: passa sozinha, uma foto por vez; para quando a pessoa mexe
+const vitrine = document.querySelector(".vitrine__trilho");
+if (vitrine && !matchMedia("(prefers-reduced-motion: reduce)").matches) {
+  let timer;
+  const passo = () => {
+    const item = vitrine.querySelector("li"); if (!item) return;
+    const largura = item.getBoundingClientRect().width + parseFloat(getComputedStyle(vitrine).columnGap || 14);
+    if (vitrine.scrollLeft + vitrine.clientWidth >= vitrine.scrollWidth - 4) vitrine.scrollTo({ left: 0 });
+    else vitrine.scrollBy({ left: largura });
+  };
+  const iniciar = () => { clearInterval(timer); timer = setInterval(passo, 3500); };
+  const parar = () => clearInterval(timer);
+  vitrine.addEventListener("mouseenter", parar);
+  vitrine.addEventListener("mouseleave", iniciar);
+  vitrine.addEventListener("touchstart", parar, { passive: true });
+  vitrine.addEventListener("touchend", () => setTimeout(iniciar, 4000), { passive: true });
+  document.addEventListener("visibilitychange", () => document.hidden ? parar() : iniciar());
+  iniciar();
+}

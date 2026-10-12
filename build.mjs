@@ -143,61 +143,31 @@ fs.cpSync(path.join(ROOT, "static"), OUT, { recursive: true });
 const disponiveis = pecas.filter(p => p.status !== "vendido");
 const vendidos = pecas.filter(p => p.status === "vendido");
 const porData = [...disponiveis].sort((a, b) => (b.data || "").localeCompare(a.data || ""));
-// Carrossel: fotos livres cadastradas em "Textos e contatos" (ambiente, ateliê, detalhes...)
-const slides = (site.carrossel || []).filter(s => s.foto).slice(0, 6);
-const novas = porData.slice(0, 4);
-let destaques = disponiveis.filter(p => p.destaque && !novas.includes(p)).slice(0, 6);
-if (destaques.length > 3) destaques = destaques.slice(0, destaques.length - (destaques.length % 3));
+// Home: 8 peças — primeiro as marcadas "Mostrar na página inicial" (pela ordem), depois as mais recentes
+const marcadas = disponiveis.filter(p => p.destaque).sort((a, b) => (a.ordem ?? 100) - (b.ordem ?? 100) || (b.data || "").localeCompare(a.data || ""));
+const naHome = [...marcadas, ...porData.filter(p => !marcadas.includes(p))].slice(0, 8);
+const fotosCapa = (site.fotos_capa || []).filter(f => f.foto).slice(0, 12).map(f => ({ src: thumb(f.foto, 2400), alt: f.descricao_foto || "Voluta" }));
+const galeria = (site.galeria || []).filter(f => f.foto);
 const tipos = categorias.map(c => ({ nome: c, slug: slugify(c), lista: disponiveis.filter(p => p.categoria === c) }));
-tipos.forEach(t => { const capa = fotoCategoria[t.nome] || [...t.lista, ...vendidos.filter(p => p.categoria === t.nome)].map(p => p.imagens[0])[0]; t.capa = capa; });
 
 write("index.html", page({
-  url: "/", img: slides[0]?.foto || disponiveis[0]?.imagens[0],
+  url: "/", img: (site.fotos_capa || [])[0]?.foto || disponiveis[0]?.imagens[0],
   body: `
 <h1 class="visually-hidden">Voluta — mobiliário modernista brasileiro, garimpado e restaurado em Belo Horizonte</h1>
-${slides.length ? `<section class="carrossel" aria-roledescription="carrossel" aria-label="Voluta em imagens">
-  <div class="carrossel__trilho">
-    ${slides.map((sl, n) => {
-      const temTexto = sl.titulo || sl.texto || sl.link;
-      const legenda = `${sl.titulo ? `<span class="slide__titulo">${esc(sl.titulo)}</span>` : ""}${sl.texto ? `<span class="slide__texto">${esc(sl.texto)}</span>` : ""}${sl.link ? `<span class="slide__link">${esc(sl.link_texto || "Ver mais")}</span>` : ""}`;
-      return `<div class="slide${n === 0 ? " ativo" : ""}" role="group" aria-roledescription="slide" aria-label="${n + 1} de ${slides.length}"${n ? ' aria-hidden="true"' : ""}>
-      <img src="${esc(thumb(sl.foto, 2400))}" alt="${esc(sl.descricao_foto || sl.titulo || "Voluta")}"${n === 0 ? ' fetchpriority="high"' : ' loading="lazy"'}>
-      ${temTexto ? (sl.link ? `<a class="slide__legenda" href="${esc(sl.link)}"${n ? ' tabindex="-1"' : ""}>${legenda}</a>` : `<div class="slide__legenda">${legenda}</div>`) : ""}
-    </div>`; }).join("")}
-  </div>
-  ${slides.length > 1 ? `<div class="carrossel__ctrl">
-    <button class="carrossel__seta" data-dir="-1" aria-label="Foto anterior"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="1.5"/></svg></button>
-    <div class="carrossel__pontos">${slides.map((_, n) => `<button aria-label="Ir para a foto ${n + 1}"${n === 0 ? ' aria-current="true"' : ""} data-ir="${n}"></button>`).join("")}</div>
-    <button class="carrossel__seta" data-dir="1" aria-label="Próxima foto"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="1.5"/></svg></button>
-  </div>` : ""}
+${fotosCapa.length ? `<section class="capa">
+  <img id="capa-foto" alt="${esc(fotosCapa[0].alt)}" fetchpriority="high">
+  <script>(function(){var f=${JSON.stringify(fotosCapa).replace(/</g, "\\u003c")};var e=f[Math.floor(Math.random()*f.length)];var i=document.getElementById("capa-foto");i.src=e.src;i.alt=e.alt;})();</script>
+  <noscript><img src="${esc(fotosCapa[0].src)}" alt="${esc(fotosCapa[0].alt)}"></noscript>
 </section>` : ""}
-${destaques.length ? `<section class="secao">
-  <div class="secao__cab"><h2>Destaques</h2><a href="/acervo/">Ver todo o acervo</a></div>
-  <ul class="grade grade--3">${destaques.map(card).join("")}</ul>
+${naHome.length ? `<section class="secao">
+  <div class="secao__cab"><h2>Acervo</h2><a href="/acervo/">Ver todo o acervo</a></div>
+  <ul class="grade grade--4">${naHome.map(card).join("")}</ul>
 </section>` : ""}
-${novas.length ? `<section class="secao">
-  <div class="secao__cab"><h2>Acabaram de chegar</h2><a href="/acervo/">Ver mais recentes</a></div>
-  <ul class="grade grade--4">${novas.map(card).join("")}</ul>
-</section>` : ""}
-<section class="secao">
-  <div class="secao__cab"><h2>Navegue pelo acervo</h2><a href="/acervo/">Ver tudo</a></div>
-  <ul class="atalhos">
-    ${tipos.filter(t => t.capa).map(t => `<li><a href="/acervo/tipo/${t.slug}/">
-      <div class="atalhos__img"><img src="${esc(thumb(t.capa, 600))}" alt="" loading="lazy"></div>
-      <span class="atalhos__nome">${esc(t.nome)}</span>
-    </a></li>`).join("")}
+${galeria.length ? `<section class="vitrine" aria-label="Voluta em imagens">
+  <ul class="vitrine__trilho">
+    ${galeria.map(g => `<li>${g.link ? `<a href="${esc(g.link)}">` : ""}<img src="${esc(thumb(g.foto, 900))}" alt="${esc(g.descricao_foto || "")}" loading="lazy">${g.link ? "</a>" : ""}</li>`).join("")}
   </ul>
-</section>
-${vendidos.length ? `<section class="secao">
-  <div class="secao__cab"><h2>Já passaram pela Voluta</h2><a href="/acervo/vendidas/">Ver todas as vendidas</a></div>
-  <ul class="grade grade--4">${[...vendidos].sort((a, b) => (b.data || "").localeCompare(a.data || "")).slice(0, 4).map(card).join("")}</ul>
 </section>` : ""}
-<section class="secao indice">
-  <h2>Designers e fabricantes</h2>
-  <ul class="indice__lista">
-    ${designers.map(d => `<li><a href="/designers/${slugify(d)}/"><span class="indice__nome">${esc(d)}</span></a></li>`).join("")}
-  </ul>
-</section>
 <section class="faixa">
   <p>Curadoria e histórias das peças no Instagram.</p>
   <a class="botao botao--claro" href="https://www.instagram.com/${site.instagram}/">Seguir @${site.instagram}</a>

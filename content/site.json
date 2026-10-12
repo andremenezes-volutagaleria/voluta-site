@@ -2,48 +2,37 @@
   "ga4_id": "",
   "categorias": [
     {
-      "nome": "Poltronas",
-      "foto": "/uploads/home/dupla-mp-97.png"
+      "nome": "Poltronas"
     },
     {
-      "nome": "Cadeiras",
-      "foto": "/uploads/home/cadeiras-geraldo-barros.png"
+      "nome": "Cadeiras"
     },
     {
-      "nome": "Sofás",
-      "foto": "/uploads/home/sofa-de-sede.png"
+      "nome": "Sofás"
     },
     {
-      "nome": "Mesas de centro",
-      "foto": "/uploads/home/design-sem-nome-8-.png"
+      "nome": "Mesas de centro"
     },
     {
-      "nome": "Mesas laterais",
-      "foto": "/uploads/home/mesas-de-canto-lafer.png"
+      "nome": "Mesas laterais"
     },
     {
-      "nome": "Mesas de jantar",
-      "foto": "/uploads/home/sem-nome-post-para-instagram-45-.png"
+      "nome": "Mesas de jantar"
     },
     {
-      "nome": "Bancos",
-      "foto": "/uploads/home/post-banco-ripado-.png"
+      "nome": "Bancos"
     },
     {
-      "nome": "Aparadores/Buffet",
-      "foto": "/uploads/home/comoda-cimo.png"
+      "nome": "Aparadores/Buffet"
     },
     {
-      "nome": "Escrivaninhas",
-      "foto": "/uploads/home/sem-nome-1200-x-1600-px-.png"
+      "nome": "Escrivaninhas"
     },
     {
-      "nome": "Iluminação",
-      "foto": "/uploads/home/lumina-ria-telinha.png"
+      "nome": "Iluminação"
     },
     {
-      "nome": "Objetos",
-      "foto": ""
+      "nome": "Objetos"
     }
   ],
   "whatsapp_exibicao": "+55 31 98253-9291",
@@ -147,33 +136,73 @@
   "url": "https://volutagaleria.com.br",
   "whatsapp": "5531982539291",
   "instagram": "voluta.traco",
-  "carrossel": [
+  "sobre": "Acreditamos que o lar é uma galeria particular.\n\nA Voluta nasceu da paixão de um casal pelo design e do desejo de resgatar um jeito genuinamente brasileiro de morar. Somos uma galeria online de mobiliário modernista e cerâmica autoral, e cada peça do acervo passa por pesquisa, verificação de autenticidade e curadoria.\n\nTrabalhamos com uma seleção pequena e exclusiva: peças raras em madeiras nativas brasileiras, de designers e fabricantes que ajudaram a definir o modernismo no país. Para nós, esse design traduz a identidade brasileira ao unir a precisão da arquitetura ao calor do que é nosso.\n\nA coleção de cerâmica reúne peças únicas, moldadas à mão por artistas no ateliê da galeria.\n\nTodas as vendas são feitas online, com um atendimento reservado, seguro e detalhado para colecionadores.",
+  "nome": "Voluta",
+  "email": "voluta@volutagaleria.com.br",
+  "fotos_capa": [
     {
       "foto": "https://static-assets.artlogic.net/w_2400,h_2400,c_limit,f_auto,fl_lossy,q_auto/ws-artlogicwebsite3041/usr/library/images/main/pages/1/dsc04536.jpg",
-      "descricao_foto": "Ambiente com mobiliário modernista da Voluta",
-      "titulo": "Voluta",
-      "texto": "Mobiliário modernista brasileiro, garimpado e restaurado em Belo Horizonte.",
-      "link": "/acervo/",
-      "link_texto": "Ver o acervo"
+      "descricao_foto": "Ambiente com mobiliário modernista da Voluta"
     },
     {
       "foto": "/uploads/home/design-sem-nome-6-.png",
-      "descricao_foto": "Peças do acervo da Voluta",
-      "titulo": "O lar é uma galeria particular",
-      "texto": "",
-      "link": "/acervo/",
-      "link_texto": "Ver o acervo"
+      "descricao_foto": "Peças do acervo da Voluta"
     },
     {
       "foto": "/uploads/home/design-sem-nome-7-.png",
-      "descricao_foto": "",
-      "titulo": "",
-      "texto": "",
-      "link": "/acervo/",
-      "link_texto": "Ver o acervo"
+      "descricao_foto": ""
     }
   ],
-  "sobre": "Acreditamos que o lar é uma galeria particular.\n\nA Voluta nasceu da paixão de um casal pelo design e do desejo de resgatar um jeito genuinamente brasileiro de morar. Somos uma galeria online de mobiliário modernista e cerâmica autoral, e cada peça do acervo passa por pesquisa, verificação de autenticidade e curadoria.\n\nTrabalhamos com uma seleção pequena e exclusiva: peças raras em madeiras nativas brasileiras, de designers e fabricantes que ajudaram a definir o modernismo no país. Para nós, esse design traduz a identidade brasileira ao unir a precisão da arquitetura ao calor do que é nosso.\n\nA coleção de cerâmica reúne peças únicas, moldadas à mão por artistas no ateliê da galeria.\n\nTodas as vendas são feitas online, com um atendimento reservado, seguro e detalhado para colecionadores.",
-  "nome": "Voluta",
-  "email": "voluta@volutagaleria.com.br"
+  "galeria": [
+    {
+      "foto": "/uploads/home/dupla-mp-97.png",
+      "descricao_foto": "Poltronas",
+      "link": "/acervo/tipo/poltronas/"
+    },
+    {
+      "foto": "/uploads/home/cadeiras-geraldo-barros.png",
+      "descricao_foto": "Cadeiras",
+      "link": "/acervo/tipo/cadeiras/"
+    },
+    {
+      "foto": "/uploads/home/sofa-de-sede.png",
+      "descricao_foto": "Sofás",
+      "link": "/acervo/tipo/sofas/"
+    },
+    {
+      "foto": "/uploads/home/design-sem-nome-8-.png",
+      "descricao_foto": "Mesas de centro",
+      "link": "/acervo/tipo/mesas-de-centro/"
+    },
+    {
+      "foto": "/uploads/home/mesas-de-canto-lafer.png",
+      "descricao_foto": "Mesas laterais",
+      "link": "/acervo/tipo/mesas-laterais/"
+    },
+    {
+      "foto": "/uploads/home/sem-nome-post-para-instagram-45-.png",
+      "descricao_foto": "Mesas de jantar",
+      "link": "/acervo/tipo/mesas-de-jantar/"
+    },
+    {
+      "foto": "/uploads/home/post-banco-ripado-.png",
+      "descricao_foto": "Bancos",
+      "link": "/acervo/tipo/bancos/"
+    },
+    {
+      "foto": "/uploads/home/comoda-cimo.png",
+      "descricao_foto": "Aparadores/Buffet",
+      "link": "/acervo/tipo/aparadores-buffet/"
+    },
+    {
+      "foto": "/uploads/home/sem-nome-1200-x-1600-px-.png",
+      "descricao_foto": "Escrivaninhas",
+      "link": "/acervo/tipo/escrivaninhas/"
+    },
+    {
+      "foto": "/uploads/home/lumina-ria-telinha.png",
+      "descricao_foto": "Iluminação",
+      "link": "/acervo/tipo/iluminacao/"
+    }
+  ]
 }

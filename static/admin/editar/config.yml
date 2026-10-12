@@ -71,10 +71,10 @@ collections:
       - { name: materiais, label: Materiais, widget: string, required: false }
       - { name: descricao, label: Descrição, widget: text, required: false }
       - { name: imagens, label: Fotos (a primeira é a capa), widget: list, required: false, field: { name: imagem, label: Foto, widget: image }, hint: "Peça sem foto não aparece no site, mesmo marcada como Disponível." }
-      - { name: data, label: Data de entrada no acervo, widget: datetime, format: "YYYY-MM-DD", date_format: "DD/MM/YYYY", time_format: false, hint: "Define a ordem em Chegaram agora e Mais recentes." }
+      - { name: data, label: Data de entrada no acervo, widget: datetime, format: "YYYY-MM-DD", date_format: "DD/MM/YYYY", time_format: false, hint: "Define a ordem do acervo (mais recentes primeiro)." }
       - { name: codigo, label: Código interno (VLT), widget: string, required: false, hint: "Mais de uma unidade: separe por vírgula, ex.: VLT-032, VLT-033" }
       - { name: data_compra, label: Data da compra (uso interno, não aparece no site), widget: datetime, format: "YYYY-MM-DD", date_format: "DD/MM/YYYY", time_format: false, required: false }
-      - { name: destaque, label: Mostrar em Destaques na página inicial, widget: boolean, default: false }
+      - { name: destaque, label: Mostrar na página inicial, widget: boolean, default: false, hint: "A home mostra 8 peças: primeiro as marcadas aqui (pela Ordem), depois completa com as mais recentes." }
       - { name: ordem, label: Ordem no acervo, widget: number, value_type: int, default: 100, hint: "Números menores aparecem primeiro." }
       - { name: url_antiga, label: Endereço antigo (Artlogic), widget: hidden, required: false }
       - { name: categoria_antiga, label: Categoria antiga, widget: hidden, required: false }
@@ -90,19 +90,25 @@ collections:
         media_folder: "/static/uploads/home"   # fotos do carrossel e logo
         public_folder: "/uploads/home"
         fields:
-          - name: carrossel
-            label: Carrossel da página inicial
-            label_singular: Foto
+          - name: fotos_capa
+            label: Fotos da capa (uma aparece por vez, sorteada a cada visita)
+            label_singular: Foto da capa
             widget: list
             summary: "{{fields.descricao_foto}}"
-            hint: "Fotos horizontais (paisagem), de 2000px de largura ou mais. A ordem aqui é a ordem no site. Arraste para reordenar."
+            hint: "Até 10 fotos horizontais (paisagem), 2400 × 1260 px. Cada vez que alguém abre ou recarrega a home, o site mostra uma delas."
             fields:
               - { name: foto, label: Foto horizontal, widget: image }
               - { name: descricao_foto, label: "Descrição da foto (para Google e acessibilidade)", widget: string, required: false }
-              - { name: titulo, label: Título (opcional), widget: string, required: false }
-              - { name: texto, label: Frase curta (opcional), widget: string, required: false }
-              - { name: link, label: "Link (opcional), ex.: /restauro/ ou /acervo/percival-lafer-poltrona-mp-71/", widget: string, required: false }
-              - { name: link_texto, label: "Texto do link (opcional), ex.: Conheça o restauro", widget: string, required: false }
+          - name: galeria
+            label: Carrossel do fim da página
+            label_singular: Foto
+            widget: list
+            summary: "{{fields.descricao_foto}}"
+            hint: "Fotos que passam sozinhas no fim da home. Formato vertical (1200 × 1600 px). A ordem aqui é a ordem no site."
+            fields:
+              - { name: foto, label: Foto, widget: image }
+              - { name: descricao_foto, label: "Descrição da foto", widget: string, required: false }
+              - { name: link, label: "Link ao clicar (opcional), ex.: /acervo/tipo/poltronas/", widget: string, required: false }
           - { name: nome, label: Nome, widget: string }
           - { name: url, label: Endereço do site, widget: string }
           - { name: descricao, label: Descrição para o Google, widget: text }
@@ -115,15 +121,7 @@ collections:
           - { name: imagem_sobre, label: Foto da página Sobre, widget: image }
           - { name: ga4_id, label: "Google Analytics (G-XXXX)", widget: string, required: false }
           - { name: meta_pixel_id, label: Pixel da Meta, widget: string, required: false }
-          - name: categorias
-            label: Tipos de peça (ordem do filtro e fotos da home)
-            label_singular: Tipo de peça
-            widget: list
-            summary: "{{fields.nome}}"
-            hint: "A foto aparece no quadrado da categoria em \"Navegue pelo acervo\", na home. Sem foto, o site usa a capa da peça disponível mais recente. Use foto quadrada (1200 × 1200 px)."
-            fields:
-              - { name: nome, label: Nome do tipo, widget: string, hint: "Tem que ser igual ao tipo escolhido nas fichas das peças." }
-              - { name: foto, label: Foto da categoria, widget: image, required: false }
+          - { name: categorias, label: Tipos de peça (ordem do filtro), label_singular: Tipo de peça, widget: list, summary: "{{fields.nome}}", fields: [ { name: nome, label: Nome do tipo, widget: string, hint: "Tem que ser igual ao tipo escolhido nas fichas das peças." } ] }
           - { name: designers, label: Designers, widget: list, summary: "{{fields.nome}}", fields: [ { name: nome, label: Nome, widget: string }, { name: info, label: "Nacionalidade e datas", widget: string, required: false } ] }
           - { name: sobre, label: Texto da página Sobre, widget: markdown }
           - { name: restauro, label: Texto da página Restauro, widget: markdown }
