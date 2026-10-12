@@ -1,15 +1,4 @@
 {
-  "titulo": "Buffet Sérgio Rodrigues",
-  "designer": "Sérgio Rodrigues",
-  "ano": "1963",
-  "categoria": "Buffets",
-  "status": "disponivel",
-  "preco": null,
-  "preco_obs": "",
-  "parcelamento": "",
-  "dimensoes": "L 143 × P 49 × A 76,5 cm",
-  "materiais": "Jacarandá maciço e lâmina de jacarandá",
-  "descricao": "Projetado nos anos 1960 por Sérgio Rodrigues para a OCA, com linhas simples e estrutura robusta em jacarandá. Destacam-se os puxadores circulares vazados, entalhados na própria madeira. Peça de colecionador de grande valor histórico.",
   "imagens": [
     "https://static-assets.artlogic.net/w_2400,h_2400,c_limit,f_auto,fl_lossy,q_auto/artlogicstorage/voluta/images/view/9880b6d2c06bf96ce2d928baaa348ec0p/voluta-s-rgio-rodrigues-buffet-s-rgio-rodrigues-1963.png",
     "https://static-assets.artlogic.net/w_2400,h_2400,c_limit,f_auto,fl_lossy,q_auto/artlogicstorage/voluta/images/view/d7bb30aeda0266bb5fe9a6c9cbeba84cp/voluta-s-rgio-rodrigues-buffet-s-rgio-rodrigues-1963.png",
@@ -21,10 +10,21 @@
     "https://static-assets.artlogic.net/w_2400,h_2400,c_limit,f_auto,fl_lossy,q_auto/artlogicstorage/voluta/images/view/c5251dfb67c6ded4be169171e23d9b12p/voluta-s-rgio-rodrigues-buffet-s-rgio-rodrigues-1963.png"
   ],
   "destaque": true,
-  "ordem": 24,
-  "codigo": "VLT-074",
-  "url_antiga": "10-sergio-rodrigues-buffet-sergio-rodrigues-1963",
+  "ano": "1963",
   "categoria_antiga": "15",
+  "descricao": "Projetado nos anos 1960 por Sérgio Rodrigues para a OCA, com linhas simples e estrutura robusta em jacarandá. Destacam-se os puxadores circulares vazados, entalhados na própria madeira. Peça de colecionador de grande valor histórico.",
+  "ordem": 24,
   "data": "2026-06-02",
-  "data_compra": "2025-10-12"
+  "designer": "Sérgio Rodrigues",
+  "url_antiga": "10-sergio-rodrigues-buffet-sergio-rodrigues-1963",
+  "preco": null,
+  "materiais": "Jacarandá maciço e lâmina de jacarandá",
+  "preco_obs": "",
+  "status": "vendido",
+  "categoria": "Buffets",
+  "data_compra": "2025-10-12",
+  "parcelamento": "",
+  "codigo": "VLT-074",
+  "titulo": "Buffet Sérgio Rodrigues",
+  "dimensoes": "L 143 × P 49 × A 76,5 cm"
 }
