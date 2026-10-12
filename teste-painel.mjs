@@ -20,7 +20,7 @@ repo.content["site.json"] = { content: fs.readFileSync(path.join(ROOT, "content/
 fs.writeFileSync(path.join(OUT, "dados.js"), `window.repoFiles = ${JSON.stringify(repo)}; window.repoFiles["content/pecas"] = window.repoFiles.content.pecas;`);
 
 // Mesma configuração do painel real, trocando só o "backend" pelo modo de teste
-const config = fs.readFileSync(path.join(ROOT, "static/admin/config.yml"), "utf8")
+const config = fs.readFileSync(path.join(ROOT, "static/admin/editar/config.yml"), "utf8")
   .replace(/backend:[\s\S]*?\n(?=\S)/, "backend:\n  name: test-repo\n\n");
 fs.writeFileSync(path.join(OUT, "config.yml"), config);
 
@@ -40,7 +40,7 @@ fs.writeFileSync(path.join(OUT, "index.html"), `<!doctype html>
 <body>
   <div class="aviso-teste">Modo teste: pode mexer à vontade. Nada é salvo; ao recarregar, tudo volta ao original.</div>
   <script src="https://unpkg.com/decap-cms@^3.0.0/dist/decap-cms.js"></script>
-  <script src="/admin/preview.js"></script>
+  <script src="/admin/editar/preview.js"></script>
 </body>
 </html>
 `);

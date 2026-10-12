@@ -12,7 +12,7 @@ Site estático da Voluta Galeria, hospedado no Netlify. Sem mensalidade de plata
 
 ## Dia a dia: cadastrar ou vender uma peça
 
-1. Acesse `volutagaleria.com.br/admin` e entre com o GitHub.
+1. Acesse `volutagaleria.com.br/admin`: abre a tabela do inventário. Para entrar, use "Entrar com GitHub". O botão Editar de cada linha abre a ficha da peça.
 2. **Nova peça:** Peças do acervo → Nova Peça. Preencha, arraste as fotos (a primeira vira capa) e clique em Publicar.
 3. **Vendeu:** abra a peça e mude Situação para "Vendido". Ela continua no site com o selo, o que ajuda a mostrar histórico.
 4. **Tirar do ar:** Situação "Oculto".
@@ -23,7 +23,7 @@ O site se atualiza sozinho em cerca de 1 minuto depois de publicar.
 
 1. Crie uma conta gratuita no GitHub e um repositório chamado `voluta-site`; envie esta pasta para ele.
 2. No Netlify: Add new project → Import from GitHub → escolha `voluta-site`. As configurações de build já vêm do `netlify.toml`.
-3. O painel já aponta para o repositório `andremenezes-volutagaleria/voluta-site` (em `static/admin/config.yml`).
+3. O painel já aponta para o repositório `andremenezes-volutagaleria/voluta-site` (em `static/admin/editar/config.yml`).
 4. Painel de login: no GitHub, Settings → Developer settings → OAuth Apps → New, com callback `https://api.netlify.com/auth/done`. No Netlify, Project configuration → Access & security → OAuth → Install provider → GitHub, colando o Client ID e o Secret.
 5. Domínio: no Netlify, Domain management → Add domain `volutagaleria.com.br`. No Registro.br, aponte os DNS para o Netlify (o próprio Netlify mostra os valores).
 6. Em `content/site.json`, preencha `ga4_id` e `meta_pixel_id` para manter o rastreamento dos anúncios.

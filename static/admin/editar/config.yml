@@ -1,5 +1,5 @@
 # Painel de cadastro da Voluta (Decap CMS)
-# Acesse em volutagaleria.com.br/admin e entre com sua conta do GitHub.
+# Editor do painel (a tabela fica em /admin). Entre com sua conta do GitHub.
 backend:
   name: github
   repo: andremenezes-volutagaleria/voluta-site
@@ -57,7 +57,8 @@ collections:
       - { name: descricao, label: Descrição, widget: text }
       - { name: imagens, label: Fotos (a primeira é a capa), widget: list, field: { name: imagem, label: Foto, widget: image } }
       - { name: data, label: Data de entrada no acervo, widget: datetime, format: "YYYY-MM-DD", date_format: "DD/MM/YYYY", time_format: false, hint: "Define a ordem em Chegaram agora e Mais recentes." }
-      - { name: codigo, label: Código interno (VLT), widget: string, required: false }
+      - { name: codigo, label: Código interno (VLT), widget: string, required: false, hint: "Mais de uma unidade: separe por vírgula, ex.: VLT-032, VLT-033" }
+      - { name: data_compra, label: Data da compra (uso interno, não aparece no site), widget: datetime, format: "YYYY-MM-DD", date_format: "DD/MM/YYYY", time_format: false, required: false }
       - { name: destaque, label: Mostrar em Destaques na página inicial, widget: boolean, default: false }
       - { name: ordem, label: Ordem no acervo, widget: number, value_type: int, default: 100, hint: "Números menores aparecem primeiro." }
       - { name: url_antiga, label: Endereço antigo (Artlogic), widget: hidden, required: false }

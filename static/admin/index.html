@@ -1,14 +1,176 @@
 <!doctype html>
 <html lang="pt-BR">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="robots" content="noindex">
-  <title>Painel · Voluta</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Inventário · Painel Voluta</title>
+<link rel="stylesheet" href="/css/site.css">
+<style>
+  body { background: #F6F5F3; }
+  .inv { max-width: 1400px; margin: 0 auto; padding: 28px 24px 64px; }
+  .inv__topo { display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+  .inv__topo h1 { font-family: var(--titulo); text-transform: uppercase; letter-spacing: .06em; font-size: 16px; font-weight: 500; color: var(--vinho); margin: 0; }
+  .inv__topo p { margin: 2px 0 0; font-size: 12px; color: var(--cinza); }
+  .bt { font-family: var(--titulo); text-transform: uppercase; letter-spacing: .06em; font-size: 11px; font-weight: 500; text-decoration: none; padding: 9px 14px; border: 1px solid var(--vinho); color: var(--vinho); background: #fff; cursor: pointer; display: inline-block; }
+  .bt--prim { background: var(--vinho); color: #fff; }
+  .bt--peq { padding: 6px 12px; font-size: 10.5px; }
+  .inv__acoes { display: flex; gap: 10px; flex-wrap: wrap; }
+  .inv__filtros { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 14px; }
+  .inv__filtros input, .inv__filtros select { font: 300 13px var(--texto); padding: 8px 10px; border: 1px solid var(--linha); background: #fff; color: var(--tinta); }
+  .inv__filtros input { min-width: 240px; flex: 1; max-width: 380px; }
+  .inv__filtros label { font-size: 12px; color: var(--cinza); display: flex; align-items: center; gap: 6px; }
+  .inv__cont { font-size: 12px; color: var(--cinza); margin-left: auto; }
+  .rolagem { overflow-x: auto; background: #fff; border: 1px solid #ECE8E4; }
+  .tabela { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .tabela th { position: sticky; top: 0; background: #fff; text-align: left; font-family: var(--titulo); text-transform: uppercase; letter-spacing: .06em; font-size: 10.5px; font-weight: 500; color: var(--vinho); padding: 11px 12px; border-bottom: 1px solid var(--mostarda); white-space: nowrap; }
+  .tabela th button { all: unset; cursor: pointer; }
+  .tabela th button:focus-visible { outline: 2px solid var(--mostarda); }
+  .tabela th[aria-sort="ascending"] button::after { content: " ↑"; }
+  .tabela th[aria-sort="descending"] button::after { content: " ↓"; }
+  .tabela td { padding: 7px 12px; border-bottom: 1px solid #F0ECE8; vertical-align: middle; white-space: nowrap; }
+  .tabela td.col-peca { white-space: normal; min-width: 240px; }
+  .tabela td.col-foto { width: 56px; padding-right: 0; }
+  .tabela tr:hover td { background: #FBFAF8; }
+  .tabela img { width: 44px; height: 44px; max-width: none; object-fit: cover; background: #F4F4F4; display: block; }
+  .num { font-variant-numeric: tabular-nums; color: var(--cinza); }
+  .st { display: inline-block; font-size: 11px; padding: 2px 9px; border-radius: 99px; }
+  .st--disponivel { background: #E6F2EA; color: #1F6A43; }
+  .st--vendido { background: #F3E6E9; color: var(--vinho); }
+  .st--oculto { background: #EEE; color: #666; }
+  .falta { color: #B08A22; }
+  .aviso { background: #fff; border: 1px solid #ECE8E4; padding: 40px 24px; text-align: center; font-size: 14px; }
+  .aviso p { margin: 0 0 16px; }
+  .ver { margin-left: 10px; font-size: 12px; color: var(--burle); }
+</style>
 </head>
 <body>
-  <script src="https://unpkg.com/decap-cms@^3.0.0/dist/decap-cms.js"></script>
-  <script src="/admin/preview.js"></script>
-  <a href="/admin/inventario/" style="position:fixed;left:16px;bottom:16px;z-index:9999;background:#300A15;color:#fff;font:500 12px/1 system-ui,sans-serif;letter-spacing:.04em;text-decoration:none;padding:11px 16px;border-radius:999px;box-shadow:0 4px 14px rgba(0,0,0,.18)">▦ Ver inventário em tabela</a>
+<main class="inv">
+  <div class="inv__topo">
+    <div>
+      <h1>Inventário do site</h1>
+      <p>Lido direto do seu repositório: mostra as mudanças na hora, mesmo antes de o site atualizar.</p>
+    </div>
+    <div class="inv__acoes">
+      <a class="bt" href="/admin/editar/#/collections/config/entries/site">Textos e carrossel</a>
+      <a class="bt bt--prim" href="/admin/editar/#/collections/pecas/new">+ Nova peça</a>
+    </div>
+  </div>
+
+  <div id="app"><div class="aviso"><p>Carregando o inventário…</p></div></div>
+</main>
+
+<script>
+(() => {
+  const REPO = { dono: "andremenezes-volutagaleria", nome: "voluta-site", ramo: "main", pasta: "content/pecas" };
+  const app = document.getElementById("app");
+  const rotulo = { disponivel: "Disponível", vendido: "Vendido", oculto: "Oculto" };
+  const e = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const norm = s => String(s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+  const fmt = d => d ? d.slice(0, 10).split("-").reverse().join("/") : "";
+  const foto = u => !u ? "" : u.includes("static-assets.artlogic.net") ? u.replace(/w_\d+,h_\d+,c_limit/, "w_120,h_120,c_limit") : u;
+
+  const pedirLogin = msg => {
+    app.innerHTML = `<div class="aviso"><p>${e(msg)}</p><a class="bt bt--prim" href="/admin/editar/">Entrar com GitHub</a><p style="margin-top:14px;font-size:12px;color:var(--cinza)">Depois de entrar, clique em "Voltar para a tabela".</p></div>`;
+  };
+
+  let usuario = null;
+  try { usuario = JSON.parse(localStorage.getItem("decap-cms-user") || "null"); } catch {}
+  if (!usuario?.token) return pedirLogin("Entre com sua conta do GitHub para ver o inventário.");
+
+  const consulta = `query($dono:String!,$nome:String!,$expr:String!){repository(owner:$dono,name:$nome){object(expression:$expr){...on Tree{entries{name object{...on Blob{text}}}}}}}`;
+  fetch("https://api.github.com/graphql", {
+    method: "POST",
+    headers: { Authorization: "bearer " + usuario.token, "Content-Type": "application/json" },
+    body: JSON.stringify({ query: consulta, variables: { dono: REPO.dono, nome: REPO.nome, expr: `${REPO.ramo}:${REPO.pasta}` } }),
+  })
+    .then(r => { if (r.status === 401) throw new Error("login"); return r.json(); })
+    .then(j => {
+      const entradas = j?.data?.repository?.object?.entries;
+      if (!entradas) throw new Error(j?.errors?.[0]?.message || "sem dados");
+      const dados = entradas.filter(x => x.name.endsWith(".json") && x.object?.text).map(x => {
+        const d = JSON.parse(x.object.text);
+        return { s: x.name.replace(/\.json$/, ""), c: d.codigo || "", t: d.titulo || "", d: d.designer || "", k: d.categoria || "",
+          st: d.status || "", dc: d.data_compra || "", dt: (d.data || "").slice(0, 10), h: !!d.destaque, i: foto((d.imagens || [])[0]) };
+      });
+      montar(dados);
+    })
+    .catch(err => err.message === "login"
+      ? pedirLogin("Seu login expirou. Entre de novo para ver o inventário.")
+      : (app.innerHTML = `<div class="aviso"><p>Não foi possível carregar o inventário (${e(err.message)}). Recarregue a página; se continuar, entre de novo no painel.</p><a class="bt" href="/admin/editar/">Abrir o painel</a></div>`));
+
+  function montar(dados) {
+    const categorias = [...new Set(dados.map(r => r.k).filter(Boolean))].sort();
+    app.innerHTML = `
+      <div class="inv__filtros">
+        <input type="search" id="q" placeholder="Buscar por código, peça ou designer" aria-label="Buscar">
+        <select id="fst" aria-label="Status"><option value="">Todos os status</option><option value="disponivel">Disponível</option><option value="vendido">Vendido</option><option value="oculto">Oculto</option></select>
+        <select id="fcat" aria-label="Categoria"><option value="">Todas as categorias</option>${categorias.map(c => `<option>${e(c)}</option>`).join("")}</select>
+        <label>Ordenar por
+          <select id="ord">
+            <option value="c:1">Código</option>
+            <option value="dc:-1">Data da compra (mais recente)</option>
+            <option value="dc:1">Data da compra (mais antiga)</option>
+            <option value="dt:-1">Entrada no site (mais recente)</option>
+            <option value="t:1">Peça (A–Z)</option>
+            <option value="d:1">Designer (A–Z)</option>
+            <option value="st:1">Status</option>
+          </select>
+        </label>
+        <span class="inv__cont" id="cont"></span>
+      </div>
+      <div class="rolagem"><table class="tabela">
+        <thead><tr>
+          <th scope="col"><span class="visually-hidden">Foto</span></th>
+          <th scope="col" data-k="c"><button>Código</button></th>
+          <th scope="col" data-k="t"><button>Peça</button></th>
+          <th scope="col" data-k="k"><button>Categoria</button></th>
+          <th scope="col" data-k="d"><button>Designer</button></th>
+          <th scope="col" data-k="st"><button>Status</button></th>
+          <th scope="col" data-k="dc"><button>Data da compra</button></th>
+          <th scope="col" data-k="dt"><button>Entrada no site</button></th>
+          <th scope="col" data-k="h"><button>Destaque</button></th>
+          <th scope="col"><span class="visually-hidden">Ações</span></th>
+        </tr></thead>
+        <tbody id="corpo"></tbody>
+      </table></div>`;
+
+    let chave = "c", dir = 1;
+    const sel = document.getElementById("ord");
+    const desenhar = () => {
+      const q = norm(document.getElementById("q").value), st = document.getElementById("fst").value, cat = document.getElementById("fcat").value;
+      const l = dados.filter(r => (!st || r.st === st) && (!cat || r.k === cat) && (!q || norm([r.c, r.t, r.d].join(" ")).includes(q)));
+      l.sort((a, b) => {
+        const x = a[chave], y = b[chave];
+        if (x === "" && y !== "") return 1;      // vazios sempre no fim
+        if (y === "" && x !== "") return -1;
+        return (x > y ? 1 : x < y ? -1 : 0) * dir;
+      });
+      document.getElementById("cont").textContent = `${l.length} ${l.length === 1 ? "peça" : "peças"}`;
+      document.getElementById("corpo").innerHTML = l.map(r => `<tr>
+        <td class="col-foto">${r.i ? `<img src="${e(r.i)}" alt="" loading="lazy">` : ""}</td>
+        <td class="num">${r.c ? e(r.c) : '<span class="falta">sem código</span>'}</td>
+        <td class="col-peca">${e(r.t)}</td>
+        <td>${e(r.k)}</td>
+        <td>${e(r.d)}</td>
+        <td><span class="st st--${e(r.st)}">${rotulo[r.st] || e(r.st)}</span></td>
+        <td class="num">${fmt(r.dc) || '<span class="falta">—</span>'}</td>
+        <td class="num">${fmt(r.dt)}</td>
+        <td>${r.h ? "★" : ""}</td>
+        <td><a class="bt bt--peq" href="/admin/editar/#/collections/pecas/entries/${e(r.s)}">Editar</a>${r.st !== "oculto" ? `<a class="ver" href="/acervo/${e(r.s)}/" target="_blank" rel="noopener">Ver no site</a>` : ""}</td>
+      </tr>`).join("");
+      document.querySelectorAll("th[data-k]").forEach(th => th.removeAttribute("aria-sort"));
+      document.querySelector(`th[data-k="${chave}"]`)?.setAttribute("aria-sort", dir > 0 ? "ascending" : "descending");
+      const v = `${chave}:${dir}`; if ([...sel.options].some(o => o.value === v)) sel.value = v;
+    };
+    document.querySelectorAll("th[data-k] button").forEach(b => b.addEventListener("click", () => {
+      const k = b.parentElement.dataset.k; dir = chave === k ? -dir : 1; chave = k; desenhar();
+    }));
+    sel.addEventListener("change", () => { const [k, d] = sel.value.split(":"); chave = k; dir = Number(d); desenhar(); });
+    ["q", "fst", "fcat"].forEach(id => document.getElementById(id).addEventListener("input", desenhar));
+    desenhar();
+  }
+})();
+</script>
 </body>
 </html>

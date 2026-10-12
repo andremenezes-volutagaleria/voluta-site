@@ -344,85 +344,6 @@ write("contato/index.html", page({
 
 write("404.html", page({ title: "Página não encontrada", body: `<section class="secao texto"><div class="texto__corpo"><h1 class="titulo-pagina">Esta página não existe mais</h1><p>A peça pode ter sido vendida ou mudado de endereço.</p><p><a class="botao" href="/acervo/">Ver o acervo</a></p></div></section>` }));
 
-// Painel: tabela do inventário (/admin/inventario/), lista todas as peças com link para editar
-{
-  const linhas = [...pecas, ...fs.readdirSync(path.join(ROOT, "content/pecas")).filter(f => f.endsWith(".json"))
-      .map(f => ({ slug: f.replace(/\.json$/, ""), ...JSON.parse(fs.readFileSync(path.join(ROOT, "content/pecas", f), "utf8")) }))
-      .filter(p => p.status === "oculto")]
-    .map(p => ({ s: p.slug, c: p.codigo || "", t: p.titulo, d: p.designer, k: p.categoria, st: p.status, dt: p.data || "", h: !!p.destaque, i: thumb(p.imagens?.[0] || "", 120) }));
-  write("admin/inventario/index.html", `<!doctype html>
-<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex">
-<title>Inventário · Painel Voluta</title>
-<link rel="stylesheet" href="/css/site.css">
-<style>
-  body { background: #F6F5F3; }
-  .inv { max-width: 1320px; margin: 0 auto; padding: 28px 24px 64px; }
-  .inv__topo { display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: center; justify-content: space-between; margin-bottom: 18px; }
-  .inv__topo h1 { font-family: var(--titulo); text-transform: uppercase; letter-spacing: .06em; font-size: 16px; font-weight: 500; color: var(--vinho); margin: 0; }
-  .inv__acoes { display: flex; gap: 10px; flex-wrap: wrap; }
-  .inv__acoes a { font-family: var(--titulo); text-transform: uppercase; letter-spacing: .06em; font-size: 11px; font-weight: 500; text-decoration: none; padding: 9px 14px; border: 1px solid var(--vinho); color: var(--vinho); background: #fff; }
-  .inv__acoes a.prim { background: var(--vinho); color: #fff; }
-  .inv__filtros { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 14px; }
-  .inv__filtros input, .inv__filtros select { font: 300 13px var(--texto); padding: 8px 10px; border: 1px solid var(--linha); background: #fff; color: var(--tinta); }
-  .inv__filtros input { min-width: 260px; flex: 1; max-width: 420px; }
-  .inv__cont { font-size: 12px; color: var(--cinza); margin-left: auto; }
-  .tabela { width: 100%; border-collapse: collapse; background: #fff; font-size: 13px; }
-  .tabela th { position: sticky; top: 0; background: #fff; text-align: left; font-family: var(--titulo); text-transform: uppercase; letter-spacing: .06em; font-size: 10.5px; font-weight: 500; color: var(--vinho); padding: 10px 12px; border-bottom: 1px solid var(--mostarda); cursor: pointer; white-space: nowrap; user-select: none; }
-  .tabela th[aria-sort="ascending"]::after { content: " ↑"; } .tabela th[aria-sort="descending"]::after { content: " ↓"; }
-  .tabela td { white-space: nowrap; padding: 8px 12px; border-bottom: 1px solid #EEEAE6; vertical-align: middle; }
-  .tabela tr:hover td { background: #FBFAF8; }
-  .tabela img { width: 44px; height: 44px; object-fit: cover; background: #F4F4F4; display: block; }
-  .cod { font-variant-numeric: tabular-nums; white-space: nowrap; color: var(--cinza); }
-  .st { display: inline-block; font-size: 11px; padding: 2px 9px; border-radius: 99px; white-space: nowrap; }
-  .st--disponivel { background: #E6F2EA; color: #1F6A43; } .st--vendido { background: #F3E6E9; color: var(--vinho); } .st--oculto { background: #EEE; color: #666; }
-  .lk { white-space: nowrap; } .lk a { color: var(--burle); margin-right: 12px; font-size: 12px; }
-  .vazio-cod { color: #C9A23A; }
-  @media (max-width: 760px) { .col-opc { display: none; } }
-</style></head>
-<body><main class="inv">
-  <div class="inv__topo">
-    <h1>Inventário do site</h1>
-    <div class="inv__acoes"><a href="/admin/#/collections/pecas">Voltar ao painel</a><a class="prim" href="/admin/#/collections/pecas/new">+ Nova peça</a></div>
-  </div>
-  <div class="inv__filtros">
-    <input type="search" id="q" placeholder="Buscar por código, peça ou designer" aria-label="Buscar">
-    <select id="fst" aria-label="Status"><option value="">Todos os status</option><option value="disponivel">Disponível</option><option value="vendido">Vendido</option><option value="oculto">Oculto</option></select>
-    <select id="fcat" aria-label="Categoria"><option value="">Todas as categorias</option>${[...new Set(pecas.map(p => p.categoria))].sort().map(c => `<option>${esc(c)}</option>`).join("")}</select>
-    <span class="inv__cont" id="cont"></span>
-  </div>
-  <table class="tabela"><thead><tr>
-    <th data-k="i" aria-label="Foto"></th><th data-k="c">Código</th><th data-k="t">Peça</th><th data-k="k" class="col-opc">Categoria</th><th data-k="d">Designer</th><th data-k="st">Status</th><th data-k="h" class="col-opc">Destaque</th><th data-k="dt" class="col-opc">Entrada</th><th data-k="">Ações</th>
-  </tr></thead><tbody id="corpo"></tbody></table>
-  <p style="font-size:12px;color:var(--cinza);margin-top:14px">A tabela mostra o que está publicado no site. Depois de editar e publicar no painel, ela se atualiza junto com o site (cerca de 1 minuto).</p>
-</main>
-<script>
-const dados = ${JSON.stringify(linhas)};
-const rotulo = { disponivel: "Disponível", vendido: "Vendido", oculto: "Oculto" };
-const e = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-const norm = s => String(s || "").normalize("NFD").replace(/[\\u0300-\\u036f]/g, "").toLowerCase();
-let chave = "c", dir = 1;
-const fmt = d => d ? d.split("-").reverse().join("/") : "";
-function desenhar() {
-  const q = norm(document.getElementById("q").value), st = document.getElementById("fst").value, cat = document.getElementById("fcat").value;
-  let l = dados.filter(r => (!st || r.st === st) && (!cat || r.k === cat) && (!q || norm([r.c, r.t, r.d].join(" ")).includes(q)));
-  l.sort((a, b) => { const x = a[chave], y = b[chave]; if (chave === "c") { if (!x) return 1; if (!y) return -1; } return (x > y ? 1 : x < y ? -1 : 0) * dir; });
-  document.getElementById("cont").textContent = l.length + (l.length === 1 ? " peça" : " peças");
-  document.getElementById("corpo").innerHTML = l.map(r => '<tr>' +
-    '<td>' + (r.i ? '<img src="' + e(r.i) + '" alt="" loading="lazy">' : '') + '</td>' +
-    '<td class="cod">' + (r.c ? e(r.c) : '<span class="vazio-cod">sem código</span>') + '</td>' +
-    '<td>' + e(r.t) + '</td><td class="col-opc">' + e(r.k) + '</td><td>' + e(r.d) + '</td>' +
-    '<td><span class="st st--' + r.st + '">' + (rotulo[r.st] || r.st) + '</span></td>' +
-    '<td class="col-opc">' + (r.h ? "★" : "") + '</td><td class="col-opc cod">' + fmt(r.dt) + '</td>' +
-    '<td class="lk"><a href="/admin/#/collections/pecas/entries/' + e(r.s) + '">Editar</a>' + (r.st !== "oculto" ? '<a href="/acervo/' + e(r.s) + '/" target="_blank" rel="noopener">Ver no site</a>' : '') + '</td></tr>').join("");
-  document.querySelectorAll("th[data-k]").forEach(th => th.removeAttribute("aria-sort"));
-  const th = document.querySelector('th[data-k="' + chave + '"]'); if (th) th.setAttribute("aria-sort", dir > 0 ? "ascending" : "descending");
-}
-document.querySelectorAll("th[data-k]").forEach(th => th.addEventListener("click", () => { const k = th.dataset.k; if (!k || k === "i") return; dir = chave === k ? -dir : 1; chave = k; desenhar(); }));
-["q", "fst", "fcat"].forEach(id => document.getElementById(id).addEventListener("input", desenhar));
-desenhar();
-</script></body></html>`);
-}
-
 // SEO: sitemap, robots
 const urls = ["/", "/acervo/", "/designers/", "/sobre/", "/restauro/", "/contato/", "/politica-de-devolucao/", ...pecas.map(p => `/acervo/${p.slug}/`), ...designers.map(d => `/designers/${slugify(d)}/`), ...tipos.map(t => `/acervo/tipo/${t.slug}/`)];
 write("sitemap.xml", `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.map(u => `<url><loc>${site.url}${u}</loc></url>`).join("\n")}\n</urlset>`);
@@ -447,6 +368,7 @@ const gerais = [
   "/content/*  /acervo/  301",
   "/contact/*  /contato/  301",
   "/pol-tica-de-devolu-o-/*  /politica-de-devolucao/  301",
+  "/admin/inventario/*  /admin/  301",
 ];
 write("_redirects", [...especificos, ...gerais].join("\n") + "\n");
 
