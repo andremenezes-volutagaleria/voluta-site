@@ -40,10 +40,6 @@
     {
       "nome": "Iluminação",
       "foto": "/uploads/home/lumina-ria-telinha.png"
-    },
-    {
-      "nome": "Objetos",
-      "foto": ""
     }
   ],
   "whatsapp_exibicao": "+55 31 98253-9291",
@@ -147,23 +143,6 @@
   "url": "https://volutagaleria.com.br",
   "whatsapp": "5531982539291",
   "instagram": "voluta.traco",
-  "sobre": "Acreditamos que o lar é uma galeria particular.\n\nA Voluta nasceu da paixão de um casal pelo design e do desejo de resgatar um jeito genuinamente brasileiro de morar. Somos uma galeria online de mobiliário modernista e cerâmica autoral, e cada peça do acervo passa por pesquisa, verificação de autenticidade e curadoria.\n\nTrabalhamos com uma seleção pequena e exclusiva: peças raras em madeiras nativas brasileiras, de designers e fabricantes que ajudaram a definir o modernismo no país. Para nós, esse design traduz a identidade brasileira ao unir a precisão da arquitetura ao calor do que é nosso.\n\nA coleção de cerâmica reúne peças únicas, moldadas à mão por artistas no ateliê da galeria.\n\nTodas as vendas são feitas online, com um atendimento reservado, seguro e detalhado para colecionadores.",
-  "nome": "Voluta",
-  "email": "voluta@volutagaleria.com.br",
-  "fotos_capa": [
-    {
-      "foto": "https://static-assets.artlogic.net/w_2400,h_2400,c_limit,f_auto,fl_lossy,q_auto/ws-artlogicwebsite3041/usr/library/images/main/pages/1/dsc04536.jpg",
-      "descricao_foto": "Ambiente com mobiliário modernista da Voluta"
-    },
-    {
-      "foto": "/uploads/home/design-sem-nome-6-.png",
-      "descricao_foto": "Peças do acervo da Voluta"
-    },
-    {
-      "foto": "/uploads/home/design-sem-nome-7-.png",
-      "descricao_foto": ""
-    }
-  ],
   "galeria": [
     {
       "foto": "/uploads/home/dupla-mp-97.png",
@@ -214,6 +193,23 @@
       "foto": "/uploads/home/lumina-ria-telinha.png",
       "descricao_foto": "Iluminação",
       "link": "/acervo/tipo/iluminacao/"
+    }
+  ],
+  "sobre": "Acreditamos que o lar é uma galeria particular.\n\nA Voluta nasceu da paixão de um casal pelo design e do desejo de resgatar um jeito genuinamente brasileiro de morar. Somos uma galeria online de mobiliário modernista e cerâmica autoral, e cada peça do acervo passa por pesquisa, verificação de autenticidade e curadoria.\n\nTrabalhamos com uma seleção pequena e exclusiva: peças raras em madeiras nativas brasileiras, de designers e fabricantes que ajudaram a definir o modernismo no país. Para nós, esse design traduz a identidade brasileira ao unir a precisão da arquitetura ao calor do que é nosso.\n\nA coleção de cerâmica reúne peças únicas, moldadas à mão por artistas no ateliê da galeria.\n\nTodas as vendas são feitas online, com um atendimento reservado, seguro e detalhado para colecionadores.",
+  "nome": "Voluta",
+  "email": "voluta@volutagaleria.com.br",
+  "fotos_capa": [
+    {
+      "foto": "https://static-assets.artlogic.net/w_2400,h_2400,c_limit,f_auto,fl_lossy,q_auto/ws-artlogicwebsite3041/usr/library/images/main/pages/1/dsc04536.jpg",
+      "descricao_foto": "Ambiente com mobiliário modernista da Voluta"
+    },
+    {
+      "foto": "/uploads/home/design-sem-nome-6-.png",
+      "descricao_foto": "Peças do acervo da Voluta"
+    },
+    {
+      "foto": "/uploads/home/design-sem-nome-7-.png",
+      "descricao_foto": ""
     }
   ]
 }
