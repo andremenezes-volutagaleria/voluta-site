@@ -1,15 +1,4 @@
 {
-  "titulo": "Poltrona CIMO B-082 (\"Pé de Foguete\")",
-  "designer": "Móveis CIMO",
-  "ano": "déc. 1960",
-  "categoria": "Poltronas",
-  "status": "disponivel",
-  "preco": 16000,
-  "preco_obs": "",
-  "parcelamento": "em até 12x",
-  "dimensoes": "L 93 × P 70 × A 76 cm",
-  "materiais": "Jacarandá-da-bahia maciço, latão, bouclé off-white",
-  "descricao": "Poltrona da Móveis CIMO em jacarandá maciço com acabamentos em latão. Assento e encosto formam um único volume contínuo que parece flutuar sobre a base. Restaurada com espumas novas e revestimento em bouclé off-white, preservando o desenho original.",
   "imagens": [
     "https://static-assets.artlogic.net/w_2400,h_2400,c_limit,f_auto,fl_lossy,q_auto/artlogicstorage/voluta/images/view/e0a3aecc5b8816f2664723bed6df6defp/voluta-m-veis-cimo-poltrona-cimo-b-082-p-de-foguete-d-c.-1960.png",
     "https://static-assets.artlogic.net/w_2400,h_2400,c_limit,f_auto,fl_lossy,q_auto/artlogicstorage/voluta/images/view/a56922b08903795b0d86a6bb3f3646d3p/voluta-m-veis-cimo-poltrona-cimo-b-082-p-de-foguete-d-c.-1960.png",
@@ -21,10 +10,21 @@
     "https://static-assets.artlogic.net/w_2400,h_2400,c_limit,f_auto,fl_lossy,q_auto/artlogicstorage/voluta/images/view/1ed81a5d27eef7c4c10ea0c9d85c50f9p/voluta-m-veis-cimo-poltrona-cimo-b-082-p-de-foguete-d-c.-1960.png"
   ],
   "destaque": true,
-  "ordem": 6,
-  "codigo": "VLT-050",
-  "url_antiga": "39-moveis-cimo-poltrona-cimo-b-082-pe-de-foguete-dec.-1960",
+  "ano": "déc. 1960",
   "categoria_antiga": "1",
+  "descricao": "Poltrona da Móveis CIMO em jacarandá maciço com acabamentos em latão. Assento e encosto formam um único volume contínuo que parece flutuar sobre a base. Restaurada com espumas novas e revestimento em bouclé off-white, preservando o desenho original.",
+  "ordem": 6,
   "data": "2026-07-18",
-  "data_compra": "2026-03-14"
+  "designer": "Móveis CIMO",
+  "url_antiga": "39-moveis-cimo-poltrona-cimo-b-082-pe-de-foguete-dec.-1960",
+  "preco": 16000,
+  "materiais": "Jacarandá-da-bahia maciço, latão, bouclé off-white",
+  "preco_obs": "",
+  "status": "vendido",
+  "categoria": "Poltronas",
+  "data_compra": "2026-03-14",
+  "parcelamento": "em até 12x",
+  "codigo": "VLT-050",
+  "titulo": "Poltrona CIMO B-082 (\"Pé de Foguete\")",
+  "dimensoes": "L 93 × P 70 × A 76 cm"
 }
