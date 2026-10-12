@@ -115,7 +115,15 @@ collections:
           - { name: imagem_sobre, label: Foto da página Sobre, widget: image }
           - { name: ga4_id, label: "Google Analytics (G-XXXX)", widget: string, required: false }
           - { name: meta_pixel_id, label: Pixel da Meta, widget: string, required: false }
-          - { name: categorias, label: Tipos de peça (ordem do filtro), widget: list }
+          - name: categorias
+            label: Tipos de peça (ordem do filtro e fotos da home)
+            label_singular: Tipo de peça
+            widget: list
+            summary: "{{fields.nome}}"
+            hint: "A foto aparece no quadrado da categoria em \"Navegue pelo acervo\", na home. Sem foto, o site usa a capa da peça disponível mais recente. Use foto quadrada (1200 × 1200 px)."
+            fields:
+              - { name: nome, label: Nome do tipo, widget: string, hint: "Tem que ser igual ao tipo escolhido nas fichas das peças." }
+              - { name: foto, label: Foto da categoria, widget: image, required: false }
           - { name: designers, label: Designers, widget: list, summary: "{{fields.nome}}", fields: [ { name: nome, label: Nome, widget: string }, { name: info, label: "Nacionalidade e datas", widget: string, required: false } ] }
           - { name: sobre, label: Texto da página Sobre, widget: markdown }
           - { name: restauro, label: Texto da página Restauro, widget: markdown }

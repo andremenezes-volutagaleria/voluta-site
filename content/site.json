@@ -1,17 +1,50 @@
 {
   "ga4_id": "",
   "categorias": [
-    "Poltronas",
-    "Cadeiras",
-    "Sofás",
-    "Mesas de centro",
-    "Mesas laterais",
-    "Mesas de jantar",
-    "Bancos",
-    "Buffets",
-    "Escrivaninhas",
-    "Iluminação",
-    "Objetos"
+    {
+      "nome": "Poltronas",
+      "foto": ""
+    },
+    {
+      "nome": "Cadeiras",
+      "foto": ""
+    },
+    {
+      "nome": "Sofás",
+      "foto": ""
+    },
+    {
+      "nome": "Mesas de centro",
+      "foto": ""
+    },
+    {
+      "nome": "Mesas laterais",
+      "foto": ""
+    },
+    {
+      "nome": "Mesas de jantar",
+      "foto": ""
+    },
+    {
+      "nome": "Bancos",
+      "foto": ""
+    },
+    {
+      "nome": "Buffets",
+      "foto": ""
+    },
+    {
+      "nome": "Escrivaninhas",
+      "foto": ""
+    },
+    {
+      "nome": "Iluminação",
+      "foto": ""
+    },
+    {
+      "nome": "Objetos",
+      "foto": ""
+    }
   ],
   "whatsapp_exibicao": "+55 31 98253-9291",
   "cidade": "Belo Horizonte, Minas Gerais – Brasil",

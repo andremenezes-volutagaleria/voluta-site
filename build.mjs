@@ -33,7 +33,9 @@ const pecas = fs.readdirSync(path.join(ROOT, "content/pecas"))
 
 const designers = [...new Set(pecas.map(p => p.designer))]
   .sort((a, b) => (a === "Anônimo") - (b === "Anônimo") || a.localeCompare(b, "pt-BR"));
-const categorias = site.categorias.filter(c => pecas.some(p => p.categoria === c));
+site.categorias = (site.categorias || []).map(c => typeof c === "string" ? { nome: c } : c).filter(c => c && c.nome);
+const fotoCategoria = Object.fromEntries(site.categorias.filter(c => c.foto).map(c => [c.nome, c.foto]));
+const categorias = site.categorias.map(c => c.nome).filter(c => pecas.some(p => p.categoria === c));
 
 const precoTexto = p => {
   if (p.status === "vendido") return "Vendido";
@@ -182,7 +184,7 @@ ${novas.length ? `<section class="secao">
   <div class="secao__cab"><h2>Navegue pelo acervo</h2><a href="/acervo/">Ver tudo</a></div>
   <ul class="atalhos">
     ${tipos.filter(t => t.lista.length).map(t => `<li><a href="/acervo/tipo/${t.slug}/">
-      <div class="atalhos__img"><img src="${esc(thumb(t.lista[0].imagens[0], 600))}" alt="" loading="lazy"></div>
+      <div class="atalhos__img"><img src="${esc(thumb(fotoCategoria[t.nome] || t.lista[0].imagens[0], 600))}" alt="" loading="lazy"></div>
       <span class="atalhos__nome">${esc(t.nome)}</span>
     </a></li>`).join("")}
   </ul>
