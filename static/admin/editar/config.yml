@@ -8,6 +8,14 @@ backend:
   auth_endpoint: auth
 
 locale: pt
+# Salvar no editor NÃO atualiza o site (o "[skip netlify]" evita gastar créditos a cada alteração).
+# O site é atualizado de uma vez pelo botão "Publicar site" na tabela do painel (/admin).
+commit_messages:
+  create: "Nova peça: {{slug}} [skip netlify]"
+  update: "Alteração: {{slug}} [skip netlify]"
+  delete: "Exclusão: {{slug}} [skip netlify]"
+  uploadMedia: "Foto enviada: {{path}} [skip netlify]"
+  deleteMedia: "Foto removida: {{path}} [skip netlify]"
 media_folder: static/uploads
 public_folder: /uploads
 publish_mode: simple

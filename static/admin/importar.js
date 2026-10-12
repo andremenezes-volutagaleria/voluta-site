@@ -150,7 +150,7 @@
     const ref = await api(`/git/ref/heads/${inv.repo.ramo}`);
     const commit = await api(`/git/commits/${ref.object.sha}`);
     const arvore = await api(`/git/trees`, { method: "POST", body: JSON.stringify({ base_tree: commit.tree.sha, tree: arquivos }) });
-    const novo = await api(`/git/commits`, { method: "POST", body: JSON.stringify({ message: `Importação em lote: ${arquivos.length} peças`, tree: arvore.sha, parents: [ref.object.sha] }) });
+    const novo = await api(`/git/commits`, { method: "POST", body: JSON.stringify({ message: `Importação em lote: ${arquivos.length} peças [skip netlify]`, tree: arvore.sha, parents: [ref.object.sha] }) });
     await api(`/git/refs/heads/${inv.repo.ramo}`, { method: "PATCH", body: JSON.stringify({ sha: novo.sha }) });
     return arquivos.length;
   }
@@ -234,7 +234,7 @@
       try {
         const n = await enviar(itens, !!chk?.checked, window.VOLUTA_INV);
         modal.innerHTML = `<div class="imp__caixa"><h2 id="imp-titulo">Importação concluída</h2>
-          <p class="imp__msg imp__msg--ok">${n} ${n === 1 ? "peça enviada" : "peças enviadas"} num único envio. Elas já aparecem na tabela; o site atualiza em cerca de 1 minuto.</p>
+          <p class="imp__msg imp__msg--ok">${n} ${n === 1 ? "peça enviada" : "peças enviadas"} num único envio. Elas já aparecem na tabela. Quando quiser levar para o site, clique em Publicar site.</p>
           <p>Próximo passo: abra cada peça pelo botão Editar e suba as fotos. Sem foto, ela fica só no painel.</p>
           <div class="imp__rodape"><button class="bt bt--prim" type="button" onclick="location.reload()">Ver a tabela</button></div></div>`;
       } catch (err) {
