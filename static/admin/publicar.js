@@ -28,7 +28,7 @@
 
   let pendentes = [];
   const api = (inv, caminho, opts = {}) => fetch(`https://api.github.com/repos/${inv.repo.dono}/${inv.repo.nome}${caminho}`, {
-    ...opts, headers: { Authorization: "token " + inv.token, Accept: "application/vnd.github+json", "Content-Type": "application/json" },
+    cache: "no-store", ...opts, headers: { Authorization: "token " + inv.token, Accept: "application/vnd.github+json", "Content-Type": "application/json" },
   }).then(async r => { if (!r.ok) throw new Error(`GitHub respondeu ${r.status}`); return r.json(); });
 
   const legivel = m => m.split("\n")[0].replace(/\s*\[skip netlify\]/i, "").replace(/^Alteração: /, "Alterada: ").replace(/^Nova peça: /, "Nova: ").replace(/^Foto enviada: .*\//, "Foto: ");
