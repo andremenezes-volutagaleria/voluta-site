@@ -22,7 +22,7 @@ collections:
     create: true
     delete: true
     slug: "{{designer}}-{{titulo}}"
-    summary: "{{designer}} · {{titulo}} · {{status}}"
+    summary: "{{codigo}} · {{titulo}} · {{designer}} · {{status}}"
     view_filters:
       - { label: "Disponíveis", field: status, pattern: "disponivel" }
       - { label: "Vendidas", field: status, pattern: "vendido" }
@@ -32,7 +32,7 @@ collections:
       - { label: "Tipo de peça", field: categoria }
       - { label: "Designer", field: designer }
       - { label: "Situação", field: status }
-    sortable_fields: ["ordem", "designer", "titulo"]
+    sortable_fields: ["codigo", "titulo", "designer", "data"]
     fields:
       - { name: titulo, label: Nome da peça, widget: string }
       - { name: designer, label: Designer ou fabricante, widget: string, hint: "Escreva igual às outras peças (ex.: Sérgio Rodrigues) para agrupar certo." }
