@@ -1,0 +1,27 @@
+{
+  "titulo": "Chaise longue LC4",
+  "designer": "Le Corbusier",
+  "ano": "desenho de 1929",
+  "categoria": "Poltronas",
+  "status": "disponivel",
+  "preco": 6500,
+  "preco_obs": "",
+  "parcelamento": "em até 12x",
+  "dimensoes": "C 160 × L 56 × A 75 cm (máx.)",
+  "materiais": "Tubo de aço cromado, base em aço carbono preto, estofado em courino preto",
+  "descricao": "Apresentada em Paris em 1929, a LC4 é um marco do funcionalismo modernista, apelidada por Le Corbusier de \"máquina de relaxar\". Estrutura em aço cromado sobre pedestal preto; a inclinação se ajusta só com o peso do corpo, sem mecanismo. O desenho integra o acervo permanente do MoMA, em Nova York.",
+  "imagens": [
+    "https://static-assets.artlogic.net/w_2400,h_2400,c_limit,f_auto,fl_lossy,q_auto/artlogicstorage/voluta/images/view/195e58fb8fc790b016c13a0043be455ap/voluta-le-corbusier-chaise-loungue-lc4.png",
+    "https://static-assets.artlogic.net/w_2400,h_2400,c_limit,f_auto,fl_lossy,q_auto/artlogicstorage/voluta/images/view/575446ebd32b1dc27b608d1428f82661p/voluta-le-corbusier-chaise-loungue-lc4.png",
+    "https://static-assets.artlogic.net/w_2400,h_2400,c_limit,f_auto,fl_lossy,q_auto/artlogicstorage/voluta/images/view/7447016247b1490ad342e0dc755a4d5bp/voluta-le-corbusier-chaise-loungue-lc4.png",
+    "https://static-assets.artlogic.net/w_2400,h_2400,c_limit,f_auto,fl_lossy,q_auto/artlogicstorage/voluta/images/view/27bff35385e5f092e155cf6d58e91db3p/voluta-le-corbusier-chaise-loungue-lc4.png",
+    "https://static-assets.artlogic.net/w_2400,h_2400,c_limit,f_auto,fl_lossy,q_auto/artlogicstorage/voluta/images/view/1b93e6c3c990fad249f66a6820a958c1p/voluta-le-corbusier-chaise-loungue-lc4.png",
+    "https://static-assets.artlogic.net/w_2400,h_2400,c_limit,f_auto,fl_lossy,q_auto/artlogicstorage/voluta/images/view/9c5658dc2102f316ec548cc897de4883p/voluta-le-corbusier-chaise-loungue-lc4.png"
+  ],
+  "destaque": true,
+  "ordem": 7,
+  "codigo": "",
+  "url_antiga": "55-le-corbusier-chaise-loungue-lc4",
+  "categoria_antiga": "1",
+  "data": "2026-08-13"
+}

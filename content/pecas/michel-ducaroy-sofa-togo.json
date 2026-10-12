@@ -1,0 +1,26 @@
+{
+  "titulo": "Sofá Togo",
+  "designer": "Michel Ducaroy",
+  "ano": "1973",
+  "categoria": "Sofás",
+  "status": "vendido",
+  "preco": null,
+  "preco_obs": "",
+  "parcelamento": "",
+  "dimensoes": "L 210 × P 100 × A 80 cm",
+  "materiais": "Espuma de poliuretano em três densidades, veludo roxo",
+  "descricao": "Desenhado para a Ligne Roset, foi o primeiro sofá inteiramente em espuma, sem madeira, molas ou estrutura rígida. Exemplar de quatro lugares em veludo roxo, higienizado pela Voluta.",
+  "imagens": [
+    "https://static-assets.artlogic.net/w_2400,h_2400,c_limit,f_auto,fl_lossy,q_auto/artlogicstorage/voluta/images/view/fd057947944f4d62cc96b24b299d1c33p/voluta-michel-ducaroy-sof-togo-1973.png",
+    "https://static-assets.artlogic.net/w_2400,h_2400,c_limit,f_auto,fl_lossy,q_auto/artlogicstorage/voluta/images/view/18dda014874dd5ffb7b8df87b65b48e1p/voluta-michel-ducaroy-sof-togo-1973.png",
+    "https://static-assets.artlogic.net/w_2400,h_2400,c_limit,f_auto,fl_lossy,q_auto/artlogicstorage/voluta/images/view/0090e2137b4dfde1621ebdecc2671aeap/voluta-michel-ducaroy-sof-togo-1973.png",
+    "https://static-assets.artlogic.net/w_2400,h_2400,c_limit,f_auto,fl_lossy,q_auto/artlogicstorage/voluta/images/view/132679a506c7a6fc1e77ad5b2dcfd184p/voluta-michel-ducaroy-sof-togo-1973.png",
+    "https://static-assets.artlogic.net/w_2400,h_2400,c_limit,f_auto,fl_lossy,q_auto/artlogicstorage/voluta/images/view/97eb9084e0150436cbb2f0346a0f3221p/voluta-michel-ducaroy-sof-togo-1973.png"
+  ],
+  "destaque": false,
+  "ordem": 242,
+  "codigo": "",
+  "data": "2026-07-23",
+  "url_antiga": "42-michel-ducaroy-sofa-togo-1973",
+  "categoria_antiga": "9"
+}

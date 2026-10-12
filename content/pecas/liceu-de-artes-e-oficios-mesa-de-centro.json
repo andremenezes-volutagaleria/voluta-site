@@ -1,0 +1,27 @@
+{
+  "titulo": "Mesa de centro",
+  "designer": "Liceu de Artes e Ofícios",
+  "ano": "1960",
+  "categoria": "Mesas de centro",
+  "status": "disponivel",
+  "preco": 4200,
+  "preco_obs": "",
+  "parcelamento": "em até 12x",
+  "dimensoes": "Ø 82 × A 33 cm",
+  "materiais": "Jacarandá maciço, tampo redondo em vidro",
+  "descricao": "Mesa de alta marcenaria produzida nos anos 1960 pelo Liceu de Artes e Ofícios de São Paulo. A base em jacarandá tem pés esculpidos e travessas angulares, visíveis através do tampo de vidro.",
+  "imagens": [
+    "https://static-assets.artlogic.net/w_2400,h_2400,c_limit,f_auto,fl_lossy,q_auto/artlogicstorage/voluta/images/view/56d5338a7eb0c973b7eaef2f7e7afd86p/voluta-liceu-de-artes-e-of-cios-mesa-de-centro-1960.png",
+    "https://static-assets.artlogic.net/w_2400,h_2400,c_limit,f_auto,fl_lossy,q_auto/artlogicstorage/voluta/images/view/670093cbdd3f51c7d0b4cf60e00854f9p/voluta-liceu-de-artes-e-of-cios-mesa-de-centro-1960.png",
+    "https://static-assets.artlogic.net/w_2400,h_2400,c_limit,f_auto,fl_lossy,q_auto/artlogicstorage/voluta/images/view/31386686b074189ed831feb9ca676359p/voluta-liceu-de-artes-e-of-cios-mesa-de-centro-1960.png",
+    "https://static-assets.artlogic.net/w_2400,h_2400,c_limit,f_auto,fl_lossy,q_auto/artlogicstorage/voluta/images/view/c8a016fefcee80549441a227ee4da477p/voluta-liceu-de-artes-e-of-cios-mesa-de-centro-1960.png",
+    "https://static-assets.artlogic.net/w_2400,h_2400,c_limit,f_auto,fl_lossy,q_auto/artlogicstorage/voluta/images/view/1199a593e25bb4f496186717adbab7e9p/voluta-liceu-de-artes-e-of-cios-mesa-de-centro-1960.png",
+    "https://static-assets.artlogic.net/w_2400,h_2400,c_limit,f_auto,fl_lossy,q_auto/artlogicstorage/voluta/images/view/d4e64653e5e3383d97005ffbce38975dp/voluta-liceu-de-artes-e-of-cios-mesa-de-centro-1960.png"
+  ],
+  "destaque": false,
+  "ordem": 17,
+  "codigo": "",
+  "url_antiga": "58-liceu-de-artes-e-oficios-mesa-de-centro-1960",
+  "categoria_antiga": "5",
+  "data": "2026-08-17"
+}

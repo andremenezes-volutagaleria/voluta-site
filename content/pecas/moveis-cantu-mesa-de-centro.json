@@ -1,0 +1,28 @@
+{
+  "titulo": "Mesa de centro",
+  "designer": "Móveis Cantu",
+  "ano": "déc. 1960",
+  "categoria": "Mesas de centro",
+  "status": "disponivel",
+  "preco": 4000,
+  "preco_obs": "",
+  "parcelamento": "em até 12x",
+  "dimensoes": "L 100 × P 50 × A 40 cm",
+  "materiais": "Jacarandá maciço, tampo em mármore branco",
+  "descricao": "Mesa de centro criada pelo arquiteto Jorge Jabour Mauad para a Móveis Cantu nos anos 1960. Une a robustez do jacarandá à elegância do tampo em mármore branco.",
+  "imagens": [
+    "https://static-assets.artlogic.net/w_2400,h_2400,c_limit,f_auto,fl_lossy,q_auto/artlogicstorage/voluta/images/view/b6f0a8cbc157f54bee2a327e29d85b8dp/voluta-m-veis-cantu-mesa-de-centro-d-c.-1960.png",
+    "https://static-assets.artlogic.net/w_2400,h_2400,c_limit,f_auto,fl_lossy,q_auto/artlogicstorage/voluta/images/view/e18b107c8423c6eb740d000ed46b333bp/voluta-m-veis-cantu-mesa-de-centro-d-c.-1960.png",
+    "https://static-assets.artlogic.net/w_2400,h_2400,c_limit,f_auto,fl_lossy,q_auto/artlogicstorage/voluta/images/view/dc3f1e5957ea1f8699e11b2221b3d5c0p/voluta-m-veis-cantu-mesa-de-centro-d-c.-1960.png",
+    "https://static-assets.artlogic.net/w_2400,h_2400,c_limit,f_auto,fl_lossy,q_auto/artlogicstorage/voluta/images/view/92fe8dcb9d78a93b38e0915b5506738cp/voluta-m-veis-cantu-mesa-de-centro-d-c.-1960.png",
+    "https://static-assets.artlogic.net/w_2400,h_2400,c_limit,f_auto,fl_lossy,q_auto/artlogicstorage/voluta/images/view/75c809833bb87399e72876381434811ep/voluta-m-veis-cantu-mesa-de-centro-d-c.-1960.png",
+    "https://static-assets.artlogic.net/w_2400,h_2400,c_limit,f_auto,fl_lossy,q_auto/artlogicstorage/voluta/images/view/dc2c9c701d80757ead616aa4d34da520p/voluta-m-veis-cantu-mesa-de-centro-d-c.-1960.png",
+    "https://static-assets.artlogic.net/w_2400,h_2400,c_limit,f_auto,fl_lossy,q_auto/artlogicstorage/voluta/images/view/97d23832022e4a5a272478fac944025dp/voluta-m-veis-cantu-mesa-de-centro-d-c.-1960.png"
+  ],
+  "destaque": false,
+  "ordem": 14,
+  "codigo": "",
+  "url_antiga": "5-moveis-cantu-mesa-de-centro-dec.-1960",
+  "categoria_antiga": "5",
+  "data": "2026-05-25"
+}

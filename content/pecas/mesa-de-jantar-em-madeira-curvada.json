@@ -1,0 +1,23 @@
+{
+  "titulo": "Mesa de jantar em madeira curvada",
+  "designer": "Anônimo",
+  "ano": "1960",
+  "categoria": "Mesas de jantar",
+  "status": "disponivel",
+  "preco": 12000,
+  "preco_obs": "",
+  "parcelamento": "em até 12x",
+  "dimensoes": "C 170 × L 100 × A 78,5 cm",
+  "materiais": "Madeira de lei maciça, tampo em vidro",
+  "descricao": "Mesa paulistana com base em madeira curvada: quatro arcos se unem num ponto central e se afinam em volutas junto ao tampo. O vidro deixa a estrutura visível de todos os ângulos, reforçando o caráter escultórico.",
+  "imagens": [
+    "https://static-assets.artlogic.net/w_2400,h_2400,c_limit,f_auto,fl_lossy,q_auto/artlogicstorage/voluta/images/view/9f408a3440b42037326df5a973bc1fe0j/voluta-an-nimo-mesa-de-jantar-em-madeira-curvada-1960.jpg",
+    "https://static-assets.artlogic.net/w_2400,h_2400,c_limit,f_auto,fl_lossy,q_auto/artlogicstorage/voluta/images/view/24e2c095a46a7f84314bc480e1b203c8j/voluta-an-nimo-mesa-de-jantar-em-madeira-curvada-1960.jpg"
+  ],
+  "destaque": false,
+  "ordem": 25,
+  "codigo": "",
+  "url_antiga": "52-anonimo-mesa-de-jantar-em-madeira-curvada-1960",
+  "categoria_antiga": "10",
+  "data": "2026-08-08"
+}

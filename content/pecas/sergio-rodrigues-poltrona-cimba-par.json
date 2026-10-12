@@ -1,0 +1,28 @@
+{
+  "titulo": "Poltrona Cimba (par)",
+  "designer": "Sérgio Rodrigues",
+  "ano": "1964",
+  "categoria": "Poltronas",
+  "status": "disponivel",
+  "preco": 7000,
+  "preco_obs": "cada unidade",
+  "parcelamento": "em até 12x",
+  "dimensoes": "L 70 × P 72 × A 36 cm",
+  "materiais": "Madeira maciça laqueada",
+  "descricao": "Longe do visual robusto do início da carreira de Sérgio Rodrigues, a Cimba tem estrutura delgada e arquitetônica, de linhas retas, com encaixes da marcenaria tradicional brasileira e assento e encosto levemente inclinados.",
+  "imagens": [
+    "https://static-assets.artlogic.net/w_2400,h_2400,c_limit,f_auto,fl_lossy,q_auto/artlogicstorage/voluta/images/view/7b8e5a94973b74e2cefa4d7c070d3767p/voluta-s-rgio-rodrigues-poltrona-cimba-par-1964.png",
+    "https://static-assets.artlogic.net/w_2400,h_2400,c_limit,f_auto,fl_lossy,q_auto/artlogicstorage/voluta/images/view/71db19451761b8023fa20ee3f48e5093p/voluta-s-rgio-rodrigues-poltrona-cimba-par-1964.png",
+    "https://static-assets.artlogic.net/w_2400,h_2400,c_limit,f_auto,fl_lossy,q_auto/artlogicstorage/voluta/images/view/b771bf09b07e75b20972ec09580f1a45p/voluta-s-rgio-rodrigues-poltrona-cimba-par-1964.png",
+    "https://static-assets.artlogic.net/w_2400,h_2400,c_limit,f_auto,fl_lossy,q_auto/artlogicstorage/voluta/images/view/c57983dceca412ca31a029270f081ff1p/voluta-s-rgio-rodrigues-poltrona-cimba-par-1964.png",
+    "https://static-assets.artlogic.net/w_2400,h_2400,c_limit,f_auto,fl_lossy,q_auto/artlogicstorage/voluta/images/view/a9de19e24c25dc32fc1a74d5dbbd500bp/voluta-s-rgio-rodrigues-poltrona-cimba-par-1964.png",
+    "https://static-assets.artlogic.net/w_2400,h_2400,c_limit,f_auto,fl_lossy,q_auto/artlogicstorage/voluta/images/view/811967ef272829927c469d4421a5d23ap/voluta-s-rgio-rodrigues-poltrona-cimba-par-1964.png",
+    "https://static-assets.artlogic.net/w_2400,h_2400,c_limit,f_auto,fl_lossy,q_auto/artlogicstorage/voluta/images/view/0c9f7568dc3bb8d2129c170419527feap/voluta-s-rgio-rodrigues-poltrona-cimba-par-1964.png"
+  ],
+  "destaque": false,
+  "ordem": 5,
+  "codigo": "",
+  "url_antiga": "27-sergio-rodrigues-poltrona-cimba-par-1964",
+  "categoria_antiga": "1",
+  "data": "2026-06-29"
+}

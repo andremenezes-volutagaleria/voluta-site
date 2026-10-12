@@ -1,0 +1,54 @@
+// Pré-visualização no painel: mostra a peça como ela vai aparecer no site.
+(function () {
+  if (!window.CMS) return;
+  const h = window.h;
+  CMS.registerPreviewStyle("/css/site.css");
+
+  const brl = n => "R$ " + Number(n).toLocaleString("pt-BR", { maximumFractionDigits: 0 });
+  const precoTexto = d => {
+    if (d.status === "vendido") return "Vendido";
+    if (!d.preco) return "Preço sob consulta";
+    return `${brl(d.preco)} à vista${d.parcelamento ? ` · ${d.parcelamento}` : ""}`;
+  };
+
+  CMS.registerPreviewTemplate("pecas", ({ entry, getAsset }) => {
+    const d = entry.get("data").toJS();
+    const fotos = (d.imagens || []).filter(Boolean).map(f => getAsset(f).toString());
+    const capa = fotos[0];
+    const img = (src, extra) => src ? h("img", Object.assign({ src, alt: "" }, extra || {})) : h("div", { style: { aspectRatio: "4/5", background: "#F4F4F4" } });
+
+    return h("div", { style: { padding: "32px", maxWidth: "1100px", margin: "0 auto" } },
+      h("p", { className: "subtitulo", style: { marginBottom: "16px" } }, "Como aparece na lista do acervo:"),
+      h("ul", { className: "grade", style: { gridTemplateColumns: "260px", marginBottom: "48px" } },
+        h("li", { className: "card" + (d.status === "vendido" ? " card--vendido" : "") },
+          h("a", { href: "#" },
+            h("div", { className: "card__img" }, img(capa), d.status === "vendido" ? h("span", { className: "selo" }, "Vendida") : null),
+            h("p", { className: "card__designer" }, d.designer || "Designer"),
+            h("h3", { className: "card__titulo" }, d.titulo || "Nome da peça", d.ano ? h("span", { className: "card__ano" }, ", " + d.ano) : null),
+            h("p", { className: "card__preco" }, precoTexto(d))
+          )
+        )
+      ),
+      h("p", { className: "subtitulo", style: { marginBottom: "16px" } }, "Como aparece na página da peça:"),
+      h("div", { className: "peca", style: { padding: 0 } },
+        h("div", { className: "galeria" },
+          h("div", { className: "galeria__principal" }, img(capa)),
+          fotos.length > 1 ? h("ul", { className: "galeria__mini" }, fotos.map((f, i) => h("li", { key: i }, h("button", null, h("img", { src: f, alt: "" }))))) : null
+        ),
+        h("div", { className: "ficha", style: { position: "static" } },
+          h("p", { className: "ficha__designer" }, h("a", { href: "#" }, d.designer || "Designer")),
+          h("h1", { className: "ficha__titulo" }, d.titulo || "Nome da peça"),
+          d.ano ? h("p", { className: "ficha__ano" }, d.ano) : null,
+          h("p", { className: "ficha__preco" }, precoTexto(d)),
+          d.preco_obs && d.status !== "vendido" ? h("p", { className: "ficha__obs" }, d.preco_obs) : null,
+          h("a", { className: "botao " + (d.status === "vendido" ? "botao--linha" : "botao--wa"), href: "#" }, d.status === "vendido" ? "Procurar peça parecida" : "Tenho interesse"),
+          h("dl", { className: "ficha__dados" },
+            d.dimensoes ? [h("dt", { key: "a" }, "Dimensões"), h("dd", { key: "b" }, d.dimensoes)] : null,
+            d.materiais ? [h("dt", { key: "c" }, "Materiais"), h("dd", { key: "d" }, d.materiais)] : null
+          ),
+          h("div", { className: "ficha__texto" }, (d.descricao || "").split(/\n\n+/).map((p, i) => h("p", { key: i }, p)))
+        )
+      )
+    );
+  });
+})();

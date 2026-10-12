@@ -1,0 +1,27 @@
+{
+  "titulo": "Banco Mocho",
+  "designer": "Sérgio Rodrigues",
+  "ano": "1954",
+  "categoria": "Bancos",
+  "status": "vendido",
+  "preco": null,
+  "preco_obs": "",
+  "parcelamento": "",
+  "dimensoes": "",
+  "materiais": "Jacarandá",
+  "descricao": "Peça que marcou o início da carreira de Sérgio Rodrigues, inspirada nos bancos de ordenha das fazendas brasileiras. Assento esculpido em jacarandá com furo central para transporte.",
+  "imagens": [
+    "https://static-assets.artlogic.net/w_2400,h_2400,c_limit,f_auto,fl_lossy,q_auto/artlogicstorage/voluta/images/view/e0fd49f3b6cbbb55e02fd2e7c81be84ap/voluta-s-rgio-rodrigues-banco-mocho-1954.png",
+    "https://static-assets.artlogic.net/w_2400,h_2400,c_limit,f_auto,fl_lossy,q_auto/artlogicstorage/voluta/images/view/4ba9a84307602c4a419e9d8f008c31d1p/voluta-s-rgio-rodrigues-banco-mocho-1954.png",
+    "https://static-assets.artlogic.net/w_2400,h_2400,c_limit,f_auto,fl_lossy,q_auto/artlogicstorage/voluta/images/view/6915faec4d187c18eb98fef4ac058ca3p/voluta-s-rgio-rodrigues-banco-mocho-1954.png",
+    "https://static-assets.artlogic.net/w_2400,h_2400,c_limit,f_auto,fl_lossy,q_auto/artlogicstorage/voluta/images/view/3678eb8a3ee32b98e27431c128022666p/voluta-s-rgio-rodrigues-banco-mocho-1954.png",
+    "https://static-assets.artlogic.net/w_2400,h_2400,c_limit,f_auto,fl_lossy,q_auto/artlogicstorage/voluta/images/view/fdb302cd160d819a35ba3c4ba4818e3fp/voluta-s-rgio-rodrigues-banco-mocho-1954.png",
+    "https://static-assets.artlogic.net/w_2400,h_2400,c_limit,f_auto,fl_lossy,q_auto/artlogicstorage/voluta/images/view/08738b4273f534a2d279d5ab6f968bb8p/voluta-s-rgio-rodrigues-banco-mocho-1954.png"
+  ],
+  "destaque": false,
+  "ordem": 218,
+  "codigo": "",
+  "data": "2026-06-14",
+  "url_antiga": "18-sergio-rodrigues-banco-mocho-1954",
+  "categoria_antiga": "2"
+}
