@@ -179,22 +179,22 @@ ${novas.length ? `<section class="secao">
   <ul class="grade grade--4">${novas.map(card).join("")}</ul>
 </section>` : ""}
 <section class="secao">
-  <div class="secao__cab"><h2>Navegue pelo acervo</h2><a href="/acervo/">Ver tudo (${disponiveis.length})</a></div>
+  <div class="secao__cab"><h2>Navegue pelo acervo</h2><a href="/acervo/">Ver tudo</a></div>
   <ul class="atalhos">
     ${tipos.filter(t => t.lista.length).map(t => `<li><a href="/acervo/tipo/${t.slug}/">
       <div class="atalhos__img"><img src="${esc(thumb(t.lista[0].imagens[0], 600))}" alt="" loading="lazy"></div>
-      <span class="atalhos__nome">${esc(t.nome)}</span><span class="atalhos__n">${t.lista.length}</span>
+      <span class="atalhos__nome">${esc(t.nome)}</span>
     </a></li>`).join("")}
   </ul>
 </section>
 ${vendidos.length ? `<section class="secao">
-  <div class="secao__cab"><h2>Já passaram pela Voluta</h2><a href="/acervo/vendidas/">Ver todas as vendidas (${vendidos.length})</a></div>
+  <div class="secao__cab"><h2>Já passaram pela Voluta</h2><a href="/acervo/vendidas/">Ver todas as vendidas</a></div>
   <ul class="grade grade--4">${[...vendidos].sort((a, b) => (b.data || "").localeCompare(a.data || "")).slice(0, 4).map(card).join("")}</ul>
 </section>` : ""}
 <section class="secao indice">
   <h2>Designers e fabricantes</h2>
   <ul class="indice__lista">
-    ${designers.map(d => `<li><a href="/designers/${slugify(d)}/"><span class="indice__nome">${esc(d)}</span><span class="indice__n">${pecas.filter(p => p.designer === d).length}</span></a></li>`).join("")}
+    ${designers.map(d => `<li><a href="/designers/${slugify(d)}/"><span class="indice__nome">${esc(d)}</span></a></li>`).join("")}
   </ul>
 </section>
 <section class="faixa">
@@ -212,7 +212,7 @@ write("busca.json", JSON.stringify(pecas.map(p => ({
 
 // Acervo: páginas de listagem com menu lateral (todas, por tipo, por designer, vendidas)
 const lado = ativo => {
-  const item = (href, nome, n, chave) => `<li><a href="${href}"${ativo === chave ? ' aria-current="page"' : ""}${n ? "" : ' class="so-vendidas"'}>${esc(nome)}<span>${n || ""}</span></a></li>`;
+  const item = (href, nome, n, chave) => `<li><a href="${href}"${ativo === chave ? ' aria-current="page"' : ""}${n ? "" : ' class="so-vendidas"'}>${esc(nome)}</a></li>`;
   return `<aside class="lateral" id="lateral" aria-label="Filtrar acervo">
   <div class="lateral__grupo">
     <h2>Tipo de peça</h2>
