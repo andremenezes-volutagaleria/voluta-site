@@ -53,6 +53,7 @@
     </div>
     <div class="inv__acoes">
       <a class="bt" href="/admin/editar/#/collections/config/entries/site">Textos e carrossel</a>
+      <button class="bt" id="importar-btn" type="button">Importar planilha</button>
       <a class="bt bt--prim" href="/admin/editar/#/collections/pecas/new">+ Nova peça</a>
     </div>
   </div>
@@ -93,6 +94,9 @@
         return { s: x.name.replace(/\.json$/, ""), c: d.codigo || "", t: d.titulo || "", d: d.designer || "", k: d.categoria || "",
           st: d.status || "", dc: d.data_compra || "", dt: (d.data || "").slice(0, 10), h: !!d.destaque, i: foto((d.imagens || [])[0]) };
       });
+      // Disponibiliza para o importador em lote (importar.js)
+      window.VOLUTA_INV = { repo: REPO, token: usuario.token, fichas: entradas.filter(x => x.name.endsWith(".json") && x.object?.text).map(x => ({ arquivo: x.name, dados: JSON.parse(x.object.text) })) };
+      document.dispatchEvent(new CustomEvent("inventario-pronto"));
       montar(dados);
     })
     .catch(err => err.message === "login"
@@ -148,7 +152,7 @@
       });
       document.getElementById("cont").textContent = `${l.length} ${l.length === 1 ? "peça" : "peças"}`;
       document.getElementById("corpo").innerHTML = l.map(r => `<tr>
-        <td class="col-foto">${r.i ? `<img src="${e(r.i)}" alt="" loading="lazy">` : ""}</td>
+        <td class="col-foto">${r.i ? `<img src="${e(r.i)}" alt="" loading="lazy">` : '<span class="falta" style="font-size:11px">sem foto</span>'}</td>
         <td class="num">${r.c ? e(r.c) : '<span class="falta">sem código</span>'}</td>
         <td class="col-peca">${e(r.t)}</td>
         <td>${e(r.k)}</td>
@@ -172,5 +176,6 @@
   }
 })();
 </script>
+<script src="/admin/importar.js" defer></script>
 </body>
 </html>

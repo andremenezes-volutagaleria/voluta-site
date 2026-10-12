@@ -37,3 +37,7 @@ O site se atualiza sozinho em cerca de 1 minuto depois de publicar.
 ## Painel de teste (só para experimentar)
 
 `node build.mjs && node teste-painel.mjs` gera também `dist/admin-teste/`: o mesmo painel, já com todas as peças, mas sem salvar nada (ao recarregar, volta ao original). Serve para treinar. O site real publicado pelo Netlify não inclui essa página.
+
+## Importar várias peças de uma vez
+
+Na tabela do painel (`/admin`), botão **Importar planilha**. Baixe o modelo (`/admin/modelo-importacao-voluta.xlsx`), preencha uma peça por linha e envie o arquivo: o painel mostra uma prévia e cria todas as fichas num único envio. Aceita também a planilha de inventário exportada. As fotos são adicionadas depois, peça por peça; **peça sem foto não aparece no site**.

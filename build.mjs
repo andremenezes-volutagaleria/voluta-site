@@ -28,7 +28,7 @@ const write = (rel, html) => { const f = path.join(OUT, rel); fs.mkdirSync(path.
 const pecas = fs.readdirSync(path.join(ROOT, "content/pecas"))
   .filter(f => f.endsWith(".json"))
   .map(f => ({ slug: f.replace(/\.json$/, ""), ...JSON.parse(fs.readFileSync(path.join(ROOT, "content/pecas", f), "utf8")) }))
-  .filter(p => p.status !== "oculto")
+  .filter(p => p.status !== "oculto" && (p.imagens || []).filter(Boolean).length) // peça sem foto só aparece no painel
   .sort((a, b) => (a.status === "vendido") - (b.status === "vendido") || (a.ordem ?? 999) - (b.ordem ?? 999));
 
 const designers = [...new Set(pecas.map(p => p.designer))]
