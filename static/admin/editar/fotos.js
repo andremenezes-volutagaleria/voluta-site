@@ -29,11 +29,32 @@
     return cache[caminho];
   }
 
+  // Fotos recém-escolhidas (ainda não salvas): guardamos uma cópia local pelo nome do arquivo,
+  // porque o editor tenta mostrá-las pelo endereço do site, onde ainda não existem.
+  var locais = {};
+  function chave(nome) {
+    nome = String(nome || "").split("/").pop();
+    try { nome = decodeURIComponent(nome); } catch (e) {}
+    return nome.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9.]+/g, "");
+  }
+  document.addEventListener("change", function (ev) {
+    var el = ev.target;
+    if (!el || el.tagName !== "INPUT" || el.type !== "file" || !el.files) return;
+    Array.prototype.forEach.call(el.files, function (f) { locais[chave(f.name)] = URL.createObjectURL(f); });
+  }, true);
+  document.addEventListener("drop", function (ev) {
+    var fs = ev.dataTransfer && ev.dataTransfer.files;
+    if (fs) Array.prototype.forEach.call(fs, function (f) { locais[chave(f.name)] = URL.createObjectURL(f); });
+  }, true);
+
   function consertar(img) {
     if (!img || img.dataset.voltaFoto) return;
-    var caminho = caminhoNoRepo(img.currentSrc || img.src);
+    var src = img.currentSrc || img.src;
+    var caminho = caminhoNoRepo(src);
     if (!caminho) return;
     img.dataset.voltaFoto = "1";
+    var local = locais[chave(caminho)];
+    if (local) { img.src = local; return; }
     buscar(caminho).then(function (u) { img.src = u; }).catch(function () {});
   }
 
@@ -44,6 +65,7 @@
   // Para a pré-visualização: devolve um endereço que funciona para "/uploads/..." (busca no GitHub)
   window.voltaUrlFoto = function (src) {
     var caminho = caminhoNoRepo(src);
+    if (caminho && locais[chave(caminho)]) return Promise.resolve(locais[chave(caminho)]);
     return caminho ? buscar(caminho) : Promise.resolve(src);
   };
 })();

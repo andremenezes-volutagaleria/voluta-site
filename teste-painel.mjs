@@ -36,6 +36,7 @@ fs.writeFileSync(path.join(OUT, "index.html"), `<!doctype html>
       font: 500 12px/1.4 system-ui, sans-serif; padding: 8px 16px; border-radius: 999px; box-shadow: 0 4px 14px rgba(0,0,0,.2); pointer-events: none; }
   </style>
   <script src="/admin-teste/dados.js"></script>
+  <script src="/admin/editar/fotos.js"></script>
 </head>
 <body>
   <div class="aviso-teste">Modo teste: pode mexer à vontade. Nada é salvo; ao recarregar, tudo volta ao original.</div>

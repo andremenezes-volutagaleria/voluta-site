@@ -87,6 +87,8 @@ collections:
         label: Configurações do site
         file: content/site.json
         format: json
+        media_folder: "/static/uploads/home"   # fotos do carrossel e logo
+        public_folder: "/uploads/home"
         fields:
           - name: carrossel
             label: Carrossel da página inicial
