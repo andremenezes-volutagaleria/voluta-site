@@ -1,15 +1,4 @@
 {
-  "titulo": "Carrinho de bebidas",
-  "designer": "Casa Finland",
-  "ano": "déc. 1960",
-  "categoria": "Objetos",
-  "status": "disponivel",
-  "preco": 2900,
-  "preco_obs": "",
-  "parcelamento": "em até 12x",
-  "dimensoes": "L 48 × P 39 × A 70 cm",
-  "materiais": "Madeira nobre, rodas em metal",
-  "descricao": "Carrinho de bebidas da Casa Finland, em marcenaria refinada, com porta-garrafas embutido na estrutura central e as rodas metálicas originais da época.",
   "imagens": [
     "https://static-assets.artlogic.net/w_2400,h_2400,c_limit,f_auto,fl_lossy,q_auto/artlogicstorage/voluta/images/view/4f3e86ceb39628493cb82086696e26f5p/voluta-casa-finland-carrinho-de-bebidas-d-c.-1960.png",
     "https://static-assets.artlogic.net/w_2400,h_2400,c_limit,f_auto,fl_lossy,q_auto/artlogicstorage/voluta/images/view/861d513b490bcfb99df60f59af99131dp/voluta-casa-finland-carrinho-de-bebidas-d-c.-1960.png",
@@ -20,10 +9,21 @@
     "https://static-assets.artlogic.net/w_2400,h_2400,c_limit,f_auto,fl_lossy,q_auto/artlogicstorage/voluta/images/view/a86bf5440516f90ab9fe45ccbd8e2734p/voluta-casa-finland-carrinho-de-bebidas-d-c.-1960.png"
   ],
   "destaque": false,
+  "ano": "déc. 1960",
+  "categoria_antiga": "",
+  "descricao": "Carrinho de bebidas da Casa Finland, em marcenaria refinada, com porta-garrafas embutido na estrutura central e as rodas metálicas originais da época.",
   "ordem": 113,
-  "codigo": "VLT-012",
-  "data_compra": "2025-12-12",
   "data": "2026-06-06",
+  "designer": "Casa Finland",
   "url_antiga": "13-casa-finland-carrinho-de-bebidas-dec.-1960",
-  "categoria_antiga": ""
+  "preco": "",
+  "materiais": "Madeira nobre, rodas em metal",
+  "preco_obs": "",
+  "status": "disponivel",
+  "categoria": "Bancos",
+  "data_compra": "2025-12-12",
+  "parcelamento": "",
+  "codigo": "VLT-012",
+  "titulo": "Carrinho de bebidas",
+  "dimensoes": "L 48 × P 39 × A 70 cm"
 }
