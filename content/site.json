@@ -2,37 +2,48 @@
   "ga4_id": "",
   "categorias": [
     {
-      "nome": "Poltronas"
+      "nome": "Poltronas",
+      "foto": "/uploads/home/dupla-mp-97.png"
     },
     {
-      "nome": "Cadeiras"
+      "nome": "Cadeiras",
+      "foto": "/uploads/home/cadeiras-geraldo-barros.png"
     },
     {
-      "nome": "Sofás"
+      "nome": "Sofás",
+      "foto": "/uploads/home/sofa-de-sede.png"
     },
     {
-      "nome": "Mesas de centro"
+      "nome": "Mesas de centro",
+      "foto": "/uploads/home/design-sem-nome-8-.png"
     },
     {
-      "nome": "Mesas laterais"
+      "nome": "Mesas laterais",
+      "foto": "/uploads/home/mesas-de-canto-lafer.png"
     },
     {
-      "nome": "Mesas de jantar"
+      "nome": "Mesas de jantar",
+      "foto": "/uploads/home/sem-nome-post-para-instagram-45-.png"
     },
     {
-      "nome": "Bancos"
+      "nome": "Bancos",
+      "foto": "/uploads/home/post-banco-ripado-.png"
     },
     {
-      "nome": "Aparadores/Buffet"
+      "nome": "Aparadores/Buffet",
+      "foto": "/uploads/home/comoda-cimo.png"
     },
     {
-      "nome": "Escrivaninhas"
+      "nome": "Escrivaninhas",
+      "foto": "/uploads/home/sem-nome-1200-x-1600-px-.png"
     },
     {
-      "nome": "Iluminação"
+      "nome": "Iluminação",
+      "foto": "/uploads/home/lumina-ria-telinha.png"
     },
     {
-      "nome": "Objetos"
+      "nome": "Objetos",
+      "foto": ""
     }
   ],
   "whatsapp_exibicao": "+55 31 98253-9291",
