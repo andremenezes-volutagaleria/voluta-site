@@ -35,7 +35,7 @@ const designers = [...new Set(pecas.map(p => p.designer))]
   .sort((a, b) => (a === "Anônimo") - (b === "Anônimo") || a.localeCompare(b, "pt-BR"));
 site.categorias = (site.categorias || []).map(c => typeof c === "string" ? { nome: c } : c).filter(c => c && c.nome);
 const fotoCategoria = Object.fromEntries(site.categorias.filter(c => c.foto).map(c => [c.nome, c.foto]));
-const categorias = site.categorias.map(c => c.nome).filter(c => pecas.some(p => p.categoria === c));
+const categorias = site.categorias.map(c => c.nome).filter(c => fotoCategoria[c] || pecas.some(p => p.categoria === c)); // tipo sem peça nenhuma só aparece se tiver foto escolhida
 
 const precoTexto = p => {
   if (p.status === "vendido") return "Vendido";
@@ -150,7 +150,8 @@ const slides = (site.carrossel || []).filter(s => s.foto).slice(0, 6);
 const novas = porData.slice(0, 4);
 let destaques = disponiveis.filter(p => p.destaque && !novas.includes(p)).slice(0, 6);
 if (destaques.length > 3) destaques = destaques.slice(0, destaques.length - (destaques.length % 3));
-const tipos = categorias.map(c => ({ nome: c, slug: slugify(c), lista: disponiveis.filter(p => p.categoria === c) })).filter(t => t.lista.length || vendidos.some(p => p.categoria === t.nome));
+const tipos = categorias.map(c => ({ nome: c, slug: slugify(c), lista: disponiveis.filter(p => p.categoria === c) }));
+tipos.forEach(t => { const capa = fotoCategoria[t.nome] || [...t.lista, ...vendidos.filter(p => p.categoria === t.nome)].map(p => p.imagens[0])[0]; t.capa = capa; });
 
 write("index.html", page({
   url: "/", img: slides[0]?.foto || disponiveis[0]?.imagens[0],
@@ -183,8 +184,8 @@ ${novas.length ? `<section class="secao">
 <section class="secao">
   <div class="secao__cab"><h2>Navegue pelo acervo</h2><a href="/acervo/">Ver tudo</a></div>
   <ul class="atalhos">
-    ${tipos.filter(t => t.lista.length).map(t => `<li><a href="/acervo/tipo/${t.slug}/">
-      <div class="atalhos__img"><img src="${esc(thumb(fotoCategoria[t.nome] || t.lista[0].imagens[0], 600))}" alt="" loading="lazy"></div>
+    ${tipos.filter(t => t.capa).map(t => `<li><a href="/acervo/tipo/${t.slug}/">
+      <div class="atalhos__img"><img src="${esc(thumb(t.capa, 600))}" alt="" loading="lazy"></div>
       <span class="atalhos__nome">${esc(t.nome)}</span>
     </a></li>`).join("")}
   </ul>
@@ -362,7 +363,8 @@ pecas.forEach(p => {
   caminhos.forEach(c => especificos.push(`${c}/*  ${destino}  301`, `${c}  ${destino}  301`));
 });
 Object.entries(ARTISTAS_ANTIGOS).forEach(([old, d]) => { if (designers.includes(d)) especificos.push(`/artists/${old}/*  /designers/${slugify(d)}/  301`); });
-const CATS_ANTIGAS = { "1-poltronas": "Poltronas", "4-cadeiras": "Cadeiras", "5-mesas-de-centro": "Mesas de centro", "9-sofas": "Sofás", "6-mesas-laterais": "Mesas laterais", "2-bancos": "Bancos", "15-buffet": "Buffets", "8-escrivaninhas": "Escrivaninhas", "10-mesas-de-jantar": "Mesas de jantar" };
+const CATS_ANTIGAS = { "1-poltronas": "Poltronas", "4-cadeiras": "Cadeiras", "5-mesas-de-centro": "Mesas de centro", "9-sofas": "Sofás", "6-mesas-laterais": "Mesas laterais", "2-bancos": "Bancos", "15-buffet": "Aparadores/Buffet", "8-escrivaninhas": "Escrivaninhas", "10-mesas-de-jantar": "Mesas de jantar" };
+especificos.push("/acervo/tipo/buffets/*  /acervo/tipo/aparadores-buffet/  301");
 Object.entries(CATS_ANTIGAS).forEach(([old, c]) => { if (tipos.some(t => t.nome === c)) especificos.push(`/artworks/categories/${old}/*  /acervo/tipo/${slugify(c)}/  301`); });
 const gerais = [
   "/artworks/*  /acervo/  301",

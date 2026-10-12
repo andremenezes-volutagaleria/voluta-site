@@ -55,7 +55,7 @@ collections:
       - name: categoria
         label: Tipo de peça
         widget: select
-        options: ["Poltronas", "Cadeiras", "Sofás", "Mesas de centro", "Mesas laterais", "Mesas de jantar", "Bancos", "Buffets", "Escrivaninhas", "Iluminação", "Objetos"]
+        options: ["Poltronas", "Cadeiras", "Sofás", "Mesas de centro", "Mesas laterais", "Mesas de jantar", "Bancos", "Aparadores/Buffet", "Escrivaninhas", "Iluminação", "Objetos"]
       - name: status
         label: Situação
         widget: select

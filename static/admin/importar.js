@@ -4,7 +4,7 @@
   const btn = document.getElementById("importar-btn");
   if (!btn) return;
 
-  const TIPOS = ["Poltronas", "Cadeiras", "Sofás", "Mesas de centro", "Mesas laterais", "Mesas de jantar", "Bancos", "Buffets", "Escrivaninhas", "Iluminação", "Objetos"];
+  const TIPOS = ["Poltronas", "Cadeiras", "Sofás", "Mesas de centro", "Mesas laterais", "Mesas de jantar", "Bancos", "Aparadores/Buffet", "Escrivaninhas", "Iluminação", "Objetos"];
   const norm = s => String(s ?? "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().trim();
   const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
   const slugify = s => String(s).normalize("NFKD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
@@ -30,7 +30,7 @@
   const TIPO_ALIAS = {
     "cadeira & banquetas": "Cadeiras", "cadeiras & banquetas": "Cadeiras", "cadeira": "Cadeiras", "banquetas": "Bancos",
     "mesas de centro": "Mesas de centro", "mesa de centro": "Mesas de centro", "meas laterais": "Mesas laterais", "mesa lateral": "Mesas laterais",
-    "mesas de jantar": "Mesas de jantar", "mesa de jantar": "Mesas de jantar", "aparadores, estantes & buffet": "Buffets", "buffet": "Buffets", "aparadores": "Buffets",
+    "mesas de jantar": "Mesas de jantar", "mesa de jantar": "Mesas de jantar", "aparadores, estantes & buffet": "Aparadores/Buffet", "buffet": "Aparadores/Buffet", "aparadores": "Aparadores/Buffet",
     "iluminacao": "Iluminação", "luminaria": "Iluminação", "tapecarias & objetos": "Objetos", "objeto": "Objetos", "sofa": "Sofás", "poltrona": "Poltronas", "banco": "Bancos", "escrivaninha": "Escrivaninhas",
   };
   const DESIGNER_ALIAS = { "anonimo": "Anônimo", "scapinelli": "Giuseppe Scapinelli", "liceu de artes": "Liceu de Artes e Ofícios", "de sede switzerlan": "De Sede", "de sede switzerland": "De Sede", "michel ducaroy / ligne roset": "Michel Ducaroy", "finland": "Casa Finland" };
