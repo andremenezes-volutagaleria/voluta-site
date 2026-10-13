@@ -326,3 +326,11 @@ main:has(> .faixa:last-child) + .rodape .rodape__in { border-top: 1px solid rgba
 @media (hover: hover) { .card a:hover .card__img2, .card a:focus-visible .card__img2 { opacity: 1; } }
 .card a:hover .card__img--troca img { transform: none; }
 .card__img .selo { z-index: 1; }
+/* Celular: áreas de toque maiores e rótulos legíveis */
+@media (max-width: 760px) {
+  .rodape__links { gap: 0; }
+  .rodape__links a { display: block; padding: 8px 0; }
+  .vizinhas a { display: inline-block; padding: 12px 0; }
+  .card__designer, .ficha__designer a, .selo { font-size: 11.5px; }
+}
+@media (max-width: 760px) { .secao__cab a { padding: 8px 0; } }
