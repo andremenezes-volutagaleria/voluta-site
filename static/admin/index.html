@@ -41,6 +41,8 @@
   .falta { color: #B08A22; }
   .aviso { background: #fff; border: 1px solid #ECE8E4; padding: 40px 24px; text-align: center; font-size: 14px; }
   .aviso p { margin: 0 0 16px; }
+  .hm { display: inline-block; font-size: 11px; padding: 2px 9px; border-radius: 99px; background: #F6EED6; color: #7A5D12; font-weight: 600; white-space: nowrap; }
+  .hm--auto { background: #F2F2F2; color: #777; font-weight: 400; }
   .ver { margin-left: 10px; font-size: 12px; color: var(--burle); }
 </style>
 </head>
@@ -92,7 +94,7 @@
       const dados = entradas.filter(x => x.name.endsWith(".json") && x.object?.text).map(x => {
         const d = JSON.parse(x.object.text);
         return { s: x.name.replace(/\.json$/, ""), c: d.codigo || "", t: d.titulo || "", d: d.designer || "", k: d.categoria || "",
-          st: d.status || "", dc: d.data_compra || "", dt: (d.data || "").slice(0, 10), h: !!d.destaque, i: foto((d.imagens || [])[0]) };
+          st: d.status || "", dc: d.data_compra || "", dt: (d.data || "").slice(0, 10), m: !!d.destaque, o: d.ordem ?? 100, nf: (d.imagens || []).filter(Boolean).length, h: "", i: foto((d.imagens || [])[0]) };
       });
       // Disponibiliza para o importador em lote (importar.js)
       window.VOLUTA_INV = { repo: REPO, token: usuario.token, fichas: entradas.filter(x => x.name.endsWith(".json") && x.object?.text).map(x => ({ arquivo: x.name, dados: JSON.parse(x.object.text) })) };
@@ -104,11 +106,16 @@
       : (app.innerHTML = `<div class="aviso"><p>Não foi possível carregar o inventário (${e(err.message)}). Recarregue a página; se continuar, entre de novo no painel.</p><a class="bt" href="/admin/editar/">Abrir o painel</a></div>`));
 
   function montar(dados) {
+    // Mesma regra do site: 8 peças disponíveis com foto — primeiro as marcadas (pela Ordem), depois as mais recentes
+    const vale = r => r.st === "disponivel" && r.nf > 0;
+    const marcadas = dados.filter(r => r.m && vale(r)).sort((a, b) => a.o - b.o || b.dt.localeCompare(a.dt));
+    const recentes = dados.filter(r => vale(r) && !marcadas.includes(r)).sort((a, b) => b.dt.localeCompare(a.dt));
+    [...marcadas, ...recentes].slice(0, 8).forEach((r, n) => { r.h = n + 1; r.auto = !r.m; });
     const categorias = [...new Set(dados.map(r => r.k).filter(Boolean))].sort();
     app.innerHTML = `
       <div class="inv__filtros">
         <input type="search" id="q" placeholder="Buscar por código, peça ou designer" aria-label="Buscar">
-        <select id="fst" aria-label="Status"><option value="">Todos os status</option><option value="disponivel">Disponível</option><option value="vendido">Vendido</option><option value="oculto">Oculto</option></select>
+        <select id="fst" aria-label="Status"><option value="">Todos os status</option><option value="disponivel">Disponível</option><option value="vendido">Vendido</option><option value="oculto">Oculto</option><option value="home">Na página inicial</option></select>
         <select id="fcat" aria-label="Categoria"><option value="">Todas as categorias</option>${categorias.map(c => `<option>${e(c)}</option>`).join("")}</select>
         <label>Ordenar por
           <select id="ord">
@@ -119,6 +126,7 @@
             <option value="t:1">Peça (A–Z)</option>
             <option value="d:1">Designer (A–Z)</option>
             <option value="st:1">Status</option>
+            <option value="h:1">Página inicial</option>
           </select>
         </label>
         <span class="inv__cont" id="cont"></span>
@@ -133,7 +141,7 @@
           <th scope="col" data-k="st"><button>Status</button></th>
           <th scope="col" data-k="dc"><button>Data da compra</button></th>
           <th scope="col" data-k="dt"><button>Entrada no site</button></th>
-          <th scope="col" data-k="h"><button>Destaque</button></th>
+          <th scope="col" data-k="h"><button>Página inicial</button></th>
           <th scope="col"><span class="visually-hidden">Ações</span></th>
         </tr></thead>
         <tbody id="corpo"></tbody>
@@ -143,7 +151,7 @@
     const sel = document.getElementById("ord");
     const desenhar = () => {
       const q = norm(document.getElementById("q").value), st = document.getElementById("fst").value, cat = document.getElementById("fcat").value;
-      const l = dados.filter(r => (!st || r.st === st) && (!cat || r.k === cat) && (!q || norm([r.c, r.t, r.d].join(" ")).includes(q)));
+      const l = dados.filter(r => (!st || (st === "home" ? r.h : r.st === st)) && (!cat || r.k === cat) && (!q || norm([r.c, r.t, r.d].join(" ")).includes(q)));
       l.sort((a, b) => {
         const x = a[chave], y = b[chave];
         if (x === "" && y !== "") return 1;      // vazios sempre no fim
@@ -160,7 +168,7 @@
         <td><span class="st st--${e(r.st)}">${rotulo[r.st] || e(r.st)}</span></td>
         <td class="num">${fmt(r.dc) || '<span class="falta">—</span>'}</td>
         <td class="num">${fmt(r.dt)}</td>
-        <td>${r.h ? "★" : ""}</td>
+        <td>${r.h ? `<span class="hm ${r.auto ? "hm--auto" : ""}" title="${r.auto ? "Entrou automaticamente (peça recente). Marque outras peças para escolher." : "Marcada por você"}">${r.h}º ${r.auto ? "· automática" : "· na home"}</span>` : r.m ? `<span class="falta" title="Marcada, mas só aparece se estiver disponível e com foto">marcada · não aparece</span>` : ""}</td>
         <td><a class="bt bt--peq" href="/admin/editar/#/collections/pecas/entries/${e(r.s)}">Editar</a>${r.st !== "oculto" ? `<a class="ver" href="/acervo/${e(r.s)}/" target="_blank" rel="noopener">Ver no site</a>` : ""}</td>
       </tr>`).join("");
       document.querySelectorAll("th[data-k]").forEach(th => th.removeAttribute("aria-sort"));
