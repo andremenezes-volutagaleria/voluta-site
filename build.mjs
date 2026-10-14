@@ -162,8 +162,9 @@ ${fotosCapa.length ? `<section class="capa">
   <img id="capa-foto" alt="${esc(fotosCapa[0].alt)}" fetchpriority="high">
   <script>(function(){var f=${JSON.stringify(fotosCapa).replace(/</g, "\\u003c")};var e=f[Math.floor(Math.random()*f.length)];var i=document.getElementById("capa-foto");i.src=e.src;i.alt=e.alt;})();</script>
   <noscript><img src="${esc(fotosCapa[0].src)}" alt="${esc(fotosCapa[0].alt)}"></noscript>
+  ${naHome.length ? `<a class="capa__seta" href="#acervo-home"><span>Acervo</span><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="1.5"/></svg></a>` : ""}
 </section>` : ""}
-${naHome.length ? `<section class="secao">
+${naHome.length ? `<section class="secao" id="acervo-home">
   <div class="secao__cab"><h2>Acervo</h2><a href="/acervo/">Ver todo o acervo</a></div>
   <ul class="grade grade--4">${naHome.map(card).join("")}</ul>
 </section>` : ""}
