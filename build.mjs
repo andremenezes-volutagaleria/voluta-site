@@ -52,7 +52,8 @@ const analytics = () => [
   site.meta_pixel_id && `<script>!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');fbq('init','${site.meta_pixel_id}');fbq('track','PageView');</script>`,
 ].filter(Boolean).join("\n");
 
-const NAV = [["/acervo/", "Acervo"], ["/designers/", "Designers"], ["/restauro/", "Restauro"], ["/sobre/", "Sobre"], ["/contato/", "Contato"]];
+const VENDA = "https://venda.volutagaleria.com.br/";
+const NAV = [["/", "Home"], ["/acervo/", "Acervo"], ["/designers/", "Designers"], [VENDA, "Venda seu móvel"], ["/sobre/", "Sobre"], ["/contato/", "Contato"]];
 
 const page = ({ title, desc = site.descricao, url = "/", img, body, current = "", jsonld = "" }) => `<!doctype html>
 <html lang="pt-BR">
@@ -118,7 +119,7 @@ ${body}
       <a href="https://www.instagram.com/${site.instagram}/">Instagram @${site.instagram}</a>
     </div>
     <div class="rodape__links">
-      <a href="/acervo/">Acervo</a><a href="/sobre/">Sobre a Voluta</a><a href="/restauro/">Restauro</a><a href="/politica-de-devolucao/">Política de devolução</a>
+      <a href="/acervo/">Acervo</a><a href="/sobre/">Sobre a Voluta</a><a href="${VENDA}">Venda seu móvel</a><a href="/politica-de-devolucao/">Política de devolução</a>
     </div>
   </div>
   <p class="rodape__copy">© ${new Date().getFullYear()} Voluta</p>
