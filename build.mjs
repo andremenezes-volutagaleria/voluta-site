@@ -52,6 +52,13 @@ const analytics = () => [
   site.meta_pixel_id && `<script>!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');fbq('init','${site.meta_pixel_id}');fbq('track','PageView');</script>`,
 ].filter(Boolean).join("\n");
 
+// Ícones (WhatsApp, e-mail, Instagram, local)
+const ICONE = {
+  wa: `<svg class="ico" viewBox="0 0 32 32" aria-hidden="true"><path fill="currentColor" d="M16 3a13 13 0 0 0-11.2 19.6L3 29l6.6-1.7A13 13 0 1 0 16 3Zm0 23.6c-2 0-4-.6-5.7-1.6l-.4-.2-3.9 1 1-3.8-.3-.4A10.6 10.6 0 1 1 16 26.6Zm5.8-7.9c-.3-.2-1.9-.9-2.2-1s-.5-.2-.7.2-.8 1-1 1.2-.4.2-.7 0a8.7 8.7 0 0 1-4.3-3.8c-.3-.5.3-.5.9-1.6.1-.2 0-.4 0-.5l-1-2.4c-.3-.6-.5-.5-.7-.5h-.6a1.2 1.2 0 0 0-.9.4 3.6 3.6 0 0 0-1.1 2.7 6.3 6.3 0 0 0 1.3 3.3 14.4 14.4 0 0 0 5.5 4.9c2 .9 2.8.9 3.8.8a3.3 3.3 0 0 0 2.2-1.5 2.7 2.7 0 0 0 .2-1.5c-.1-.2-.3-.3-.6-.4Z"/></svg>`,
+  email: `<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M3.5 6l8.5 7 8.5-7" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>`,
+  ig: `<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="12" cy="12" r="4.2" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="17.4" cy="6.6" r="1.1" fill="currentColor"/></svg>`,
+  local: `<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21Z" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="12" cy="9.5" r="2.5" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>`,
+};
 const VENDA = "https://venda.volutagaleria.com.br/";
 const NAV = [["/", "Home"], ["/acervo/", "Acervo"], ["/designers/", "Designers"], [VENDA, "Venda seu móvel"], ["/sobre/", "Sobre"], ["/contato/", "Contato"]];
 
@@ -114,9 +121,9 @@ ${body}
       <p>${esc(site.cidade)}</p>
     </div>
     <div class="rodape__links">
-      <a href="${wa("Olá! Vim pelo site da Voluta")}">WhatsApp ${esc(site.whatsapp_exibicao)}</a>
-      <a href="mailto:${site.email}">${site.email}</a>
-      <a href="https://www.instagram.com/${site.instagram}/">Instagram @${site.instagram}</a>
+      <a class="com-ico" href="${wa("Olá! Vim pelo site da Voluta")}">${ICONE.wa}<span>${esc(site.whatsapp_exibicao)}</span></a>
+      <a class="com-ico" href="mailto:${site.email}">${ICONE.email}<span>${site.email}</span></a>
+      <a class="com-ico" href="https://www.instagram.com/${site.instagram}/">${ICONE.ig}<span>@${site.instagram}</span></a>
     </div>
     <div class="rodape__links">
       <a href="/acervo/">Acervo</a><a href="/sobre/">Sobre a Voluta</a><a href="${VENDA}">Venda seu móvel</a><a href="/politica-de-devolucao/">Política de devolução</a>
@@ -163,7 +170,7 @@ ${fotosCapa.length ? `<section class="capa">
   <img id="capa-foto" alt="${esc(fotosCapa[0].alt)}" fetchpriority="high">
   <script>(function(){var f=${JSON.stringify(fotosCapa).replace(/</g, "\\u003c")};var n=Math.floor(Math.random()*f.length);try{var u=+localStorage.getItem("capa");if(f.length>1&&n===u)n=(n+1+Math.floor(Math.random()*(f.length-1)))%f.length;localStorage.setItem("capa",n);}catch(x){}var e=f[n];var i=document.getElementById("capa-foto");i.src=e.src;i.alt=e.alt;})();</script>
   <noscript><img src="${esc(fotosCapa[0].src)}" alt="${esc(fotosCapa[0].alt)}"></noscript>
-  ${naHome.length ? `<a class="capa__seta" href="#acervo-home"><span>Acervo</span><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="1.5"/></svg></a>` : ""}
+  ${naHome.length ? `<a class="capa__seta" href="#acervo-home"><span>Acervo</span><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M3 8l9 9 9-9" fill="none" stroke="currentColor" stroke-width="1.3"/></svg></a>` : ""}
 </section>` : ""}
 ${naHome.length ? `<section class="secao" id="acervo-home">
   <div class="secao__cab"><h2>Acervo</h2><a href="/acervo/">Ver todo o acervo</a></div>
@@ -302,10 +309,11 @@ write("contato/index.html", page({
   <h1 class="titulo-pagina">Contato</h1>
   <p>O atendimento é feito de forma reservada, direto com a gente. O caminho mais rápido é o WhatsApp.</p>
   <ul class="contatos">
-    <li><a class="botao botao--wa" href="${wa("Olá! Vim pelo site da Voluta")}">Conversar no WhatsApp</a></li>
-    <li><a href="mailto:${site.email}">${site.email}</a></li>
-    <li><a href="https://www.instagram.com/${site.instagram}/">@${site.instagram}</a></li>
-    <li>${esc(site.cidade)}</li>
+    <li><a class="botao botao--wa com-ico" href="${wa("Olá! Vim pelo site da Voluta")}">${ICONE.wa}<span>Conversar no WhatsApp</span></a></li>
+    <li><a class="com-ico" href="${wa("Olá! Vim pelo site da Voluta")}">${ICONE.wa}<span>${esc(site.whatsapp_exibicao)}</span></a></li>
+    <li><a class="com-ico" href="mailto:${site.email}">${ICONE.email}<span>${site.email}</span></a></li>
+    <li><a class="com-ico" href="https://www.instagram.com/${site.instagram}/">${ICONE.ig}<span>@${site.instagram}</span></a></li>
+    <li><span class="com-ico">${ICONE.local}<span>${esc(site.cidade)}</span></span></li>
   </ul>
   <h2>Quer vender uma peça?</h2>
   <p>Compramos mobiliário modernista. <a href="https://venda.volutagaleria.com.br">Envie as fotos da sua peça</a>.</p>

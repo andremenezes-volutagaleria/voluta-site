@@ -348,3 +348,25 @@ html { scroll-behavior: smooth; }
 .capa::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 160px; background: linear-gradient(to top, rgba(20,6,10,.45), rgba(20,6,10,0)); pointer-events: none; }
 .capa__seta { z-index: 1; font-size: 12px; bottom: 22px; }
 .capa__seta svg { width: 24px; height: 24px; }
+/* "Acervo ↓" mais presente */
+.capa__seta { font-size: 14px; letter-spacing: .22em; gap: 6px; bottom: 30px; }
+.capa__seta svg { width: 34px; height: 34px; }
+.capa::after { height: 220px; }
+@media (max-width: 760px) { .capa__seta { font-size: 13px; bottom: 16px; } .capa__seta svg { width: 30px; height: 30px; } }
+@media (min-width: 761px) { .capa__seta { font-size: 15px; bottom: 34px; } .capa__seta svg { width: 40px; height: 40px; } }
+
+/* Ícones de contato */
+.com-ico { display: inline-flex; align-items: center; gap: 10px; }
+.com-ico .ico { width: 18px; height: 18px; flex: none; }
+.botao.com-ico { display: inline-flex; justify-content: center; }
+.botao.com-ico .ico { width: 20px; height: 20px; }
+.rodape__links a.com-ico { display: flex; }
+.rodape .com-ico .ico { color: var(--mostarda); }
+.rodape a.com-ico:hover .ico { color: #fff; }
+.contatos .com-ico { color: var(--tinta); }
+.contatos a.com-ico:not(.botao) .ico, .contatos span.com-ico .ico { color: var(--burle); }
+/* Botão flutuante do WhatsApp no canto esquerdo */
+.wa-float { right: auto; left: 20px; }
+@media (max-width: 760px) { .wa-float { right: auto; left: 14px; } }
+.contatos .botao.com-ico, .contatos .botao.com-ico .ico { color: #fff; }
+@media (max-width: 760px) { .rodape__copy { padding-bottom: 76px !important; } }
