@@ -200,16 +200,46 @@
   "email": "voluta@volutagaleria.com.br",
   "fotos_capa": [
     {
-      "foto": "https://static-assets.artlogic.net/w_2400,h_2400,c_limit,f_auto,fl_lossy,q_auto/ws-artlogicwebsite3041/usr/library/images/main/pages/1/dsc04536.jpg",
-      "descricao_foto": "Ambiente com mobiliário modernista da Voluta"
+      "foto": "/uploads/home/4.png"
     },
     {
-      "foto": "/uploads/home/design-sem-nome-6-.png",
-      "descricao_foto": "Peças do acervo da Voluta"
-    },
-    {
-      "foto": "/uploads/home/design-sem-nome-7-.png",
+      "foto": "/uploads/home/12.png",
       "descricao_foto": ""
+    },
+    {
+      "foto": "/uploads/home/1.png",
+      "descricao_foto": ""
+    },
+    {
+      "foto": "/uploads/home/2.png",
+      "descricao_foto": ""
+    },
+    {
+      "foto": "/uploads/home/3.png"
+    },
+    {
+      "foto": "/uploads/home/5.png"
+    },
+    {
+      "foto": "/uploads/home/6.png"
+    },
+    {
+      "foto": "/uploads/home/7.png"
+    },
+    {
+      "foto": "/uploads/home/8.png"
+    },
+    {
+      "foto": "/uploads/home/9.png"
+    },
+    {
+      "foto": "/uploads/home/10.png"
+    },
+    {
+      "foto": "/uploads/home/11.png"
+    },
+    {
+      "foto": "/uploads/home/13.png"
     }
   ]
 }
