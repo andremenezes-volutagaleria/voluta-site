@@ -150,7 +150,7 @@ const porData = [...disponiveis].sort((a, b) => (b.data || "").localeCompare(a.d
 // Home: 8 peças — primeiro as marcadas "Mostrar na página inicial" (pela ordem), depois as mais recentes
 const marcadas = disponiveis.filter(p => p.destaque).sort((a, b) => (a.ordem ?? 100) - (b.ordem ?? 100) || (b.data || "").localeCompare(a.data || ""));
 const naHome = [...marcadas, ...porData.filter(p => !marcadas.includes(p))].slice(0, 8);
-const fotosCapa = (site.fotos_capa || []).filter(f => f.foto).slice(0, 12).map(f => ({ src: thumb(f.foto, 2400), alt: f.descricao_foto || "Voluta" }));
+const fotosCapa = (site.fotos_capa || []).filter(f => f.foto).slice(0, 13).map(f => ({ src: thumb(f.foto, 2560), alt: f.descricao_foto || "Voluta" }));
 const galeria = (site.galeria || []).filter(f => f.foto);
 const tipos = categorias.map(c => ({ nome: c, slug: slugify(c), lista: disponiveis.filter(p => p.categoria === c) }));
 
@@ -160,7 +160,7 @@ write("index.html", page({
 <h1 class="visually-hidden">Voluta — mobiliário modernista brasileiro, garimpado e restaurado em Belo Horizonte</h1>
 ${fotosCapa.length ? `<section class="capa">
   <img id="capa-foto" alt="${esc(fotosCapa[0].alt)}" fetchpriority="high">
-  <script>(function(){var f=${JSON.stringify(fotosCapa).replace(/</g, "\\u003c")};var e=f[Math.floor(Math.random()*f.length)];var i=document.getElementById("capa-foto");i.src=e.src;i.alt=e.alt;})();</script>
+  <script>(function(){var f=${JSON.stringify(fotosCapa).replace(/</g, "\\u003c")};var n=Math.floor(Math.random()*f.length);try{var u=+localStorage.getItem("capa");if(f.length>1&&n===u)n=(n+1+Math.floor(Math.random()*(f.length-1)))%f.length;localStorage.setItem("capa",n);}catch(x){}var e=f[n];var i=document.getElementById("capa-foto");i.src=e.src;i.alt=e.alt;})();</script>
   <noscript><img src="${esc(fotosCapa[0].src)}" alt="${esc(fotosCapa[0].alt)}"></noscript>
   ${naHome.length ? `<a class="capa__seta" href="#acervo-home"><span>Acervo</span><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="1.5"/></svg></a>` : ""}
 </section>` : ""}
