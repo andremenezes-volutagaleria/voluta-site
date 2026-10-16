@@ -70,6 +70,14 @@ document.querySelectorAll('[data-evento="interesse"]').forEach(a => {
   });
 });
 
+// Conversão: qualquer clique para o WhatsApp (botão flutuante, rodapé, contato, peça)
+document.addEventListener("click", e => {
+  const a = e.target.closest?.('a[href*="wa.me/"]'); if (!a) return;
+  const onde = a.closest(".wa-float") ? "botao_flutuante" : a.closest(".rodape") ? "rodape" : a.closest(".contatos") ? "contato" : a.dataset.evento === "interesse" ? "peca" : "outro";
+  window.gtag?.("event", "clique_whatsapp", { local: onde, pagina: location.pathname });
+  if (a.dataset.evento !== "interesse") window.fbq?.("track", "Contact");
+});
+
 // Carrossel da home
 const carrossel = document.querySelector(".carrossel");
 if (carrossel) {
