@@ -279,7 +279,7 @@ pecas.forEach((p, i) => {
       ${p.codigo ? `<dt>Código</dt><dd>${esc(p.codigo)}</dd>` : ""}
     </dl>
     <div class="ficha__texto">${paragrafos(p.descricao)}</div>
-    <p class="ficha__garantia">Envio para todo o Brasil com transporte especializado. <a href="/politica-de-devolucao/">Política de devolução</a></p>
+    <p class="ficha__garantia"><a href="/politica-de-devolucao/">Política de devolução</a></p>
   </div>
 </article>
 <nav class="vizinhas" aria-label="Outras peças"><a href="/acervo/${ant.slug}/">Peça anterior</a><a href="/acervo/${prox.slug}/">Próxima peça</a></nav>
