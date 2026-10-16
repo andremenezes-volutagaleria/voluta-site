@@ -95,7 +95,8 @@ collections:
             label_singular: Foto da capa
             widget: list
             summary: "{{fields.descricao_foto}}"
-            max: 13, hint: "Até 13 fotos horizontais (paisagem), 2560 × 1440 px. Cada vez que alguém abre ou recarrega a home, o site sorteia uma delas (sem repetir a anterior)."
+            max: 13
+            hint: "Até 13 fotos horizontais (paisagem), 2560 × 1440 px. Cada vez que alguém abre ou recarrega a home, o site sorteia uma delas (sem repetir a anterior)."
             fields:
               - { name: foto, label: Foto horizontal, widget: image }
               - { name: descricao_foto, label: "Descrição da foto (para Google e acessibilidade)", widget: string, required: false }
