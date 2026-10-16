@@ -1,15 +1,4 @@
 {
-  "titulo": "Mesa lateral CIMO (par)",
-  "designer": "Móveis CIMO",
-  "ano": "déc. 1960",
-  "categoria": "Mesas laterais",
-  "status": "disponivel",
-  "preco": 10000,
-  "preco_obs": "o par",
-  "parcelamento": "em até 12x",
-  "dimensoes": "L 60 × P 45 × A 38 cm",
-  "materiais": "Jacarandá-da-bahia maciço, metal, mármore",
-  "descricao": "Par de mesas laterais da Móveis CIMO com base em jacarandá maciço, pés em formato de taco e botões metálicos. O tampo de mármore dá peso visual sem comprometer a leveza da estrutura. Vendidas juntas, com grão, cor e acabamento em comum.",
   "imagens": [
     "https://static-assets.artlogic.net/w_2400,h_2400,c_limit,f_auto,fl_lossy,q_auto/artlogicstorage/voluta/images/view/a2d9d56aee9de3fc05811581522ca89dp/voluta-m-veis-cimo-mesa-lateral-cimo-par-d-c.-1960.png",
     "https://static-assets.artlogic.net/w_2400,h_2400,c_limit,f_auto,fl_lossy,q_auto/artlogicstorage/voluta/images/view/e342e26e4b3a65eb2c2f05652bbfc9b1p/voluta-m-veis-cimo-mesa-lateral-cimo-par-d-c.-1960.png",
@@ -21,10 +10,21 @@
     "https://static-assets.artlogic.net/w_2400,h_2400,c_limit,f_auto,fl_lossy,q_auto/artlogicstorage/voluta/images/view/8015f8f0ae00fdf0d7102939440ec869p/voluta-m-veis-cimo-mesa-lateral-cimo-par-d-c.-1960.png"
   ],
   "destaque": true,
-  "ordem": 21,
-  "codigo": "VLT-051, VLT-052",
-  "url_antiga": "41-moveis-cimo-mesa-lateral-cimo-par-dec.-1960",
+  "ano": "déc. 1960",
   "categoria_antiga": "6",
+  "descricao": "Par de mesas laterais da Móveis CIMO com base em jacarandá maciço, pés em formato de taco e botões metálicos. O tampo de mármore dá peso visual sem comprometer a leveza da estrutura. Vendidas juntas, com grão, cor e acabamento em comum.",
+  "ordem": 21,
   "data": "2026-07-21",
-  "data_compra": "2026-03-14"
+  "designer": "Móveis CIMO",
+  "url_antiga": "41-moveis-cimo-mesa-lateral-cimo-par-dec.-1960",
+  "preco": 10000,
+  "materiais": "Jacarandá-da-bahia maciço, metal, mármore",
+  "preco_obs": "o par",
+  "status": "vendido",
+  "categoria": "Mesas laterais",
+  "data_compra": "2026-03-14",
+  "parcelamento": "em até 12x",
+  "codigo": "VLT-051, VLT-052",
+  "titulo": "Mesa lateral CIMO (par)",
+  "dimensoes": "L 60 × P 45 × A 38 cm"
 }
