@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>CRM · Painel Voluta</title>
+<link rel="stylesheet" href="/css/site.css">
+<style>
+  body { background: #F6F5F3; }
+  .inv { max-width: 1400px; margin: 0 auto; padding: 28px 24px 64px; }
+  .inv__topo { display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+  .inv__topo h1 { font-family: var(--titulo); text-transform: uppercase; letter-spacing: .06em; font-size: 16px; font-weight: 500; color: var(--vinho); margin: 0; }
+  .inv__topo p { margin: 2px 0 0; font-size: 12px; color: var(--cinza); }
+  .inv__acoes { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  .bt { font-family: var(--titulo); text-transform: uppercase; letter-spacing: .06em; font-size: 11px; font-weight: 500; text-decoration: none; padding: 9px 14px; border: 1px solid var(--vinho); color: var(--vinho); background: #fff; cursor: pointer; display: inline-block; }
+  .bt--prim { background: var(--vinho); color: #fff; }
+  .bt--peq { padding: 6px 12px; font-size: 10.5px; }
+  .bt--perigo { border-color: #A3283A; color: #A3283A; }
+  .bt[disabled] { opacity: .5; cursor: default; }
+
+  .abas { display: flex; gap: 2px; flex-wrap: wrap; border-bottom: 1px solid var(--linha); margin-bottom: 18px; }
+  .abas button { all: unset; cursor: pointer; font-family: var(--titulo); text-transform: uppercase; letter-spacing: .08em; font-size: 11.5px; font-weight: 500; color: var(--cinza); padding: 11px 16px; border-bottom: 2px solid transparent; margin-bottom: -1px; }
+  .abas button[aria-selected="true"] { color: var(--vinho); border-bottom-color: var(--vinho); }
+  .abas button:focus-visible { outline: 2px solid var(--mostarda); }
+
+  .filtros { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 14px; }
+  .filtros input, .filtros select { font: 300 13px var(--texto); padding: 8px 10px; border: 1px solid var(--linha); background: #fff; color: var(--tinta); }
+  .filtros input[type=search] { min-width: 220px; flex: 1; max-width: 360px; }
+  .filtros label { font-size: 12px; color: var(--cinza); display: flex; align-items: center; gap: 6px; }
+  .filtros .dir { margin-left: auto; display: flex; gap: 8px; align-items: center; }
+  .cont { font-size: 12px; color: var(--cinza); }
+
+  .rolagem { overflow-x: auto; background: #fff; border: 1px solid #ECE8E4; }
+  .tabela { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .tabela th { position: sticky; top: 0; background: #fff; text-align: left; font-family: var(--titulo); text-transform: uppercase; letter-spacing: .06em; font-size: 10.5px; font-weight: 500; color: var(--vinho); padding: 11px 12px; border-bottom: 1px solid var(--mostarda); white-space: nowrap; }
+  .tabela th.n, .tabela td.n { text-align: right; }
+  .tabela th button { all: unset; cursor: pointer; }
+  .tabela th[aria-sort="ascending"] button::after { content: " ↑"; }
+  .tabela th[aria-sort="descending"] button::after { content: " ↓"; }
+  .tabela td { padding: 7px 12px; border-bottom: 1px solid #F0ECE8; vertical-align: middle; white-space: nowrap; }
+  .tabela td.larga { white-space: normal; min-width: 220px; }
+  .tabela tbody tr { cursor: pointer; }
+  .tabela tbody tr:hover td { background: #FBFAF8; }
+  .tabela tfoot td { font-weight: 500; border-top: 1px solid var(--mostarda); border-bottom: 0; background: #FCFBF9; }
+  .tabela img { width: 40px; height: 40px; max-width: none; object-fit: cover; background: #F4F4F4; display: block; }
+  .tabela .sf { width: 40px; height: 40px; background: #F4F2EF; }
+  .num { font-variant-numeric: tabular-nums; }
+  .cinza { color: var(--cinza); }
+  .neg { color: #A3283A; }
+  .st { display: inline-block; font-size: 11px; padding: 2px 9px; border-radius: 99px; }
+  .st--disponivel { background: #E6F2EA; color: #1F6A43; }
+  .st--vendido { background: #F3E6E9; color: var(--vinho); }
+  .st--reservado { background: #F6EED6; color: #7A5D12; }
+  .site { font-size: 10.5px; color: var(--cinza); margin-left: 6px; }
+  .aviso { background: #fff; border: 1px solid #ECE8E4; padding: 40px 24px; text-align: center; font-size: 14px; }
+  .aviso p { margin: 0 0 16px; }
+  .aviso-crm { background: #FBF6E8; border: 1px solid #EFE2B8; color: #6B5313; padding: 10px 14px; font-size: 12.5px; margin-bottom: 14px; }
+  .aviso-crm--ok { background: #EEF6F0; border-color: #CFE5D6; color: #1F5A3A; }
+  .aviso-crm--erro { background: #FBEDEF; border-color: #EBC6CC; color: #7C1F2E; }
+
+  /* Painel */
+  .kpis { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 12px; margin-bottom: 18px; }
+  .kpi { background: #fff; border: 1px solid #ECE8E4; padding: 14px 16px; }
+  .kpi__r { font-family: var(--titulo); text-transform: uppercase; letter-spacing: .08em; font-size: 10.5px; color: var(--cinza); margin: 0 0 6px; }
+  .kpi__v { font-size: 22px; font-weight: 400; color: var(--tinta); margin: 0; font-variant-numeric: tabular-nums; line-height: 1.2; }
+  .kpi__s { font-size: 11.5px; color: var(--cinza); margin: 4px 0 0; }
+  .sec { font-family: var(--titulo); text-transform: uppercase; letter-spacing: .1em; font-size: 11px; font-weight: 500; color: var(--vinho); margin: 26px 0 10px; }
+  .graficos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+  @media (max-width: 900px) { .graficos { grid-template-columns: 1fr; } }
+  .graf { background: #fff; border: 1px solid #ECE8E4; padding: 16px 16px 10px; min-width: 0; }
+  .graf--largo { grid-column: 1 / -1; }
+  .graf h3 { font-family: var(--texto); font-size: 13.5px; font-weight: 500; margin: 0 0 2px; color: var(--tinta); text-transform: none; letter-spacing: 0; }
+  .graf .sub { font-size: 11.5px; color: var(--cinza); margin: 0 0 10px; }
+  .graf .area { position: relative; height: 260px; }
+  .graf details { margin-top: 8px; font-size: 12px; }
+  .graf summary { cursor: pointer; color: var(--cinza); }
+  .graf details table { margin-top: 6px; font-size: 12px; }
+  .graf details td, .graf details th { padding: 4px 10px; }
+  .vazio { display: flex; align-items: center; justify-content: center; height: 100%; color: var(--cinza); font-size: 13px; }
+
+  /* Formulário */
+  dialog { border: 0; padding: 0; width: min(720px, 94vw); max-height: 92vh; box-shadow: 0 20px 60px rgba(48,10,21,.25); }
+  dialog::backdrop { background: rgba(30,20,22,.45); }
+  .form { padding: 22px 24px 20px; }
+  .form h2 { font-family: var(--titulo); text-transform: uppercase; letter-spacing: .08em; font-size: 14px; font-weight: 500; color: var(--vinho); margin: 0 0 16px; }
+  .campos { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px 14px; }
+  @media (max-width: 620px) { .campos { grid-template-columns: 1fr 1fr; } }
+  .campo { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+  .campo--2 { grid-column: span 2; }
+  .campo--3 { grid-column: 1 / -1; }
+  .campo label { font-size: 11.5px; color: var(--cinza); }
+  .campo input, .campo select, .campo textarea { font: 300 13.5px var(--texto); padding: 8px 10px; border: 1px solid var(--linha); background: #fff; color: var(--tinta); width: 100%; box-sizing: border-box; }
+  .campo textarea { min-height: 60px; resize: vertical; }
+  .campo .atalho { font-size: 11px; color: var(--burle); background: none; border: 0; padding: 0; cursor: pointer; text-align: left; }
+  .resumo { display: flex; flex-wrap: wrap; gap: 6px 22px; background: #FBFAF8; border: 1px solid #F0ECE8; padding: 10px 14px; margin: 16px 0 0; font-size: 12.5px; }
+  .resumo b { font-weight: 500; }
+  .form__pe { display: flex; flex-wrap: wrap; gap: 10px; justify-content: space-between; align-items: center; margin-top: 18px; }
+  .form__pe > div { display: flex; gap: 10px; flex-wrap: wrap; }
+  .form__msg { font-size: 12.5px; margin-top: 10px; }
+  .lista-compras { margin: 14px 0 0; font-size: 12.5px; }
+  .lista-compras li { margin-bottom: 4px; }
+  .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+</style>
+</head>
+<body>
+<main class="inv">
+  <div class="inv__topo">
+    <div>
+      <h1>CRM · Voluta</h1>
+      <p>Custos, vendas e resultados. Os dados ficam no repositório privado; o status das peças segue o site.</p>
+    </div>
+    <div class="inv__acoes">
+      <a class="bt" href="/admin/">Inventário do site</a>
+    </div>
+  </div>
+  <div id="app"><div class="aviso"><p>Carregando o CRM…</p></div></div>
+</main>
+<dialog id="dlg"><div class="form" id="dlg-corpo"></div></dialog>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="/admin/crm/crm.js"></script>
+<script src="/admin/publicar.js" defer></script>
+</body>
+</html>

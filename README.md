@@ -19,6 +19,13 @@ Site estático da Voluta Galeria, hospedado no Netlify. Sem mensalidade de plata
 
 O site se atualiza sozinho em cerca de 1 minuto depois de publicar.
 
+## CRM (custos, vendas, despesas e clientes)
+
+- Fica em `volutagaleria.com.br/admin/crm` (botão **CRM** na tabela do painel). Usa o mesmo login do GitHub.
+- **Os dados financeiros ficam no repositório privado `voluta-crm`** (`inventario.json`, `vendas.json`, `despesas.json`, `clientes.json`). Nunca coloque custo, fornecedor ou cliente neste repositório (`voluta-site`), que é público.
+- Ligação pelo código VLT: o status da ficha do site (Disponível/Vendido) vale no CRM; registrar uma venda no CRM marca a ficha do site como Vendido, esperando o botão **Publicar site**.
+- Custo total = compra + frete + restauro + NF + leiloeiro + custo operacional (R$ 100/peça). Lucro = preço − custo total. Margem real = lucro ÷ preço.
+
 ## Colocar no ar (uma vez só)
 
 1. Crie uma conta gratuita no GitHub e um repositório chamado `voluta-site`; envie esta pasta para ele.
