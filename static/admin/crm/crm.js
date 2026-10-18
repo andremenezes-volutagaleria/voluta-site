@@ -145,8 +145,9 @@
       const repoOk = await gh(CRM, "");
       if (repoOk.status === 401) throw new Error("login");
       if (repoOk.status === 404) return avisoTela(`Não encontrei o repositório privado <b>voluta-crm</b>.<br>Confira se ele foi criado na conta ${e(CRM.dono)}. Se já existe, saia e entre de novo no painel para renovar a permissão.`, `<a class="bt" href="/admin/editar/">Abrir o painel</a>`);
-      const [, ...arqs] = await Promise.all([carregarFichas(), ...ARQUIVOS.map(a => ler(CRM, `${a}.json`))]);
+      const [, painelSalvo, ...arqs] = await Promise.all([carregarFichas(), ler(CRM, "dashboard.json").catch(() => null), ...ARQUIVOS.map(a => ler(CRM, `${a}.json`))]);
       if (arqs.every(x => !x)) return telaImportar();
+      if (painelSalvo?.json?.widgets) { D.dashboard = painelSalvo.json; SHA.dashboard = painelSalvo.sha; } else D.dashboard = painelExemplo();
       ARQUIVOS.forEach((a, i) => { if (arqs[i]) { D[a] = arqs[i].json; SHA[a] = arqs[i].sha; } D[a].itens ||= []; });
       const mud = sincronizarDoSite();
       if (mud.length) { try { await salvar("inventario", `status atualizado pelo site (${mud.length})`); } catch {} }
@@ -179,13 +180,13 @@
     app.innerHTML = `
       ${faixa ? `<div class="aviso-crm aviso-crm--ok" role="status">${e(faixa)}</div>` : ""}
       <div class="abas" role="tablist">
-        ${[["painel", "Painel"], ["inventario", "Inventário"], ["vendas", "Vendas"], ["despesas", "Despesas"], ["clientes", "Clientes"]].map(([k, r]) =>
+        ${[["painel", "Painel"], ["montar", "Montar painel"], ["inventario", "Inventário"], ["vendas", "Vendas"], ["despesas", "Despesas"], ["clientes", "Clientes"]].map(([k, r]) =>
           `<button role="tab" data-aba="${k}" aria-selected="${aba === k}">${r}</button>`).join("")}
       </div>
       <div id="conteudo"></div>`;
     app.querySelectorAll("[data-aba]").forEach(b => b.addEventListener("click", () => { aba = b.dataset.aba; try { localStorage.setItem("crm-aba", aba); } catch {} montar(); }));
     // Espera as fontes para os gráficos medirem os rótulos com a letra certa
-    if (aba === "painel") Promise.all([document.fonts?.load?.(`400 12px ${getComputedStyle(document.body).fontFamily}`), document.fonts?.ready].map(x => Promise.resolve(x).catch(() => {}))).then(() => { if (aba === "painel") painel(); });
+    if (aba === "painel" || aba === "montar") Promise.all([document.fonts?.load?.(`400 12px ${getComputedStyle(document.body).fontFamily}`), document.fonts?.ready].map(x => Promise.resolve(x).catch(() => {}))).then(() => { if (aba === "painel") painel(); else if (aba === "montar") montarPainel(); });
     else ({ inventario, vendas, despesas, clientes })[aba]?.();
   }
   const conteudo = () => document.getElementById("conteudo");
@@ -780,6 +781,251 @@
       desenhar();
     });
     desenhar();
+  }
+
+  // ---------- Montar painel (arrastar e soltar) ----------
+  // Valores (o que somar) e agrupamentos (como separar). Cada valor vem de uma fonte; nem todo agrupamento serve para toda fonte.
+  const DIMS = { mes: "Mês", ano: "Ano", categoria: "Categoria", designer: "Designer", fornecedor: "Fornecedor", origem: "Origem", status: "Status",
+    forma: "Forma de pagamento", cliente: "Cliente", tipo: "Tipo de despesa", subtipo: "Subcategoria da despesa", idade: "Tempo parado" };
+  const ORDEM_IDADE = ["Até 30 dias", "31 a 90 dias", "91 a 180 dias", "181 a 365 dias", "Mais de 1 ano", "Sem data"];
+  const faixaIdade = p => { const d = dias(p.data_compra, hoje()); return d == null || d < 0 ? "Sem data" : d <= 30 ? ORDEM_IDADE[0] : d <= 90 ? ORDEM_IDADE[1] : d <= 180 ? ORDEM_IDADE[2] : d <= 365 ? ORDEM_IDADE[3] : ORDEM_IDADE[4]; };
+  const dimPeca = { categoria: p => p.categoria || "Sem categoria", designer: p => p.designer || "Sem designer", fornecedor: p => p.fornecedor || "Sem fornecedor", origem: p => p.origem || "—", status: p => ROT_ST[p.status] || p.status || "—" };
+  const viaPeca = k => v => { const p = peca(v.codigo); return p ? dimPeca[k](p) : "Fora do inventário"; };
+  const porData = campo => ({ mes: x => (x[campo] || "").slice(0, 7) || "Sem data", ano: x => (x[campo] || "").slice(0, 4) || "Sem data" });
+  const FONTES = {
+    vendas: { itens: () => D.vendas.itens.filter(v => noPeriodo(v.data)), dims: { ...porData("data"), categoria: viaPeca("categoria"), designer: viaPeca("designer"), fornecedor: viaPeca("fornecedor"), origem: viaPeca("origem"), forma: v => v.forma || "—", cliente: v => cliente(v.cliente_id)?.nome || "Sem cliente" } },
+    compras: { itens: () => pecas().filter(p => noPeriodo(p.data_compra)), dims: { ...porData("data_compra"), ...dimPeca } },
+    estoque: { itens: () => pecas().filter(p => p.status !== "vendido"), dims: { ...porData("data_compra"), ...dimPeca, idade: faixaIdade } },
+    despesas: { itens: () => D.despesas.itens.filter(d => noPeriodo(d.data)), dims: { ...porData("data"), tipo: d => d.categoria || "Sem categoria", subtipo: d => d.subcategoria || "Sem subcategoria" } },
+  };
+  const soVal = l => l.reduce((s, v) => s + n(v.valor), 0);
+  const MEDIDAS = {
+    faturamento: { r: "Faturamento", g: "Vendas", f: "vendas", u: "R", s: v => n(v.valor) },
+    lucro: { r: "Lucro das vendas", g: "Vendas", f: "vendas", u: "R", s: lucroVenda },
+    nvendas: { r: "Nº de vendas", g: "Vendas", f: "vendas", u: "N", s: () => 1 },
+    ticket: { r: "Ticket médio", g: "Vendas", f: "vendas", u: "R", a: l => l.length ? soVal(l) / l.length : 0 },
+    margem: { r: "Margem real", g: "Vendas", f: "vendas", u: "P", a: l => soVal(l) ? l.reduce((s, v) => s + lucroVenda(v), 0) / soVal(l) : 0 },
+    investido: { r: "Investido em peças", g: "Compras de peças", f: "compras", u: "R", s: custoPeca },
+    compra: { r: "Compra", g: "Compras de peças", f: "compras", u: "R", s: p => n(p.compra) },
+    frete: { r: "Frete", g: "Compras de peças", f: "compras", u: "R", s: p => n(p.frete) },
+    restauro: { r: "Restauro", g: "Compras de peças", f: "compras", u: "R", s: p => n(p.restauro) },
+    taxas: { r: "NF e leiloeiro", g: "Compras de peças", f: "compras", u: "R", s: p => n(p.nf) + n(p.leiloeiro) },
+    npecas: { r: "Nº de peças compradas", g: "Compras de peças", f: "compras", u: "N", s: () => 1 },
+    est_n: { r: "Peças à venda", g: "Estoque hoje", f: "estoque", u: "N", s: () => 1 },
+    est_custo: { r: "Custo do estoque", g: "Estoque hoje", f: "estoque", u: "R", s: custoTotal },
+    est_valor: { r: "Valor de venda do estoque", g: "Estoque hoje", f: "estoque", u: "R", s: p => n(p.preco_pix) },
+    est_lucro: { r: "Lucro previsto", g: "Estoque hoje", f: "estoque", u: "R", s: lucroPrev },
+    despesas: { r: "Despesas", g: "Despesas", f: "despesas", u: "R", s: d => n(d.valor) },
+  };
+  const DIMS_DE = { vendas: "das vendas", compras: "das compras", estoque: "do estoque", despesas: "das despesas" };
+  const agregar = (m, l) => m.a ? m.a(l) : l.reduce((s, x) => s + m.s(x), 0);
+  const fmtU = (u, v) => u === "P" ? P(v) : u === "N" ? Math.round(v).toLocaleString("pt-BR") : R(v);
+  const eixoU = u => ({ ticks: { callback: v => u === "P" ? `${Math.round(v * 100)}%` : u === "N" ? v.toLocaleString("pt-BR") : Math.abs(v) >= 1000 ? `R$ ${(v / 1000).toLocaleString("pt-BR")} mil` : `R$ ${v}` }, grid: { color: COR.grade }, border: { display: false } });
+  const SERIES = [COR.vinho, COR.azul, COR.mostarda];
+  const PALETA8 = [COR.vinho, COR.mostarda, COR.azul, COR.verde, COR.barro, "#6250d6", "#e87ba4", "#008300"];
+  const TIPOS = [["numero", "Número"], ["barras", "Barras"], ["linhas", "Linhas"], ["pizza", "Pizza"], ["tabela", "Tabela"]];
+  const novoIdW = () => "w" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+  function painelExemplo() {
+    return { widgets: [
+      { id: novoIdW(), medidas: ["faturamento", "lucro"], dim: "", tipo: "numero", largura: 1 },
+      { id: novoIdW(), medidas: ["despesas"], dim: "tipo", tipo: "pizza", largura: 1 },
+      { id: novoIdW(), medidas: ["faturamento", "lucro"], dim: "mes", tipo: "barras", largura: 2 },
+    ] };
+  }
+  const tituloAuto = w => w.medidas.length ? `${w.medidas.map(k => MEDIDAS[k]?.r).filter(Boolean).join(" e ")}${w.dim ? ` por ${DIMS[w.dim].toLowerCase()}` : ""}` : (w.dim ? `Por ${DIMS[w.dim].toLowerCase()}` : "Novo gráfico");
+  const temDim = w => !!w.dim;
+  const tipoValido = (w, t) => t === "numero" || (["barras", "linhas", "pizza", "tabela"].includes(t) && temDim(w) && (t !== "pizza" || (w.medidas.length === 1 && MEDIDAS[w.medidas[0]]?.u !== "P")));
+  const tipoDe = w => tipoValido(w, w.tipo) ? w.tipo : (temDim(w) ? "barras" : "numero");
+
+  function calcular(w) {
+    const ms = w.medidas.map(k => MEDIDAS[k]).filter(Boolean);
+    if (!w.dim) return { ms, fora: [], totais: ms.map(m => agregar(m, FONTES[m.f].itens())) };
+    const ok = ms.filter(m => FONTES[m.f].dims[w.dim]), fora = ms.filter(m => !FONTES[m.f].dims[w.dim]);
+    const mapas = ok.map(m => { const mp = new Map(); for (const x of FONTES[m.f].itens()) { const k = FONTES[m.f].dims[w.dim](x); if (!mp.has(k)) mp.set(k, []); mp.get(k).push(x); } return mp; });
+    let chaves = [...new Set(mapas.flatMap(mp => [...mp.keys()]))];
+    const ehMes = k => /^\d{4}-\d{2}$/.test(k);
+    if (w.dim === "mes") chaves = [...mesesDe(chaves.filter(ehMes).map(k => k + "-01")), ...chaves.filter(k => !ehMes(k))];
+    else if (w.dim === "ano") chaves.sort();
+    else if (w.dim === "idade") chaves.sort((a, b) => ORDEM_IDADE.indexOf(a) - ORDEM_IDADE.indexOf(b));
+    else if (ok.length) {
+      // Ordena pelo primeiro valor; o que passar do limite vira "Outros"
+      const v0 = k => agregar(ok[0], mapas[0].get(k) || []);
+      chaves.sort((a, b) => v0(b) - v0(a));
+      const lim = tipoDe(w) === "pizza" ? 8 : tipoDe(w) === "tabela" ? 1e9 : 12;
+      if (chaves.length > lim) {
+        const resto = chaves.slice(lim - 1); chaves = [...chaves.slice(0, lim - 1), "Outros"];
+        mapas.forEach(mp => mp.set("Outros", resto.flatMap(k => mp.get(k) || [])));
+      }
+    }
+    const valores = ok.map((m, i) => chaves.map(k => agregar(m, mapas[i].get(k) || [])));
+    return { ms: ok, fora, chaves, valores, rotulos: chaves.map(k => w.dim === "mes" && ehMes(k) ? rotMes(k) : k), totais: ok.map(m => agregar(m, FONTES[m.f].itens())) };
+  }
+
+  let graficosMontar = {}, arrastando = null, salvarTimer = null, filaPainel = Promise.resolve();
+  function guardarPainel() {
+    const st = document.getElementById("salvo-painel"); if (st) { st.textContent = "Salvando…"; st.className = "cont"; }
+    clearTimeout(salvarTimer);
+    salvarTimer = setTimeout(() => {
+      filaPainel = filaPainel.then(() => salvar("dashboard", "painel montado"))
+        .then(() => { const s2 = document.getElementById("salvo-painel"); if (s2) { s2.textContent = "Salvo"; setTimeout(() => { if (s2.textContent === "Salvo") s2.textContent = ""; }, 2500); } })
+        .catch(err => { const s2 = document.getElementById("salvo-painel"); if (s2) { s2.textContent = "Não salvou: " + err.message; s2.className = "cont neg"; } });
+    }, 900);
+  }
+  const opcoesMedidas = () => [...new Set(Object.values(MEDIDAS).map(m => m.g))].map(g => `<optgroup label="${e(g)}">${Object.entries(MEDIDAS).filter(([, m]) => m.g === g).map(([k, m]) => `<option value="${k}">${e(m.r)}</option>`).join("")}</optgroup>`).join("");
+
+  function montarPainel() {
+    Object.values(graficosMontar).forEach(g => g.destroy()); graficosMontar = {};
+    const anos = [...new Set([...D.vendas.itens.map(v => v.data), ...pecas().map(p => p.data_compra), ...D.despesas.itens.map(d => d.data)].filter(Boolean).map(d => d.slice(0, 4)))].sort().reverse();
+    const grupos = [...new Set(Object.values(MEDIDAS).map(m => m.g))];
+    conteudo().innerHTML = `
+      <div class="filtros"><label>Período <select id="per"><option value="tudo">Tudo</option><option value="3m">Últimos 3 meses</option><option value="6m">Últimos 6 meses</option><option value="12m">Últimos 12 meses</option>${anos.map(a => `<option value="${a}">${a}</option>`).join("")}</select></label>
+        <div class="dir"><span class="cont" id="salvo-painel" role="status"></span><button class="bt bt--peq" type="button" id="exemplo">Voltar ao exemplo</button><button class="bt bt--prim bt--peq" type="button" id="novo-w">+ Novo gráfico</button></div></div>
+      <div class="montar">
+        <aside class="dados" aria-label="Dados para arrastar">
+          <p class="dados__ajuda">Arraste um <b>valor</b> para o espaço vazio para criar um gráfico. Arraste outro valor ou um <b>agrupamento</b> para dentro de um gráfico para completar.</p>
+          ${grupos.map(g => `<h4>${e(g)}</h4><div class="dados__lista">${Object.entries(MEDIDAS).filter(([, m]) => m.g === g).map(([k, m]) => `<span class="dado dado--valor" draggable="true" data-t="medida" data-id="${k}">${e(m.r)}</span>`).join("")}</div>`).join("")}
+          <h4>Agrupar por</h4><div class="dados__lista">${Object.entries(DIMS).map(([k, r]) => `<span class="dado dado--grupo" draggable="true" data-t="dim" data-id="${k}">${e(r)}</span>`).join("")}</div>
+        </aside>
+        <div class="quadro" id="quadro"></div>
+      </div>`;
+    const sel = document.getElementById("per"); sel.value = periodo; if (!sel.value) { periodo = "tudo"; sel.value = "tudo"; }
+    sel.addEventListener("change", () => { periodo = sel.value; try { localStorage.setItem("crm-periodo", periodo); } catch {} desenharQuadro(); });
+    document.getElementById("novo-w").addEventListener("click", () => { D.dashboard.widgets.push({ id: novoIdW(), medidas: [], dim: "", tipo: "", largura: 1 }); desenharQuadro(); guardarPainel(); });
+    document.getElementById("exemplo").addEventListener("click", ev => {
+      const b = ev.currentTarget; if (!b.dataset.conf) { b.dataset.conf = 1; b.textContent = "Apagar meus gráficos?"; return; }
+      D.dashboard = { ...painelExemplo(), }; desenharQuadro(); guardarPainel(); b.textContent = "Voltar ao exemplo"; delete b.dataset.conf;
+    });
+    const aside = conteudo().querySelector(".dados");
+    aside.addEventListener("dragstart", ev => { const d = ev.target.closest(".dado"); if (!d) return; arrastando = { t: d.dataset.t, id: d.dataset.id }; ev.dataTransfer.setData("text/plain", d.textContent); ev.dataTransfer.effectAllowed = "copy"; document.body.classList.add("arrastando"); });
+    aside.addEventListener("dragend", fimArraste);
+    ligarQuadro();
+    desenharQuadro();
+  }
+  function fimArraste() { arrastando = null; document.body.classList.remove("arrastando"); document.querySelectorAll(".alvo").forEach(x => x.classList.remove("alvo")); }
+
+  function desenharQuadro() {
+    Object.values(graficosMontar).forEach(g => g.destroy()); graficosMontar = {};
+    const q = document.getElementById("quadro");
+    q.innerHTML = D.dashboard.widgets.map(w => `<article class="wg ${w.largura === 2 ? "wg--2" : ""}" data-w="${w.id}"></article>`).join("")
+      + `<div class="nova" data-nova>Solte um valor aqui para criar um gráfico novo</div>`;
+    D.dashboard.widgets.forEach(desenharWidget);
+  }
+
+  function desenharWidget(w) {
+    const el = document.querySelector(`[data-w="${w.id}"]`); if (!el) return;
+    graficosMontar[w.id]?.destroy(); delete graficosMontar[w.id];
+    const t = tipoDe(w), c = calcular(w);
+    const titulo = w.titulo || tituloAuto(w);
+    el.innerHTML = `
+      <header class="wg__topo">
+        <span class="wg__alca" draggable="true" title="Arraste para mudar de lugar" aria-hidden="true">⠿</span>
+        <input class="wg__tit" value="${e(titulo)}" aria-label="Título do gráfico">
+        <button class="wg__btn" type="button" data-acao="largura" title="${w.largura === 2 ? "Deixar estreito" : "Deixar largo"}">${w.largura === 2 ? "↔ Estreito" : "↔ Largo"}</button>
+        <button class="wg__btn" type="button" data-acao="excluir" title="Remover gráfico" aria-label="Remover gráfico">✕</button>
+      </header>
+      <div class="wg__tipos" role="group" aria-label="Tipo de gráfico">${TIPOS.map(([k, r]) => `<button type="button" data-tipo="${k}" aria-pressed="${t === k}" ${tipoValido(w, k) ? "" : "disabled"}>${r}</button>`).join("")}</div>
+      <div class="wg__slots">
+        <div class="slot" data-slot="medidas"><span class="slot__r">Valores</span>${w.medidas.map(k => `<span class="pilula pilula--valor">${e(MEDIDAS[k]?.r || k)}<button type="button" data-tira-medida="${k}" aria-label="Tirar ${e(MEDIDAS[k]?.r || k)}">✕</button></span>`).join("")}
+          <select class="mais" data-mais="medida" aria-label="Adicionar valor"><option value="">+ valor</option>${opcoesMedidas()}</select></div>
+        <div class="slot" data-slot="dim"><span class="slot__r">Agrupar por</span>${w.dim ? `<span class="pilula pilula--grupo">${e(DIMS[w.dim])}<button type="button" data-tira-dim aria-label="Tirar agrupamento">✕</button></span>` : ""}
+          <select class="mais" data-mais="dim" aria-label="Agrupar por"><option value="">${w.dim ? "trocar" : "+ agrupar"}</option>${Object.entries(DIMS).map(([k, r]) => `<option value="${k}">${e(r)}</option>`).join("")}</select></div>
+      </div>
+      <p class="wg__aviso" role="status">${c.fora.length ? `${c.fora.map(m => e(m.r)).join(", ")} não ${c.fora.length > 1 ? "podem" : "pode"} ser agrupado por ${e(DIMS[w.dim].toLowerCase())}.` : ""}</p>
+      <div class="wg__corpo"></div>`;
+    const corpo = el.querySelector(".wg__corpo");
+    if (!w.medidas.length) { corpo.innerHTML = `<div class="vazio vazio--alvo">Arraste um valor para cá</div>`; return; }
+    if (!c.ms.length) { corpo.innerHTML = `<div class="vazio">Escolha outro agrupamento</div>`; return; }
+    if (t === "numero") {
+      corpo.innerHTML = `<div class="wg__nums">${c.ms.map((m, i) => `<div><p class="kpi__r">${e(m.r)}</p><p class="kpi__v">${fmtU(m.u, c.totais[i])}</p></div>`).join("")}</div>`; return;
+    }
+    if (!c.chaves.length) { corpo.innerHTML = `<div class="vazio">Sem dados no período</div>`; return; }
+    if (t === "tabela") {
+      corpo.innerHTML = `<div class="rolagem" style="max-height:340px"><table class="tabela"><thead><tr><th>${e(DIMS[w.dim])}</th>${c.ms.map(m => `<th class="n">${e(m.r)}</th>`).join("")}</tr></thead><tbody>${c.rotulos.map((r, i) => `<tr style="cursor:default"><td>${e(r)}</td>${c.ms.map((m, j) => `<td class="n num">${fmtU(m.u, c.valores[j][i])}</td>`).join("")}</tr>`).join("")}</tbody>
+        <tfoot><tr><td>Total</td>${c.ms.map((m, j) => `<td class="n num">${fmtU(m.u, c.totais[j])}</td>`).join("")}</tr></tfoot></table></div>`; return;
+    }
+    const Ch = window.Chart; if (!Ch) { corpo.innerHTML = `<div class="vazio">Não foi possível carregar os gráficos.</div>`; return; }
+    const u = c.ms[0].u, horizontal = t === "barras" && !["mes", "ano", "idade"].includes(w.dim);
+    const altura = horizontal ? Math.max(220, c.chaves.length * 28 + 50) : 260;
+    corpo.innerHTML = `<div class="area" style="height:${altura}px"><canvas></canvas></div><details><summary>Ver números</summary><div class="rolagem" style="max-height:260px"><table class="tabela"><tbody>${c.rotulos.map((r, i) => `<tr style="cursor:default"><td>${e(r)}</td>${c.ms.map((m, j) => `<td class="n num">${fmtU(m.u, c.valores[j][i])}</td>`).join("")}</tr>`).join("")}</tbody></table></div></details>`;
+    const cv = corpo.querySelector("canvas");
+    const tip = { callbacks: { label: x => `${c.ms.length > 1 || t === "pizza" ? (t === "pizza" ? x.label : x.dataset.label) + ": " : ""}${fmtU(u, t === "pizza" ? x.parsed : horizontal ? x.parsed.x : x.parsed.y)}${t === "pizza" && c.totais[0] ? ` (${P(x.parsed / c.totais[0])})` : ""}` } };
+    const legenda = { display: c.ms.length > 1 || t === "pizza", position: t === "pizza" ? "right" : "top", align: "start", labels: { boxWidth: 10, boxHeight: 10 } };
+    const base = { responsive: true, maintainAspectRatio: false, animation: false, layout: { padding: { left: 6, right: 4 } }, plugins: { legend: legenda, tooltip: tip } };
+    let cfg;
+    if (t === "pizza") cfg = { type: "doughnut", data: { labels: c.rotulos, datasets: [{ data: c.valores[0], backgroundColor: c.rotulos.map((r, i) => r === "Outros" ? "#A39C94" : PALETA8[i % 8]), borderColor: "#fff", borderWidth: 2 }] }, options: { ...base, cutout: "55%" } };
+    else if (t === "linhas") cfg = { type: "line", data: { labels: c.rotulos, datasets: c.ms.map((m, j) => ({ label: m.r, data: c.valores[j], borderColor: SERIES[j], backgroundColor: SERIES[j], borderWidth: 2, pointRadius: 3, pointHoverRadius: 5, tension: 0 })) },
+      options: { ...base, interaction: { mode: "index", intersect: false }, scales: { x: { grid: { display: false } }, y: eixoU(u) } } };
+    else cfg = { type: "bar", data: { labels: c.rotulos, datasets: c.ms.map((m, j) => ({ label: m.r, data: c.valores[j], backgroundColor: SERIES[j], borderRadius: 4, borderSkipped: "start", maxBarThickness: horizontal ? 22 : 34 })) },
+      options: { ...base, indexAxis: horizontal ? "y" : "x", interaction: { mode: "index", axis: horizontal ? "y" : "x", intersect: false }, scales: horizontal ? { x: eixoU(u), y: { grid: { display: false } } } : { x: { grid: { display: false } }, y: eixoU(u) } } };
+    graficosMontar[w.id] = new Ch(cv, cfg);
+  }
+
+  const wDe = el => D.dashboard.widgets.find(w => w.id === el?.closest("[data-w]")?.dataset.w);
+  function avisoW(w, txt) { const p = document.querySelector(`[data-w="${w.id}"] .wg__aviso`); if (p) { p.textContent = txt; p.classList.add("wg__aviso--forte"); } }
+  function addMedida(w, k) {
+    if (w.medidas.includes(k)) return false;
+    if (w.medidas.length >= 3) { avisoW(w, "Cabem até 3 valores por gráfico. Crie outro gráfico para este."); return false; }
+    const u = MEDIDAS[w.medidas[0]]?.u;
+    if (u && MEDIDAS[k].u !== u) { avisoW(w, `${MEDIDAS[k].r} é ${MEDIDAS[k].u === "P" ? "uma porcentagem" : MEDIDAS[k].u === "N" ? "uma quantidade" : "em reais"} e não mistura com os outros valores. Crie outro gráfico para ele.`); return false; }
+    w.medidas.push(k); return true;
+  }
+  function soltar(destino, alvoEl) {
+    if (!arrastando) return;
+    const a = arrastando, ws = D.dashboard.widgets;
+    if (a.t === "widget") {
+      const de = ws.findIndex(w => w.id === a.id); if (de < 0) return;
+      const [mov] = ws.splice(de, 1);
+      const para = destino ? ws.indexOf(destino) : ws.length;
+      ws.splice(para < 0 ? ws.length : para, 0, mov);
+      desenharQuadro(); guardarPainel(); return;
+    }
+    if (!destino) {   // espaço vazio: cria um gráfico novo
+      const w = { id: novoIdW(), medidas: a.t === "medida" ? [a.id] : [], dim: a.t === "dim" ? a.id : "", tipo: "", largura: 1 };
+      ws.push(w); desenharQuadro(); guardarPainel(); return;
+    }
+    let mudou = false;
+    if (a.t === "medida") mudou = addMedida(destino, a.id);
+    else if (a.t === "dim" && destino.dim !== a.id) { destino.dim = a.id; if (destino.tipo === "numero") destino.tipo = ""; mudou = true; }
+    if (mudou) { desenharWidget(destino); guardarPainel(); }
+  }
+  function ligarQuadro() {
+    const q = document.getElementById("quadro");
+    q.addEventListener("dragstart", ev => {
+      const h = ev.target.closest(".wg__alca"); if (!h) return;
+      const w = wDe(h); arrastando = { t: "widget", id: w.id }; ev.dataTransfer.setData("text/plain", "grafico"); ev.dataTransfer.effectAllowed = "move";
+      ev.dataTransfer.setDragImage(h.closest(".wg"), 20, 20); document.body.classList.add("arrastando");
+    });
+    q.addEventListener("dragend", fimArraste);
+    q.addEventListener("dragover", ev => {
+      if (!arrastando) return;
+      const alvo = ev.target.closest("[data-nova], .wg"); if (!alvo) return;
+      ev.preventDefault(); ev.dataTransfer.dropEffect = arrastando.t === "widget" ? "move" : "copy";
+      document.querySelectorAll(".alvo").forEach(x => x !== alvo && x.classList.remove("alvo")); alvo.classList.add("alvo");
+    });
+    q.addEventListener("dragleave", ev => { const alvo = ev.target.closest("[data-nova], .wg"); if (alvo && !alvo.contains(ev.relatedTarget)) alvo.classList.remove("alvo"); });
+    q.addEventListener("drop", ev => {
+      const alvo = ev.target.closest("[data-nova], .wg"); if (!alvo || !arrastando) return;
+      ev.preventDefault(); soltar(alvo.matches("[data-nova]") ? null : wDe(alvo), alvo); fimArraste();
+    });
+    q.addEventListener("click", ev => {
+      const w = wDe(ev.target); if (!w) return;
+      const b = ev.target.closest("button"); if (!b) return;
+      if (b.dataset.tipo) { w.tipo = b.dataset.tipo; desenharWidget(w); guardarPainel(); }
+      else if (b.dataset.acao === "largura") { w.largura = w.largura === 2 ? 1 : 2; desenharQuadro(); guardarPainel(); }
+      else if (b.dataset.acao === "excluir") {
+        if (!b.dataset.conf) { b.dataset.conf = 1; b.textContent = "Remover?"; b.classList.add("wg__btn--perigo"); return; }
+        graficosMontar[w.id]?.destroy(); delete graficosMontar[w.id];
+        D.dashboard.widgets.splice(D.dashboard.widgets.indexOf(w), 1); desenharQuadro(); guardarPainel();
+      }
+      else if (b.dataset.tiraMedida) { w.medidas = w.medidas.filter(k => k !== b.dataset.tiraMedida); desenharWidget(w); guardarPainel(); }
+      else if ("tiraDim" in b.dataset) { w.dim = ""; desenharWidget(w); guardarPainel(); }
+    });
+    q.addEventListener("change", ev => {
+      const w = wDe(ev.target); if (!w) return;
+      const s = ev.target.closest("select.mais");
+      if (s && s.value) { const ok = s.dataset.mais === "medida" ? addMedida(w, s.value) : (w.dim = s.value, w.tipo === "numero" && (w.tipo = ""), true); s.value = ""; if (ok) { desenharWidget(w); guardarPainel(); } }
+    });
+    q.addEventListener("input", ev => { const i = ev.target.closest(".wg__tit"); if (!i) return; const w = wDe(i); w.titulo = i.value.trim() && i.value.trim() !== tituloAuto(w) ? i.value.trim() : ""; guardarPainel(); });
   }
 
   carregar();
