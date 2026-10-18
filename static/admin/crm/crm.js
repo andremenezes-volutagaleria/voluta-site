@@ -789,7 +789,8 @@
   // Contas atrasadas (data já passou e ainda pendentes) entram no mês atual.
   const addMes = (m, k) => { let [y, mm] = m.split("-").map(Number); mm += k; while (mm > 12) { mm -= 12; y++; } while (mm < 1) { mm += 12; y--; } return `${y}-${String(mm).padStart(2, "0")}`; };
   const difMeses = (a, b) => { const [ya, ma] = a.split("-").map(Number), [yb, mb] = b.split("-").map(Number); return (yb - ya) * 12 + (mb - ma); };
-  let graficoContas = null, filaContas = Promise.resolve(), timerContas = null, verPagos = false;
+  let graficoContas = null, filaContas = Promise.resolve(), timerContas = null, verPagos = false, mesContas = "todos";
+  try { mesContas = localStorage.getItem("crm-mes-contas") || "todos"; } catch {}
   function guardarContas(msg = "contas") {
     const st = document.getElementById("salvo-contas"); if (st) { st.textContent = "Salvando…"; st.className = "cont"; }
     clearTimeout(timerContas);
@@ -823,17 +824,26 @@
 
   function contas() {
     graficoContas?.destroy(); graficoContas = null;
-    const c = D.contas, pr = projecao(), hj = hoje();
-    const pend = c.lancamentos.filter(l => l.status === "pendente");
+    const c = D.contas, pr = projecao(), hj = hoje(), m0 = hj.slice(0, 7);
+    if (mesContas !== "todos" && !pr.some(x => x.m === mesContas)) mesContas = "todos";
+    const linhaMes = pr.find(x => x.m === mesContas), todos = mesContas === "todos";
+    // Mês de cada conta: pendente atrasada conta no mês atual; paga ou recebida fica no mês da data
+    const mesDe = l => l.status === "pendente" && l.data < hj ? m0 : l.data.slice(0, 7);
+    const noMes = l => todos || mesDe(l) === mesContas;
+    const pend = c.lancamentos.filter(l => l.status === "pendente" && noMes(l) && (todos ? mesDe(l) <= pr[pr.length - 1].m : true));
     const aRec = pend.filter(l => l.tipo === "entrada").reduce((s, l) => s + n(l.valor), 0);
     const aPag = pend.filter(l => l.tipo === "saida").reduce((s, l) => s + n(l.valor), 0);
+    const fxPer = todos ? pr.reduce((s, x) => s + x.fx + x.vari, 0) : linhaMes.fx + linhaMes.vari;
     const fxMes = c.fixos.filter(f => f.ativo !== false).reduce((s, f) => s + n(f.valor), 0);
+    const saldoHoje = n(c.saldo.valor), disponivel = saldoHoje + aRec, pagar = aPag + fxPer, sobra = disponivel - pagar;
+    const nomeMes = todos ? "" : ` em ${rotMes(mesContas)}`;
     const menor = pr.reduce((a, b) => b.saldo < a.saldo ? b : a, pr[0]);
     const primeiroNeg = pr.find(x => x.saldo < 0), fim = pr[pr.length - 1];
     const kpi = (r, v, s2 = "") => `<div class="kpi"><p class="kpi__r">${r}</p><p class="kpi__v">${v}</p>${s2 ? `<p class="kpi__s">${s2}</p>` : ""}</div>`;
     const media = mediaVariavel();
     conteudo().innerHTML = `
       <div class="filtros">
+        <label>Mês <select id="mes-contas"><option value="todos">Todos os meses</option>${pr.map(x => `<option value="${x.m}" ${x.m === mesContas ? "selected" : ""}>${rotMes(x.m)}${x.m === m0 ? " (este mês)" : ""}</option>`).join("")}</select></label>
         <label>Prever <select id="hz"><option value="fim">até a última conta lançada</option><option value="3">3 meses</option><option value="6">6 meses</option><option value="12">12 meses</option></select></label>
         <label><input type="checkbox" id="verpagos" ${verPagos ? "checked" : ""}> Mostrar pagas e recebidas</label>
         <div class="dir"><span class="cont" id="salvo-contas" role="status"></span>
@@ -841,20 +851,21 @@
       </div>
       <div class="kpis">
         <div class="kpi"><p class="kpi__r">Saldo em conta</p><p class="kpi__v"><input class="cel cel--saldo" id="saldo" inputmode="decimal" value="${e(numCel(c.saldo.valor))}" aria-label="Saldo em conta hoje"></p><p class="kpi__s">atualizado em ${dataBR(c.saldo.data)}</p></div>
-        ${kpi("A receber", R(aRec), `${pend.filter(l => l.tipo === "entrada").length} parcelas e valores`)}
-        ${kpi("A pagar", R(aPag), `${pend.filter(l => l.tipo === "saida").length} contas · fora os fixos`)}
-        ${kpi("Custos fixos", R(fxMes) + "<small style='font-size:13px'> /mês</small>", `${c.fixos.filter(f => f.ativo !== false).length} itens`)}
-        ${kpi(`Saldo previsto em ${rotMes(fim.m)}`, `<span class="${fim.saldo < 0 ? "neg" : ""}">${R(fim.saldo)}</span>`, `menor saldo: <span class="${menor.saldo < 0 ? "neg" : ""}">${R(menor.saldo)}</span> em ${rotMes(menor.m)}`)}
+        ${kpi(`A receber${nomeMes} + saldo`, R(disponivel), `${R(saldoHoje)} na conta + ${R(aRec)} a receber (${pend.filter(l => l.tipo === "entrada").length})`)}
+        ${kpi(`A pagar${nomeMes}`, R(pagar), `${R(aPag)} em contas (${pend.filter(l => l.tipo === "saida").length}) + ${R(fxPer)} de custos fixos${todos ? "" : ` do mês`}`)}
+        ${kpi(todos ? "Sobra no fim de tudo" : `Sobra${nomeMes}`, `<span class="${sobra < 0 ? "neg" : ""}">${R(sobra)}</span>`, "saldo + a receber − a pagar")}
+        ${todos ? kpi(`Saldo previsto em ${rotMes(fim.m)}`, `<span class="${fim.saldo < 0 ? "neg" : ""}">${R(fim.saldo)}</span>`, `menor saldo: <span class="${menor.saldo < 0 ? "neg" : ""}">${R(menor.saldo)}</span> em ${rotMes(menor.m)}`)
+          : kpi(`Caixa previsto${nomeMes}`, `<span class="${linhaMes.saldo < 0 ? "neg" : ""}">${R(linhaMes.saldo)}</span>`, `começa o mês com ${R(linhaMes.saldo - linhaMes.res)}, contando os meses anteriores`)}
       </div>
       ${primeiroNeg ? `<div class="aviso-crm aviso-crm--erro" role="alert">Pelo que está lançado, o caixa fica negativo em <b>${rotMes(primeiroNeg.m)}</b> (${R(primeiroNeg.saldo)}). A previsão não conta vendas que ainda vão acontecer: só o que está lançado como a receber.</div>` : ""}
       <div class="graf graf--largo"><h3>Caixa mês a mês</h3><p class="sub">Entradas e saídas previstas e o saldo no fim de cada mês</p>
         <div class="area"><canvas id="g-caixa"></canvas></div>
         <div class="rolagem" style="max-height:none;margin-top:12px"><table class="tabela"><thead><tr><th>Mês</th><th class="n">A receber</th><th class="n">A pagar</th><th class="n">Custos fixos</th>${pr.some(x => x.vari) ? `<th class="n">Variáveis (estim.)</th>` : ""}<th class="n">Resultado</th><th class="n">Saldo no fim do mês</th></tr></thead>
-        <tbody>${pr.map(x => `<tr style="cursor:default"><td>${rotMes(x.m)}${x.m === hj.slice(0, 7) ? ' <span class="cinza" style="font-size:11px">(inclui atrasadas)</span>' : ""}</td><td class="n num">${R(x.ent)}</td><td class="n num">${R(x.sai)}</td><td class="n num" title="${e(x.fixos.map(f => `${f.nome}: ${R(f.valor)}`).join("\n"))}">${R(x.fx)}</td>${pr.some(y => y.vari) ? `<td class="n num">${R(x.vari)}</td>` : ""}<td class="n num ${x.res < 0 ? "neg" : ""}">${R(x.res)}</td><td class="n num ${x.saldo < 0 ? "neg" : ""}"><b>${R(x.saldo)}</b></td></tr>`).join("")}</tbody></table></div>
+        <tbody>${pr.map(x => `<tr data-mes="${x.m}" class="${x.m === mesContas ? "lin-sel" : ""}" title="Ver só ${rotMes(x.m)}"><td>${rotMes(x.m)}${x.m === hj.slice(0, 7) ? ' <span class="cinza" style="font-size:11px">(inclui atrasadas)</span>' : ""}</td><td class="n num">${R(x.ent)}</td><td class="n num">${R(x.sai)}</td><td class="n num" title="${e(x.fixos.map(f => `${f.nome}: ${R(f.valor)}`).join("\n"))}">${R(x.fx)}</td>${pr.some(y => y.vari) ? `<td class="n num">${R(x.vari)}</td>` : ""}<td class="n num ${x.res < 0 ? "neg" : ""}">${R(x.res)}</td><td class="n num ${x.saldo < 0 ? "neg" : ""}"><b>${R(x.saldo)}</b></td></tr>`).join("")}</tbody></table></div>
       </div>
       <div class="graficos" style="margin-top:14px">
-        <div class="graf"><h3>A pagar</h3><p class="sub">Clique numa conta para editar · ✓ marca como paga e desconta do saldo</p><div id="l-saida"></div></div>
-        <div class="graf"><h3>A receber</h3><p class="sub">✓ marca como recebida e soma no saldo</p><div id="l-entrada"></div></div>
+        <div class="graf"><h3>A pagar${nomeMes}</h3><p class="sub">Clique numa conta para editar · ✓ marca como paga e desconta do saldo${todos ? "" : " · os custos fixos do mês aparecem aqui também"}</p><div id="l-saida"></div></div>
+        <div class="graf"><h3>A receber${nomeMes}</h3><p class="sub">✓ marca como recebida e soma no saldo</p><div id="l-entrada"></div></div>
         <div class="graf"><h3>Custos fixos do mês</h3><p class="sub">Entram sozinhos em todo mês da previsão. Se você lançar a conta do mês (como o aluguel), ligue ela ao custo fixo para não contar duas vezes.</p><div id="l-fixos"></div></div>
         <div class="graf"><h3>Custos variáveis</h3><p class="sub">Anúncios, embalagem e outros gastos que mudam todo mês. Se quiser, coloque uma estimativa mensal para entrar na previsão.</p>
           <div class="campos" style="grid-template-columns:1fr"><div class="campo"><label for="vari">Estimativa por mês (R$)</label><input id="vari" class="cel" style="width:160px;text-align:left" inputmode="decimal" value="${e(numCel(c.variavel))}" placeholder="0">
@@ -863,6 +874,9 @@
     const hz = document.getElementById("hz"); hz.value = c.horizonte || "fim";
     hz.addEventListener("change", () => { c.horizonte = hz.value; guardarContas("previsão"); contas(); });
     document.getElementById("verpagos").addEventListener("change", ev => { verPagos = ev.target.checked; contas(); });
+    const escolherMes = m => { mesContas = m; try { localStorage.setItem("crm-mes-contas", m); } catch {} contas(); };
+    document.getElementById("mes-contas").addEventListener("change", ev => escolherMes(ev.target.value));
+    conteudo().querySelectorAll("tr[data-mes]").forEach(tr => tr.addEventListener("click", () => escolherMes(tr.dataset.mes === mesContas ? "todos" : tr.dataset.mes)));
     conteudo().querySelectorAll("[data-nova]").forEach(b => b.addEventListener("click", () => formConta(null, b.dataset.nova)));
     const saldo = document.getElementById("saldo");
     saldo.addEventListener("focus", () => saldo.select());
@@ -874,16 +888,29 @@
 
     // Listas a pagar / a receber
     for (const tipo of ["saida", "entrada"]) {
-      const ls = c.lancamentos.filter(l => l.tipo === tipo && (verPagos || l.status === "pendente")).sort((a, b) => a.data.localeCompare(b.data));
+      const ls = c.lancamentos.filter(l => l.tipo === tipo && (verPagos || l.status === "pendente") && noMes(l)).sort((a, b) => a.data.localeCompare(b.data));
       const feito = tipo === "saida" ? "pago" : "recebido";
-      document.getElementById("l-" + tipo).innerHTML = ls.length ? `<div class="rolagem" style="max-height:420px"><table class="tabela"><thead><tr><th>Data</th><th>O quê</th><th class="n">Valor</th><th><span class="visually-hidden">Situação</span></th></tr></thead><tbody>
+      const fixosMes = tipo === "saida" && !todos ? linhaMes.fixos : [];
+      const diaFixo = f => `${mesContas}-${String(Math.min(28, n(f.dia) || 1)).padStart(2, "0")}`;
+      const linhasFixos = fixosMes.map(f => `<tr class="lin-fixo" style="cursor:default"><td class="num">${dataBR(diaFixo(f))}</td><td class="larga">${e(f.nome)}<br><span class="cinza" style="font-size:11px">Custo fixo</span></td><td class="n num">${R(f.valor)}</td>
+        <td><button type="button" class="ok" data-ok-fixo="${e(f.id)}" title="Marcar como pago" aria-label="Marcar ${e(f.nome)} como pago">✓</button></td></tr>`).join("");
+      const totPend = ls.filter(l => l.status === "pendente").reduce((s, l) => s + n(l.valor), 0) + fixosMes.reduce((s, f) => s + n(f.valor), 0);
+      document.getElementById("l-" + tipo).innerHTML = ls.length || fixosMes.length ? `<div class="rolagem" style="max-height:420px"><table class="tabela"><thead><tr><th>Data</th><th>O quê</th><th class="n">Valor</th><th><span class="visually-hidden">Situação</span></th></tr></thead><tbody>
         ${ls.map(l => { const atras = l.status === "pendente" && l.data < hj; return `<tr data-l="${e(l.id)}" class="${l.status !== "pendente" ? "lin-paga" : ""}">
           <td class="num">${dataBR(l.data)}${atras ? ' <span class="st st--atraso">atrasada</span>' : ""}</td><td class="larga">${e(l.descricao)}${l.categoria || l.quem ? `<br><span class="cinza" style="font-size:11px">${e([l.categoria, l.quem].filter(Boolean).join(" · "))}</span>` : ""}</td>
-          <td class="n num">${R(l.valor)}</td><td><button type="button" class="ok ${l.status !== "pendente" ? "ok--feito" : ""}" data-ok="${e(l.id)}" title="${l.status === "pendente" ? `Marcar como ${feito}` : "Voltar para pendente"}" aria-label="${l.status === "pendente" ? `Marcar como ${feito}` : "Voltar para pendente"}">✓</button></td></tr>`; }).join("")}
-        </tbody><tfoot><tr><td>Total pendente</td><td></td><td class="n num">${R(ls.filter(l => l.status === "pendente").reduce((s, l) => s + n(l.valor), 0))}</td><td></td></tr></tfoot></table></div>`
+          <td class="n num">${R(l.valor)}</td><td><button type="button" class="ok ${l.status !== "pendente" ? "ok--feito" : ""}" data-ok="${e(l.id)}" title="${l.status === "pendente" ? `Marcar como ${feito}` : "Voltar para pendente"}" aria-label="${l.status === "pendente" ? `Marcar como ${feito}` : "Voltar para pendente"}">✓</button></td></tr>`; }).join("")}${linhasFixos}
+        </tbody><tfoot><tr><td>Total pendente</td><td></td><td class="n num">${R(totPend)}</td><td></td></tr></tfoot></table></div>`
         : `<div class="vazio" style="height:80px">Nada pendente</div>`;
     }
     conteudo().querySelectorAll("#l-saida, #l-entrada").forEach(box => box.addEventListener("click", ev => {
+      const okF = ev.target.closest("[data-ok-fixo]");
+      if (okF) {   // paga um custo fixo do mês: vira uma conta paga ligada a ele (e sai da previsão daquele mês)
+        const f = c.fixos.find(x => x.id === okF.dataset.okFixo); if (!f) return;
+        const id = "L" + String(Math.max(0, ...c.lancamentos.map(y => parseInt(String(y.id).slice(1)) || 0)) + 1).padStart(3, "0");
+        c.lancamentos.push({ id, tipo: "saida", data: `${mesContas}-${String(Math.min(28, n(f.dia) || 1)).padStart(2, "0")}`, categoria: "Custo fixo", descricao: f.nome, quem: "", valor: n(f.valor), status: "pago", pago_em: hoje(), fixo_id: f.id, obs: "" });
+        c.saldo = { valor: n(c.saldo.valor) - n(f.valor), data: hoje() };
+        guardarContas(`${f.nome} pago`); contas(); return;
+      }
       const ok = ev.target.closest("[data-ok]");
       const l = c.lancamentos.find(x => x.id === (ok?.dataset.ok || ev.target.closest("tr[data-l]")?.dataset.l)); if (!l) return;
       if (!ok) return formConta(l);
