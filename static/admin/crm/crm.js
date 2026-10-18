@@ -785,15 +785,16 @@
 
   // ---------- Montar painel (arrastar e soltar) ----------
   // Valores (o que somar) e agrupamentos (como separar). Cada valor vem de uma fonte; nem todo agrupamento serve para toda fonte.
-  const DIMS = { mes: "Mês", ano: "Ano", categoria: "Categoria", designer: "Designer", fornecedor: "Fornecedor", origem: "Origem", status: "Status",
+  const DIMS = { mes: "Mês", ano: "Ano", peca: "Peça", categoria: "Categoria", designer: "Designer", fornecedor: "Fornecedor", origem: "Origem", status: "Status",
     forma: "Forma de pagamento", cliente: "Cliente", tipo: "Tipo de despesa", subtipo: "Subcategoria da despesa", idade: "Tempo parado" };
   const ORDEM_IDADE = ["Até 30 dias", "31 a 90 dias", "91 a 180 dias", "181 a 365 dias", "Mais de 1 ano", "Sem data"];
   const faixaIdade = p => { const d = dias(p.data_compra, hoje()); return d == null || d < 0 ? "Sem data" : d <= 30 ? ORDEM_IDADE[0] : d <= 90 ? ORDEM_IDADE[1] : d <= 180 ? ORDEM_IDADE[2] : d <= 365 ? ORDEM_IDADE[3] : ORDEM_IDADE[4]; };
-  const dimPeca = { categoria: p => p.categoria || "Sem categoria", designer: p => p.designer || "Sem designer", fornecedor: p => p.fornecedor || "Sem fornecedor", origem: p => p.origem || "—", status: p => ROT_ST[p.status] || p.status || "—" };
+  const dimPeca = { peca: p => `${p.codigo} · ${p.peca || "Sem nome"}`, categoria: p => p.categoria || "Sem categoria", designer: p => p.designer || "Sem designer", fornecedor: p => p.fornecedor || "Sem fornecedor", origem: p => p.origem || "—", status: p => ROT_ST[p.status] || p.status || "—" };
   const viaPeca = k => v => { const p = peca(v.codigo); return p ? dimPeca[k](p) : "Fora do inventário"; };
   const porData = campo => ({ mes: x => (x[campo] || "").slice(0, 7) || "Sem data", ano: x => (x[campo] || "").slice(0, 4) || "Sem data" });
   const FONTES = {
-    vendas: { itens: () => D.vendas.itens.filter(v => noPeriodo(v.data)), dims: { ...porData("data"), categoria: viaPeca("categoria"), designer: viaPeca("designer"), fornecedor: viaPeca("fornecedor"), origem: viaPeca("origem"), forma: v => v.forma || "—", cliente: v => cliente(v.cliente_id)?.nome || "Sem cliente" } },
+    vendas: { itens: () => D.vendas.itens.filter(v => noPeriodo(v.data)), dims: { ...porData("data"), categoria: viaPeca("categoria"), designer: viaPeca("designer"), fornecedor: viaPeca("fornecedor"), origem: viaPeca("origem"), forma: v => v.forma || "—", cliente: v => cliente(v.cliente_id)?.nome || "Sem cliente",
+      peca: v => `${v.codigo ? v.codigo + " · " : ""}${v.descricao || peca(v.codigo)?.peca || "Sem nome"}` } },
     compras: { itens: () => pecas().filter(p => noPeriodo(p.data_compra)), dims: { ...porData("data_compra"), ...dimPeca } },
     estoque: { itens: () => pecas().filter(p => p.status !== "vendido"), dims: { ...porData("data_compra"), ...dimPeca, idade: faixaIdade } },
     despesas: { itens: () => D.despesas.itens.filter(d => noPeriodo(d.data)), dims: { ...porData("data"), tipo: d => d.categoria || "Sem categoria", subtipo: d => d.subcategoria || "Sem subcategoria" } },
@@ -832,7 +833,8 @@
       { id: novoIdW(), medidas: ["faturamento", "lucro"], dim: "mes", tipo: "barras", largura: 2 },
     ] };
   }
-  const tituloAuto = w => w.medidas.length ? `${w.medidas.map(k => MEDIDAS[k]?.r).filter(Boolean).join(" e ")}${w.dim ? ` por ${DIMS[w.dim].toLowerCase()}` : ""}` : (w.dim ? `Por ${DIMS[w.dim].toLowerCase()}` : "Novo gráfico");
+  const tituloAuto = w => (w.medidas.length ? `${w.medidas.map(k => MEDIDAS[k]?.r).filter(Boolean).join(" e ")}${w.dim ? ` por ${DIMS[w.dim].toLowerCase()}` : ""}` : (w.dim ? `Por ${DIMS[w.dim].toLowerCase()}` : "Novo gráfico"))
+    + (w.dim && w.sub ? `, com ${DIMS[w.sub].toLowerCase()}` : "");
   const temDim = w => !!w.dim;
   const tipoValido = (w, t) => t === "numero" || (["barras", "linhas", "pizza", "tabela"].includes(t) && temDim(w) && (t !== "pizza" || (w.medidas.length === 1 && MEDIDAS[w.medidas[0]]?.u !== "P")));
   const tipoDe = w => tipoValido(w, w.tipo) ? w.tipo : (temDim(w) ? "barras" : "numero");
@@ -858,7 +860,18 @@
       }
     }
     const valores = ok.map((m, i) => chaves.map(k => agregar(m, mapas[i].get(k) || [])));
-    return { ms: ok, fora, chaves, valores, rotulos: chaves.map(k => w.dim === "mes" && ehMes(k) ? rotMes(k) : k), totais: ok.map(m => agregar(m, FONTES[m.f].itens())) };
+    // Detalhar por: dentro de cada grupo (ex.: cada mês), lista as linhas do segundo agrupamento (ex.: cada peça)
+    let subs = null, subFora = [];
+    if (w.sub && w.sub !== w.dim) {
+      subFora = ok.filter(m => !FONTES[m.f].dims[w.sub]);
+      subs = chaves.map(k => {
+        const sm = new Map();
+        ok.forEach((m, i) => { const f = FONTES[m.f].dims[w.sub]; if (!f) return; for (const x of (mapas[i].get(k) || [])) { const sk = f(x); if (!sm.has(sk)) sm.set(sk, ok.map(() => [])); sm.get(sk)[i].push(x); } });
+        const l = [...sm].map(([sk, ls]) => ({ chave: sk, rot: w.sub === "mes" && ehMes(sk) ? rotMes(sk) : sk, valores: ok.map((m, i) => agregar(m, ls[i])) }));
+        return ["mes", "ano"].includes(w.sub) ? l.sort((a, b) => a.chave.localeCompare(b.chave)) : l.sort((a, b) => b.valores[0] - a.valores[0]);
+      });
+    }
+    return { ms: ok, fora, chaves, valores, subs, subFora, rotulos: chaves.map(k => w.dim === "mes" && ehMes(k) ? rotMes(k) : k), totais: ok.map(m => agregar(m, FONTES[m.f].itens())) };
   }
 
   let graficosMontar = {}, arrastando = null, salvarTimer = null, filaPainel = Promise.resolve();
@@ -901,7 +914,7 @@
     ligarQuadro();
     desenharQuadro();
   }
-  function fimArraste() { arrastando = null; document.body.classList.remove("arrastando"); document.querySelectorAll(".alvo").forEach(x => x.classList.remove("alvo")); }
+  function fimArraste() { arrastando = null; document.body.classList.remove("arrastando"); document.querySelectorAll(".alvo, .slot--alvo").forEach(x => x.classList.remove("alvo", "slot--alvo")); }
 
   function desenharQuadro() {
     Object.values(graficosMontar).forEach(g => g.destroy()); graficosMontar = {};
@@ -929,8 +942,10 @@
           <select class="mais" data-mais="medida" aria-label="Adicionar valor"><option value="">+ valor</option>${opcoesMedidas()}</select></div>
         <div class="slot" data-slot="dim"><span class="slot__r">Agrupar por</span>${w.dim ? `<span class="pilula pilula--grupo">${e(DIMS[w.dim])}<button type="button" data-tira-dim aria-label="Tirar agrupamento">✕</button></span>` : ""}
           <select class="mais" data-mais="dim" aria-label="Agrupar por"><option value="">${w.dim ? "trocar" : "+ agrupar"}</option>${Object.entries(DIMS).map(([k, r]) => `<option value="${k}">${e(r)}</option>`).join("")}</select></div>
+        ${w.dim ? `<div class="slot" data-slot="sub"><span class="slot__r">Detalhar por</span>${w.sub ? `<span class="pilula pilula--grupo">${e(DIMS[w.sub])}<button type="button" data-tira-sub aria-label="Tirar detalhamento">✕</button></span>` : ""}
+          <select class="mais" data-mais="sub" aria-label="Detalhar por"><option value="">${w.sub ? "trocar" : "+ detalhar"}</option>${Object.entries(DIMS).filter(([k]) => k !== w.dim).map(([k, r]) => `<option value="${k}">${e(r)}</option>`).join("")}</select></div>` : ""}
       </div>
-      <p class="wg__aviso" role="status">${c.fora.length ? `${c.fora.map(m => e(m.r)).join(", ")} não ${c.fora.length > 1 ? "podem" : "pode"} ser agrupado por ${e(DIMS[w.dim].toLowerCase())}.` : ""}</p>
+      <p class="wg__aviso" role="status">${c.fora.length ? `${c.fora.map(m => e(m.r)).join(", ")} não ${c.fora.length > 1 ? "podem" : "pode"} ser agrupado por ${e(DIMS[w.dim].toLowerCase())}.` : ""}${c.subFora?.length ? ` ${c.subFora.map(m => e(m.r)).join(", ")} não ${c.subFora.length > 1 ? "podem" : "pode"} ser detalhado por ${e(DIMS[w.sub].toLowerCase())}.` : ""}</p>
       <div class="wg__corpo"></div>`;
     const corpo = el.querySelector(".wg__corpo");
     if (!w.medidas.length) { corpo.innerHTML = `<div class="vazio vazio--alvo">Arraste um valor para cá</div>`; return; }
@@ -939,16 +954,22 @@
       corpo.innerHTML = `<div class="wg__nums">${c.ms.map((m, i) => `<div><p class="kpi__r">${e(m.r)}</p><p class="kpi__v">${fmtU(m.u, c.totais[i])}</p></div>`).join("")}</div>`; return;
     }
     if (!c.chaves.length) { corpo.innerHTML = `<div class="vazio">Sem dados no período</div>`; return; }
-    if (t === "tabela") {
-      corpo.innerHTML = `<div class="rolagem" style="max-height:340px"><table class="tabela"><thead><tr><th>${e(DIMS[w.dim])}</th>${c.ms.map(m => `<th class="n">${e(m.r)}</th>`).join("")}</tr></thead><tbody>${c.rotulos.map((r, i) => `<tr style="cursor:default"><td>${e(r)}</td>${c.ms.map((m, j) => `<td class="n num">${fmtU(m.u, c.valores[j][i])}</td>`).join("")}</tr>`).join("")}</tbody>
-        <tfoot><tr><td>Total</td>${c.ms.map((m, j) => `<td class="n num">${fmtU(m.u, c.totais[j])}</td>`).join("")}</tr></tfoot></table></div>`; return;
-    }
+    const tabelaW = (alt, comRodape) => `<div class="rolagem" style="max-height:${alt}px"><table class="tabela"><thead><tr><th>${e(DIMS[w.dim])}${c.subs ? ` / ${e(DIMS[w.sub])}` : ""}</th>${c.ms.map(m => `<th class="n">${e(m.r)}</th>`).join("")}</tr></thead><tbody>${c.rotulos.map((r, i) =>
+        `<tr class="${c.subs ? "lin-grupo" : ""}" style="cursor:default"><td>${e(r)}</td>${c.ms.map((m, j) => `<td class="n num">${fmtU(m.u, c.valores[j][i])}</td>`).join("")}</tr>`
+        + (c.subs ? c.subs[i].map(sb => `<tr class="lin-sub" style="cursor:default"><td>${e(sb.rot)}</td>${c.ms.map((m, j) => `<td class="n num">${fmtU(m.u, sb.valores[j])}</td>`).join("")}</tr>`).join("") : "")).join("")}</tbody>
+        ${comRodape ? `<tfoot><tr><td>Total</td>${c.ms.map((m, j) => `<td class="n num">${fmtU(m.u, c.totais[j])}</td>`).join("")}</tr></tfoot>` : ""}</table></div>`;
+    if (t === "tabela") { corpo.innerHTML = tabelaW(c.subs ? 520 : 340, true); return; }
     const Ch = window.Chart; if (!Ch) { corpo.innerHTML = `<div class="vazio">Não foi possível carregar os gráficos.</div>`; return; }
     const u = c.ms[0].u, horizontal = t === "barras" && !["mes", "ano", "idade"].includes(w.dim);
     const altura = horizontal ? Math.max(220, c.chaves.length * 28 + 50) : 260;
-    corpo.innerHTML = `<div class="area" style="height:${altura}px"><canvas></canvas></div><details><summary>Ver números</summary><div class="rolagem" style="max-height:260px"><table class="tabela"><tbody>${c.rotulos.map((r, i) => `<tr style="cursor:default"><td>${e(r)}</td>${c.ms.map((m, j) => `<td class="n num">${fmtU(m.u, c.valores[j][i])}</td>`).join("")}</tr>`).join("")}</tbody></table></div></details>`;
+    corpo.innerHTML = `<div class="area" style="height:${altura}px"><canvas></canvas></div><details ${c.subs ? "open" : ""}><summary>${c.subs ? `Ver números com ${e(DIMS[w.sub].toLowerCase())}` : "Ver números"}</summary>${tabelaW(c.subs ? 360 : 260, false)}</details>`;
     const cv = corpo.querySelector("canvas");
-    const tip = { callbacks: { label: x => `${c.ms.length > 1 || t === "pizza" ? (t === "pizza" ? x.label : x.dataset.label) + ": " : ""}${fmtU(u, t === "pizza" ? x.parsed : horizontal ? x.parsed.x : x.parsed.y)}${t === "pizza" && c.totais[0] ? ` (${P(x.parsed / c.totais[0])})` : ""}` } };
+    const rodapeTip = items => {
+      if (!c.subs || !items.length) return "";
+      const l = c.subs[items[0].dataIndex] || [], m0 = c.ms[0];
+      return [`${DIMS[w.sub]}:`, ...l.slice(0, 8).map(sb => `• ${sb.rot.length > 46 ? sb.rot.slice(0, 45) + "…" : sb.rot}  ${fmtU(m0.u, sb.valores[0])}`), ...(l.length > 8 ? [`… e mais ${l.length - 8}`] : [])];
+    };
+    const tip = { footerFont: { weight: "normal" }, callbacks: { footer: rodapeTip, label: x => `${c.ms.length > 1 || t === "pizza" ? (t === "pizza" ? x.label : x.dataset.label) + ": " : ""}${fmtU(u, t === "pizza" ? x.parsed : horizontal ? x.parsed.x : x.parsed.y)}${t === "pizza" && c.totais[0] ? ` (${P(x.parsed / c.totais[0])})` : ""}` } };
     const legenda = { display: c.ms.length > 1 || t === "pizza", position: t === "pizza" ? "right" : "top", align: "start", labels: { boxWidth: 10, boxHeight: 10 } };
     const base = { responsive: true, maintainAspectRatio: false, animation: false, layout: { padding: { left: 6, right: 4 } }, plugins: { legend: legenda, tooltip: tip } };
     let cfg;
@@ -969,7 +990,7 @@
     if (u && MEDIDAS[k].u !== u) { avisoW(w, `${MEDIDAS[k].r} é ${MEDIDAS[k].u === "P" ? "uma porcentagem" : MEDIDAS[k].u === "N" ? "uma quantidade" : "em reais"} e não mistura com os outros valores. Crie outro gráfico para ele.`); return false; }
     w.medidas.push(k); return true;
   }
-  function soltar(destino, alvoEl) {
+  function soltar(destino, alvoEl, slotNome) {
     if (!arrastando) return;
     const a = arrastando, ws = D.dashboard.widgets;
     if (a.t === "widget") {
@@ -985,7 +1006,8 @@
     }
     let mudou = false;
     if (a.t === "medida") mudou = addMedida(destino, a.id);
-    else if (a.t === "dim" && destino.dim !== a.id) { destino.dim = a.id; if (destino.tipo === "numero") destino.tipo = ""; mudou = true; }
+    else if (a.t === "dim" && slotNome === "sub" && destino.dim && destino.dim !== a.id) { destino.sub = a.id; mudou = true; }
+    else if (a.t === "dim" && destino.dim !== a.id) { if (destino.sub === a.id) destino.sub = ""; destino.dim = a.id; if (destino.tipo === "numero") destino.tipo = ""; mudou = true; }
     if (mudou) { desenharWidget(destino); guardarPainel(); }
   }
   function ligarQuadro() {
@@ -1000,12 +1022,13 @@
       if (!arrastando) return;
       const alvo = ev.target.closest("[data-nova], .wg"); if (!alvo) return;
       ev.preventDefault(); ev.dataTransfer.dropEffect = arrastando.t === "widget" ? "move" : "copy";
-      document.querySelectorAll(".alvo").forEach(x => x !== alvo && x.classList.remove("alvo")); alvo.classList.add("alvo");
+      document.querySelectorAll(".alvo, .slot--alvo").forEach(x => x !== alvo && x.classList.remove("alvo", "slot--alvo")); alvo.classList.add("alvo");
+      const sl = ev.target.closest('.slot[data-slot="sub"]'); if (sl && arrastando.t === "dim") sl.classList.add("slot--alvo");
     });
     q.addEventListener("dragleave", ev => { const alvo = ev.target.closest("[data-nova], .wg"); if (alvo && !alvo.contains(ev.relatedTarget)) alvo.classList.remove("alvo"); });
     q.addEventListener("drop", ev => {
       const alvo = ev.target.closest("[data-nova], .wg"); if (!alvo || !arrastando) return;
-      ev.preventDefault(); soltar(alvo.matches("[data-nova]") ? null : wDe(alvo), alvo); fimArraste();
+      ev.preventDefault(); soltar(alvo.matches("[data-nova]") ? null : wDe(alvo), alvo, ev.target.closest(".slot")?.dataset.slot); fimArraste();
     });
     q.addEventListener("click", ev => {
       const w = wDe(ev.target); if (!w) return;
@@ -1018,12 +1041,18 @@
         D.dashboard.widgets.splice(D.dashboard.widgets.indexOf(w), 1); desenharQuadro(); guardarPainel();
       }
       else if (b.dataset.tiraMedida) { w.medidas = w.medidas.filter(k => k !== b.dataset.tiraMedida); desenharWidget(w); guardarPainel(); }
-      else if ("tiraDim" in b.dataset) { w.dim = ""; desenharWidget(w); guardarPainel(); }
+      else if ("tiraDim" in b.dataset) { w.dim = ""; w.sub = ""; desenharWidget(w); guardarPainel(); }
+      else if ("tiraSub" in b.dataset) { w.sub = ""; desenharWidget(w); guardarPainel(); }
     });
     q.addEventListener("change", ev => {
       const w = wDe(ev.target); if (!w) return;
       const s = ev.target.closest("select.mais");
-      if (s && s.value) { const ok = s.dataset.mais === "medida" ? addMedida(w, s.value) : (w.dim = s.value, w.tipo === "numero" && (w.tipo = ""), true); s.value = ""; if (ok) { desenharWidget(w); guardarPainel(); } }
+      if (s && s.value) {
+        const ok = s.dataset.mais === "medida" ? addMedida(w, s.value)
+          : s.dataset.mais === "sub" ? (w.sub = s.value, true)
+          : (w.sub === s.value && (w.sub = ""), w.dim = s.value, w.tipo === "numero" && (w.tipo = ""), true);
+        s.value = ""; if (ok) { desenharWidget(w); guardarPainel(); }
+      }
     });
     q.addEventListener("input", ev => { const i = ev.target.closest(".wg__tit"); if (!i) return; const w = wDe(i); w.titulo = i.value.trim() && i.value.trim() !== tituloAuto(w) ? i.value.trim() : ""; guardarPainel(); });
   }
