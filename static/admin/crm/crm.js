@@ -145,7 +145,8 @@
       const repoOk = await gh(CRM, "");
       if (repoOk.status === 401) throw new Error("login");
       if (repoOk.status === 404) return avisoTela(`Não encontrei o repositório privado <b>voluta-crm</b>.<br>Confira se ele foi criado na conta ${e(CRM.dono)}. Se já existe, saia e entre de novo no painel para renovar a permissão.`, `<a class="bt" href="/admin/editar/">Abrir o painel</a>`);
-      const [, painelSalvo, ...arqs] = await Promise.all([carregarFichas(), ler(CRM, "dashboard.json").catch(() => null), ...ARQUIVOS.map(a => ler(CRM, `${a}.json`))]);
+      const [, painelSalvo, contasSalvo, ...arqs] = await Promise.all([carregarFichas(), ler(CRM, "dashboard.json").catch(() => null), ler(CRM, "contas.json").catch(() => null), ...ARQUIVOS.map(a => ler(CRM, `${a}.json`))]);
+      if (contasSalvo?.json?.lancamentos) { D.contas = contasSalvo.json; SHA.contas = contasSalvo.sha; } else D.contas = { saldo: { valor: 0, data: hoje() }, variavel: null, horizonte: "fim", fixos: [], lancamentos: [] };
       if (arqs.every(x => !x)) return telaImportar();
       if (painelSalvo?.json?.widgets) { D.dashboard = painelSalvo.json; SHA.dashboard = painelSalvo.sha; } else D.dashboard = painelExemplo();
       ARQUIVOS.forEach((a, i) => { if (arqs[i]) { D[a] = arqs[i].json; SHA[a] = arqs[i].sha; } D[a].itens ||= []; });
@@ -180,13 +181,13 @@
     app.innerHTML = `
       ${faixa ? `<div class="aviso-crm aviso-crm--ok" role="status">${e(faixa)}</div>` : ""}
       <div class="abas" role="tablist">
-        ${[["painel", "Painel"], ["montar", "Montar painel"], ["inventario", "Inventário"], ["vendas", "Vendas"], ["despesas", "Despesas"], ["clientes", "Clientes"]].map(([k, r]) =>
+        ${[["painel", "Painel"], ["montar", "Montar painel"], ["inventario", "Inventário"], ["vendas", "Vendas"], ["despesas", "Despesas"], ["contas", "Contas"], ["clientes", "Clientes"]].map(([k, r]) =>
           `<button role="tab" data-aba="${k}" aria-selected="${aba === k}">${r}</button>`).join("")}
       </div>
       <div id="conteudo"></div>`;
     app.querySelectorAll("[data-aba]").forEach(b => b.addEventListener("click", () => { aba = b.dataset.aba; try { localStorage.setItem("crm-aba", aba); } catch {} montar(); }));
     // Espera as fontes para os gráficos medirem os rótulos com a letra certa
-    if (aba === "painel" || aba === "montar") Promise.all([document.fonts?.load?.(`400 12px ${getComputedStyle(document.body).fontFamily}`), document.fonts?.ready].map(x => Promise.resolve(x).catch(() => {}))).then(() => { if (aba === "painel") painel(); else if (aba === "montar") montarPainel(); });
+    if (aba === "painel" || aba === "montar" || aba === "contas") Promise.all([document.fonts?.load?.(`400 12px ${getComputedStyle(document.body).fontFamily}`), document.fonts?.ready].map(x => Promise.resolve(x).catch(() => {}))).then(() => { if (aba === "painel") painel(); else if (aba === "montar") montarPainel(); else if (aba === "contas") contas(); });
     else ({ inventario, vendas, despesas, clientes })[aba]?.();
   }
   const conteudo = () => document.getElementById("conteudo");
@@ -781,6 +782,209 @@
       desenhar();
     });
     desenhar();
+  }
+
+  // ---------- Contas (fluxo de caixa) ----------
+  // Saldo de hoje + o que falta receber − o que falta pagar − custos fixos de cada mês = saldo previsto no fim de cada mês.
+  // Contas atrasadas (data já passou e ainda pendentes) entram no mês atual.
+  const addMes = (m, k) => { let [y, mm] = m.split("-").map(Number); mm += k; while (mm > 12) { mm -= 12; y++; } while (mm < 1) { mm += 12; y--; } return `${y}-${String(mm).padStart(2, "0")}`; };
+  const difMeses = (a, b) => { const [ya, ma] = a.split("-").map(Number), [yb, mb] = b.split("-").map(Number); return (yb - ya) * 12 + (mb - ma); };
+  let graficoContas = null, filaContas = Promise.resolve(), timerContas = null, verPagos = false;
+  function guardarContas(msg = "contas") {
+    const st = document.getElementById("salvo-contas"); if (st) { st.textContent = "Salvando…"; st.className = "cont"; }
+    clearTimeout(timerContas);
+    return new Promise(res => { timerContas = setTimeout(() => {
+      filaContas = filaContas.then(() => salvar("contas", msg)).then(() => { const s2 = document.getElementById("salvo-contas"); if (s2) { s2.textContent = "Salvo"; setTimeout(() => { if (s2.textContent === "Salvo") s2.textContent = ""; }, 2500); } res(true); })
+        .catch(err => { const s2 = document.getElementById("salvo-contas"); if (s2) { s2.textContent = "Não salvou: " + err.message; s2.className = "cont neg"; } res(false); });
+    }, 500); });
+  }
+  const mediaVariavel = () => {   // média mensal das despesas dos 3 últimos meses completos
+    const m0 = hoje().slice(0, 7), ms = [1, 2, 3].map(k => addMes(m0, -k));
+    return ms.reduce((s, m) => s + D.despesas.itens.filter(d => (d.data || "").startsWith(m)).reduce((a, d) => a + n(d.valor), 0), 0) / 3;
+  };
+  function projecao() {
+    const c = D.contas, hj = hoje(), m0 = hj.slice(0, 7), diaHoje = +hj.slice(8, 10);
+    const pend = c.lancamentos.filter(l => l.status === "pendente");
+    const ultimo = pend.map(l => l.data.slice(0, 7)).sort().pop() || m0;
+    const nMeses = c.horizonte === "fim" ? Math.max(3, difMeses(m0, ultimo) + 1) : +c.horizonte;
+    const meses = Array.from({ length: nMeses }, (_, i) => addMes(m0, i));
+    let saldo = n(c.saldo.valor);
+    return meses.map(m => {
+      const ls = pend.filter(l => (l.data < hj ? m0 : l.data.slice(0, 7)) === m);
+      const ent = ls.filter(l => l.tipo === "entrada").reduce((s, l) => s + n(l.valor), 0);
+      const sai = ls.filter(l => l.tipo === "saida").reduce((s, l) => s + n(l.valor), 0);
+      // Custo fixo entra sozinho, a não ser que já exista uma conta ligada a ele nesse mês; no mês atual, só o que ainda vai vencer
+      const fixos = c.fixos.filter(f => f.ativo !== false && !c.lancamentos.some(l => l.fixo_id === f.id && l.data.slice(0, 7) === m) && (m !== m0 || n(f.dia || 1) > diaHoje));
+      const fx = fixos.reduce((s, f) => s + n(f.valor), 0), vari = m === m0 ? 0 : n(c.variavel || 0);
+      const res = ent - sai - fx - vari; saldo += res;
+      return { m, ent, sai, fx, vari, res, saldo, fixos };
+    });
+  }
+
+  function contas() {
+    graficoContas?.destroy(); graficoContas = null;
+    const c = D.contas, pr = projecao(), hj = hoje();
+    const pend = c.lancamentos.filter(l => l.status === "pendente");
+    const aRec = pend.filter(l => l.tipo === "entrada").reduce((s, l) => s + n(l.valor), 0);
+    const aPag = pend.filter(l => l.tipo === "saida").reduce((s, l) => s + n(l.valor), 0);
+    const fxMes = c.fixos.filter(f => f.ativo !== false).reduce((s, f) => s + n(f.valor), 0);
+    const menor = pr.reduce((a, b) => b.saldo < a.saldo ? b : a, pr[0]);
+    const primeiroNeg = pr.find(x => x.saldo < 0), fim = pr[pr.length - 1];
+    const kpi = (r, v, s2 = "") => `<div class="kpi"><p class="kpi__r">${r}</p><p class="kpi__v">${v}</p>${s2 ? `<p class="kpi__s">${s2}</p>` : ""}</div>`;
+    const media = mediaVariavel();
+    conteudo().innerHTML = `
+      <div class="filtros">
+        <label>Prever <select id="hz"><option value="fim">até a última conta lançada</option><option value="3">3 meses</option><option value="6">6 meses</option><option value="12">12 meses</option></select></label>
+        <label><input type="checkbox" id="verpagos" ${verPagos ? "checked" : ""}> Mostrar pagas e recebidas</label>
+        <div class="dir"><span class="cont" id="salvo-contas" role="status"></span>
+          <button class="bt bt--peq" type="button" data-nova="entrada">+ A receber</button><button class="bt bt--prim bt--peq" type="button" data-nova="saida">+ A pagar</button></div>
+      </div>
+      <div class="kpis">
+        <div class="kpi"><p class="kpi__r">Saldo em conta</p><p class="kpi__v"><input class="cel cel--saldo" id="saldo" inputmode="decimal" value="${e(numCel(c.saldo.valor))}" aria-label="Saldo em conta hoje"></p><p class="kpi__s">atualizado em ${dataBR(c.saldo.data)}</p></div>
+        ${kpi("A receber", R(aRec), `${pend.filter(l => l.tipo === "entrada").length} parcelas e valores`)}
+        ${kpi("A pagar", R(aPag), `${pend.filter(l => l.tipo === "saida").length} contas · fora os fixos`)}
+        ${kpi("Custos fixos", R(fxMes) + "<small style='font-size:13px'> /mês</small>", `${c.fixos.filter(f => f.ativo !== false).length} itens`)}
+        ${kpi(`Saldo previsto em ${rotMes(fim.m)}`, `<span class="${fim.saldo < 0 ? "neg" : ""}">${R(fim.saldo)}</span>`, `menor saldo: <span class="${menor.saldo < 0 ? "neg" : ""}">${R(menor.saldo)}</span> em ${rotMes(menor.m)}`)}
+      </div>
+      ${primeiroNeg ? `<div class="aviso-crm aviso-crm--erro" role="alert">Pelo que está lançado, o caixa fica negativo em <b>${rotMes(primeiroNeg.m)}</b> (${R(primeiroNeg.saldo)}). A previsão não conta vendas que ainda vão acontecer: só o que está lançado como a receber.</div>` : ""}
+      <div class="graf graf--largo"><h3>Caixa mês a mês</h3><p class="sub">Entradas e saídas previstas e o saldo no fim de cada mês</p>
+        <div class="area"><canvas id="g-caixa"></canvas></div>
+        <div class="rolagem" style="max-height:none;margin-top:12px"><table class="tabela"><thead><tr><th>Mês</th><th class="n">A receber</th><th class="n">A pagar</th><th class="n">Custos fixos</th>${pr.some(x => x.vari) ? `<th class="n">Variáveis (estim.)</th>` : ""}<th class="n">Resultado</th><th class="n">Saldo no fim do mês</th></tr></thead>
+        <tbody>${pr.map(x => `<tr style="cursor:default"><td>${rotMes(x.m)}${x.m === hj.slice(0, 7) ? ' <span class="cinza" style="font-size:11px">(inclui atrasadas)</span>' : ""}</td><td class="n num">${R(x.ent)}</td><td class="n num">${R(x.sai)}</td><td class="n num" title="${e(x.fixos.map(f => `${f.nome}: ${R(f.valor)}`).join("\n"))}">${R(x.fx)}</td>${pr.some(y => y.vari) ? `<td class="n num">${R(x.vari)}</td>` : ""}<td class="n num ${x.res < 0 ? "neg" : ""}">${R(x.res)}</td><td class="n num ${x.saldo < 0 ? "neg" : ""}"><b>${R(x.saldo)}</b></td></tr>`).join("")}</tbody></table></div>
+      </div>
+      <div class="graficos" style="margin-top:14px">
+        <div class="graf"><h3>A pagar</h3><p class="sub">Clique numa conta para editar · ✓ marca como paga e desconta do saldo</p><div id="l-saida"></div></div>
+        <div class="graf"><h3>A receber</h3><p class="sub">✓ marca como recebida e soma no saldo</p><div id="l-entrada"></div></div>
+        <div class="graf"><h3>Custos fixos do mês</h3><p class="sub">Entram sozinhos em todo mês da previsão. Se você lançar a conta do mês (como o aluguel), ligue ela ao custo fixo para não contar duas vezes.</p><div id="l-fixos"></div></div>
+        <div class="graf"><h3>Custos variáveis</h3><p class="sub">Anúncios, embalagem e outros gastos que mudam todo mês. Se quiser, coloque uma estimativa mensal para entrar na previsão.</p>
+          <div class="campos" style="grid-template-columns:1fr"><div class="campo"><label for="vari">Estimativa por mês (R$)</label><input id="vari" class="cel" style="width:160px;text-align:left" inputmode="decimal" value="${e(numCel(c.variavel))}" placeholder="0">
+          <button type="button" class="atalho" id="usar-media">Usar a média das despesas dos últimos 3 meses (${R(media)})</button></div></div></div>
+      </div>`;
+    const hz = document.getElementById("hz"); hz.value = c.horizonte || "fim";
+    hz.addEventListener("change", () => { c.horizonte = hz.value; guardarContas("previsão"); contas(); });
+    document.getElementById("verpagos").addEventListener("change", ev => { verPagos = ev.target.checked; contas(); });
+    conteudo().querySelectorAll("[data-nova]").forEach(b => b.addEventListener("click", () => formConta(null, b.dataset.nova)));
+    const saldo = document.getElementById("saldo");
+    saldo.addEventListener("focus", () => saldo.select());
+    saldo.addEventListener("keydown", ev => { if (ev.key === "Enter") saldo.blur(); });
+    saldo.addEventListener("change", () => { c.saldo = { valor: n(saldo.value), data: hoje() }; guardarContas("saldo atualizado"); contas(); });
+    const vari = document.getElementById("vari");
+    vari.addEventListener("change", () => { c.variavel = n(vari.value) || null; guardarContas("custo variável estimado"); contas(); });
+    document.getElementById("usar-media").addEventListener("click", () => { c.variavel = Math.round(media); guardarContas("custo variável estimado"); contas(); });
+
+    // Listas a pagar / a receber
+    for (const tipo of ["saida", "entrada"]) {
+      const ls = c.lancamentos.filter(l => l.tipo === tipo && (verPagos || l.status === "pendente")).sort((a, b) => a.data.localeCompare(b.data));
+      const feito = tipo === "saida" ? "pago" : "recebido";
+      document.getElementById("l-" + tipo).innerHTML = ls.length ? `<div class="rolagem" style="max-height:420px"><table class="tabela"><thead><tr><th>Data</th><th>O quê</th><th class="n">Valor</th><th><span class="visually-hidden">Situação</span></th></tr></thead><tbody>
+        ${ls.map(l => { const atras = l.status === "pendente" && l.data < hj; return `<tr data-l="${e(l.id)}" class="${l.status !== "pendente" ? "lin-paga" : ""}">
+          <td class="num">${dataBR(l.data)}${atras ? ' <span class="st st--atraso">atrasada</span>' : ""}</td><td class="larga">${e(l.descricao)}${l.categoria || l.quem ? `<br><span class="cinza" style="font-size:11px">${e([l.categoria, l.quem].filter(Boolean).join(" · "))}</span>` : ""}</td>
+          <td class="n num">${R(l.valor)}</td><td><button type="button" class="ok ${l.status !== "pendente" ? "ok--feito" : ""}" data-ok="${e(l.id)}" title="${l.status === "pendente" ? `Marcar como ${feito}` : "Voltar para pendente"}" aria-label="${l.status === "pendente" ? `Marcar como ${feito}` : "Voltar para pendente"}">✓</button></td></tr>`; }).join("")}
+        </tbody><tfoot><tr><td>Total pendente</td><td></td><td class="n num">${R(ls.filter(l => l.status === "pendente").reduce((s, l) => s + n(l.valor), 0))}</td><td></td></tr></tfoot></table></div>`
+        : `<div class="vazio" style="height:80px">Nada pendente</div>`;
+    }
+    conteudo().querySelectorAll("#l-saida, #l-entrada").forEach(box => box.addEventListener("click", ev => {
+      const ok = ev.target.closest("[data-ok]");
+      const l = c.lancamentos.find(x => x.id === (ok?.dataset.ok || ev.target.closest("tr[data-l]")?.dataset.l)); if (!l) return;
+      if (!ok) return formConta(l);
+      const sinal = l.tipo === "entrada" ? 1 : -1;
+      if (l.status === "pendente") { l.status = l.tipo === "entrada" ? "recebido" : "pago"; l.pago_em = hoje(); c.saldo = { valor: n(c.saldo.valor) + sinal * n(l.valor), data: hoje() }; }
+      else { l.status = "pendente"; delete l.pago_em; c.saldo = { valor: n(c.saldo.valor) - sinal * n(l.valor), data: hoje() }; }
+      guardarContas(`${l.descricao} ${l.status}`); contas();
+    }));
+
+    // Custos fixos (edição direto na tabela)
+    const fx = document.getElementById("l-fixos");
+    fx.innerHTML = `<div class="rolagem" style="max-height:none"><table class="tabela"><thead><tr><th>Custo</th><th class="n">Valor</th><th class="n">Dia</th><th><span class="visually-hidden">Remover</span></th></tr></thead><tbody>
+      ${c.fixos.map(f => `<tr data-f="${e(f.id)}" style="cursor:default"><td class="td-ed"><input class="cel cel--txt" data-c="nome" value="${e(f.nome)}" aria-label="Nome do custo"></td><td class="td-ed n"><input class="cel" data-c="valor" inputmode="decimal" value="${e(numCel(f.valor))}" aria-label="Valor de ${e(f.nome)}"></td>
+        <td class="td-ed n"><input class="cel" style="width:52px" data-c="dia" inputmode="numeric" value="${e(f.dia || "")}" aria-label="Dia do vencimento de ${e(f.nome)}"></td><td><button type="button" class="wg__btn" data-tira-f="${e(f.id)}" aria-label="Remover ${e(f.nome)}">✕</button></td></tr>`).join("")}
+      </tbody><tfoot><tr><td>Total por mês</td><td class="n num">${R(fxMes)}</td><td></td><td></td></tr></tfoot></table></div>
+      <button type="button" class="bt bt--peq" id="novo-fixo" style="margin-top:10px">+ Custo fixo</button>`;
+    fx.addEventListener("change", ev => {
+      const i = ev.target.closest("input[data-c]"); if (!i) return;
+      const f = c.fixos.find(x => x.id === i.closest("tr").dataset.f), k = i.dataset.c;
+      f[k] = k === "nome" ? i.value.trim() : k === "dia" ? Math.min(31, Math.max(1, parseInt(i.value) || 1)) : n(i.value);
+      guardarContas(`custo fixo ${f.nome}`); contas();
+    });
+    fx.addEventListener("click", ev => {
+      const t = ev.target.closest("[data-tira-f]");
+      if (t) {
+        if (!t.dataset.conf) { t.dataset.conf = 1; t.textContent = "Remover?"; t.classList.add("wg__btn--perigo"); return; }
+        c.fixos = c.fixos.filter(f => f.id !== t.dataset.tiraF); guardarContas("custo fixo removido"); contas(); return;
+      }
+      if (ev.target.closest("#novo-fixo")) { c.fixos.push({ id: "F" + Date.now().toString(36), nome: "Novo custo", valor: 0, dia: 10, ativo: true }); guardarContas("custo fixo"); contas();
+        setTimeout(() => { const ins = document.querySelectorAll('#l-fixos input[data-c="nome"]'); ins[ins.length - 1]?.select(); }, 0); }
+    });
+
+    // Gráfico: entradas e saídas (barras) e saldo no fim do mês (linha), tudo em reais, num eixo só
+    const Ch = window.Chart; if (!Ch) return;
+    graficoContas = new Ch(document.getElementById("g-caixa"), {
+      data: { labels: pr.map(x => rotMes(x.m)), datasets: [
+        { type: "bar", label: "Entradas", data: pr.map(x => x.ent), backgroundColor: COR.azul, borderRadius: 4, borderSkipped: "start", maxBarThickness: 30, order: 2 },
+        { type: "bar", label: "Saídas (com fixos)", data: pr.map(x => x.sai + x.fx + x.vari), backgroundColor: COR.vinho, borderRadius: 4, borderSkipped: "start", maxBarThickness: 30, order: 2 },
+        { type: "line", label: "Saldo no fim do mês", data: pr.map(x => x.saldo), borderColor: "#300A15", backgroundColor: "#300A15", borderWidth: 2, pointRadius: 4, pointHoverRadius: 6, tension: 0, order: 1,
+          segment: { borderDash: () => [] } } ] },
+      options: { responsive: true, maintainAspectRatio: false, animation: false, layout: { padding: { left: 6, right: 4 } }, interaction: { mode: "index", intersect: false },
+        plugins: { legend: { position: "top", align: "start", labels: { boxWidth: 10, boxHeight: 10 } }, tooltip: { callbacks: { label: x => `${x.dataset.label}: ${R(x.parsed.y)}` } } },
+        scales: { x: { grid: { display: false } }, y: { ticks: { callback: v => Math.abs(v) >= 1000 ? `R$ ${(v / 1000).toLocaleString("pt-BR")} mil` : `R$ ${v}` }, grid: { color: ctx => ctx.tick.value === 0 ? "#B9AEA5" : COR.grade, lineWidth: ctx => ctx.tick.value === 0 ? 1.5 : 1 }, border: { display: false } } } },
+    });
+  }
+
+  function formConta(l, tipoNovo) {
+    const c = D.contas, novo = !l, x = l || { tipo: tipoNovo, data: hoje(), status: "pendente", categoria: "", descricao: "", quem: "", valor: "", fixo_id: "" };
+    const ent = x.tipo === "entrada";
+    const cats = unicos(c.lancamentos.filter(y => y.tipo === x.tipo), y => y.categoria);
+    abrir(`<h2>${novo ? (ent ? "Novo valor a receber" : "Nova conta a pagar") : (ent ? "A receber" : "A pagar")}</h2>
+      <div class="campos">
+        ${campo("k-data", novo ? "Data (da 1ª parcela)" : "Data", x.data, { tipo: "date" })}
+        ${campo("k-desc", "O quê", x.descricao, { cls: "campo--2" })}
+        ${campo("k-cat", "Tipo", x.categoria, { lista: cats })}
+        ${campo("k-quem", ent ? "De quem" : "Para quem", x.quem, { lista: unicos(c.lancamentos, y => y.quem) })}
+        ${campo("k-valor", novo ? "Valor de cada parcela (R$)" : "Valor (R$)", x.valor, { tipo: "number" })}
+        ${campo("k-status", "Situação", "", { tipo: "select", extra: [["pendente", "Pendente"], [ent ? "recebido" : "pago", ent ? "Recebido" : "Pago"]].map(([k, r]) => `<option value="${k}" ${x.status === k ? "selected" : ""}>${r}</option>`).join("") })}
+        ${novo ? campo("k-parc", "Repetir por quantos meses", "1", { tipo: "number" }) : ""}
+        ${!ent ? campo("k-fixo", "É a conta de um custo fixo?", "", { tipo: "select", extra: `<option value="">Não</option>${c.fixos.map(f => `<option value="${e(f.id)}" ${x.fixo_id === f.id ? "selected" : ""}>${e(f.nome)}</option>`).join("")}` }) : ""}
+        ${campo("k-obs", "Observações", x.obs, { tipo: "textarea", cls: "campo--3" })}
+      </div>
+      ${novo ? `<p class="cinza" style="font-size:12px;margin:10px 0 0">Para parcelado, coloque o número de meses: cria uma conta por mês com "1/N", "2/N"… no nome.</p>` : ""}
+      ${rodape(!novo)}`, raiz => {
+      raiz.querySelector("#salvar").addEventListener("click", async ev => {
+        ev.currentTarget.disabled = true;
+        const base = { ...x, data: val(raiz, "k-data"), descricao: val(raiz, "k-desc"), categoria: val(raiz, "k-cat"), quem: val(raiz, "k-quem"), valor: n(val(raiz, "k-valor")),
+          status: val(raiz, "k-status"), fixo_id: val(raiz, "k-fixo"), obs: val(raiz, "k-obs") };
+        const antes = structuredClone(c);
+        try {
+          if (!base.valor) throw new Error("Preencha o valor.");
+          if (!base.data) throw new Error("Preencha a data.");
+          if (!base.descricao) throw new Error("Escreva o que é.");
+          const sinal = base.tipo === "entrada" ? 1 : -1, feito = s2 => s2 !== "pendente";
+          if (novo) {
+            const nP = Math.max(1, Math.min(60, parseInt(val(raiz, "k-parc")) || 1));
+            const prox = () => "L" + String(Math.max(0, ...c.lancamentos.map(y => parseInt(String(y.id).slice(1)) || 0)) + 1).padStart(3, "0");
+            for (let i = 0; i < nP; i++) {
+              const d = new Date(base.data + "T12:00:00"); d.setMonth(d.getMonth() + i);
+              const y = { ...base, id: prox(), data: d.toISOString().slice(0, 10), descricao: nP > 1 ? `${base.descricao} ${i + 1}/${nP}` : base.descricao, status: i === 0 ? base.status : "pendente" };
+              if (feito(y.status)) { y.pago_em = hoje(); c.saldo = { valor: n(c.saldo.valor) + sinal * y.valor, data: hoje() }; }
+              c.lancamentos.push(y);
+            }
+          } else {
+            // Ajusta o saldo se mudou a situação ou o valor de algo já pago
+            const delta = (feito(base.status) ? base.valor : 0) - (feito(x.status) ? n(x.valor) : 0);
+            if (delta) c.saldo = { valor: n(c.saldo.valor) + sinal * delta, data: hoje() };
+            if (feito(base.status) && !feito(x.status)) base.pago_em = hoje();
+            c.lancamentos[c.lancamentos.indexOf(l)] = base;
+          }
+          if (!(await guardarContas(`${novo ? "nova conta" : "alteração"}: ${base.descricao}`))) throw new Error("Não foi possível salvar. Recarregue a página.");
+          dlg.close(); contas();
+        } catch (err) { D.contas = antes; erroForm(raiz, err); }
+      });
+      confirmarExclusao(raiz, async () => {
+        const antes = structuredClone(c);
+        if (l.status !== "pendente") c.saldo = { valor: n(c.saldo.valor) - (l.tipo === "entrada" ? 1 : -1) * n(l.valor), data: hoje() };
+        c.lancamentos.splice(c.lancamentos.indexOf(l), 1);
+        if (await guardarContas(`exclusão: ${l.descricao}`)) { dlg.close(); contas(); } else { D.contas = antes; erroForm(raiz, new Error("Não foi possível excluir.")); }
+      });
+    });
   }
 
   // ---------- Montar painel (arrastar e soltar) ----------
