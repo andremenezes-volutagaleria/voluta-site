@@ -31,9 +31,12 @@
   .filtros .dir { margin-left: auto; display: flex; gap: 8px; align-items: center; }
   .cont { font-size: 12px; color: var(--cinza); }
 
-  .rolagem { overflow-x: auto; background: #fff; border: 1px solid #ECE8E4; }
+  /* A tabela rola dentro da caixa: assim o cabeçalho fica congelado no topo e os totais no rodapé */
+  .rolagem { overflow: auto; max-height: calc(100vh - 150px); background: #fff; border: 1px solid #ECE8E4; }
+  .graf .rolagem { max-height: 360px; }
+  #t-tipos .rolagem { max-height: none; }
   .tabela { width: 100%; border-collapse: collapse; font-size: 13px; }
-  .tabela th { position: sticky; top: 0; background: #fff; text-align: left; font-family: var(--titulo); text-transform: uppercase; letter-spacing: .06em; font-size: 10.5px; font-weight: 500; color: var(--vinho); padding: 11px 12px; border-bottom: 1px solid var(--mostarda); white-space: nowrap; }
+  .tabela th { position: sticky; top: 0; z-index: 2; background: #fff; box-shadow: 0 1px 0 var(--mostarda); text-align: left; font-family: var(--titulo); text-transform: uppercase; letter-spacing: .06em; font-size: 10.5px; font-weight: 500; color: var(--vinho); padding: 11px 12px; border-bottom: 1px solid var(--mostarda); white-space: nowrap; }
   .tabela th.n, .tabela td.n { text-align: right; }
   .tabela th button { all: unset; cursor: pointer; }
   .tabela th[aria-sort="ascending"] button::after { content: " ↑"; }
@@ -42,7 +45,7 @@
   .tabela td.larga { white-space: normal; min-width: 220px; }
   .tabela tbody tr { cursor: pointer; }
   .tabela tbody tr:hover td { background: #FBFAF8; }
-  .tabela tfoot td { font-weight: 500; border-top: 1px solid var(--mostarda); border-bottom: 0; background: #FCFBF9; }
+  .tabela tfoot td { position: sticky; bottom: 0; z-index: 1; font-weight: 500; border-top: 1px solid var(--mostarda); border-bottom: 0; background: #FCFBF9; box-shadow: 0 -1px 0 var(--mostarda); }
   .tabela img { width: 40px; height: 40px; max-width: none; object-fit: cover; background: #F4F4F4; display: block; }
   .tabela .sf { width: 40px; height: 40px; background: #F4F2EF; }
   .tabela td.td-ed { padding: 4px 6px; cursor: default; }
@@ -82,6 +85,19 @@
   .graf summary { cursor: pointer; color: var(--cinza); }
   .graf details table { margin-top: 6px; font-size: 12px; }
   .graf details td, .graf details th { padding: 4px 10px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 14px; align-items: center; }
+  .chip { display: inline-flex; align-items: center; gap: 7px; font-size: 12px; padding: 5px 11px; border: 1px solid var(--linha); border-radius: 99px; background: #fff; cursor: pointer; user-select: none; }
+  .chip input { position: absolute; opacity: 0; pointer-events: none; }
+  .chip i { width: 9px; height: 9px; border-radius: 2px; background: var(--c); opacity: .3; }
+  .chip:has(input:checked) { border-color: var(--tinta); background: #FBFAF8; }
+  .chip:has(input:checked) i { opacity: 1; }
+  .chip:has(input:focus-visible) { outline: 2px solid var(--mostarda); }
+  .chips .lnk { all: unset; cursor: pointer; font-size: 12px; color: var(--burle); margin-left: 6px; }
+  .tipos { display: grid; grid-template-columns: minmax(0, 300px) minmax(0, 1fr); gap: 24px; align-items: center; }
+  @media (max-width: 760px) { .tipos { grid-template-columns: 1fr; } }
+  .area--pizza { height: 260px; }
+  .sw { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 8px; vertical-align: -1px; }
+  .total-tipos { font-size: 22px; font-variant-numeric: tabular-nums; margin: 0 0 4px; }
   .vazio { display: flex; align-items: center; justify-content: center; height: 100%; color: var(--cinza); font-size: 13px; }
 
   /* Formulário */

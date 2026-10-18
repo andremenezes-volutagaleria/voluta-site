@@ -635,6 +635,17 @@
         ${kpi("Resultado", `<span class="${bruto - desp < 0 ? "neg" : ""}">${R(bruto - desp)}</span>`, "vendas menos custo das peças e despesas reais")}
         ${kpi("Investido em peças", R(invest), `${compras.length} ${compras.length === 1 ? "peça comprada" : "peças compradas"} no período`)}
       </div>
+      <div class="graf graf--largo" id="caixa-tipos">
+        <h3>Quanto gastei por tipo</h3>
+        <p class="sub">Marque os tipos que quer somar. Vale o período escolhido acima. Compra de peças começa desmarcada para não esconder o resto.</p>
+        <div class="chips" id="chips"></div>
+        <div class="tipos">
+          <div><p class="total-tipos" id="total-tipos"></p><div class="area area--pizza" id="a-pizza"><canvas id="g-pizza"></canvas></div></div>
+          <div id="t-tipos"></div>
+        </div>
+        <h3 style="margin-top:18px">Por mês</h3><p class="sub" id="sub-tipos-mes"></p>
+        <div class="area" id="a-tipos-mes"><canvas id="g-tipos-mes"></canvas></div>
+      </div>
       <h2 class="sec">Estoque hoje</h2>
       <div class="kpis">
         ${kpi("Peças à venda", String(disp.length), `${disp.filter(p => p.status === "reservado").length} reservadas`)}
@@ -708,6 +719,67 @@
     // Leilão x direto
     const org = ["Leilão", "Direto"].map(o => { const l = vs.filter(v => peca(v.codigo)?.origem === o), f = l.reduce((s, v) => s + n(v.valor), 0), lu = l.reduce((s, v) => s + lucroVenda(v), 0); return [o, l.length, R(f), R(lu), f ? P(lu / f) : "—"]; });
     tabelaNum("t-origem", ["Origem", "Vendas", "Vendido", "Lucro", "Margem real"], org);
+    gastosPorTipo(compras, ds, novo, eixoR, tabelaNum);
+  }
+
+  // ---------- Quanto gastei por tipo (filtro + pizza + por mês) ----------
+  let graficosTipo = [];
+  function gastosPorTipo(compras, ds, novo, eixoR, tabelaNum) {
+    graficosTipo = [];   // os gráficos antigos já foram destruídos pelo painel
+    // Cor fixa por tipo (a cor segue o tipo, não a posição). Paleta validada para daltonismo nos vizinhos.
+    const fixos = [["Compra de peças", p => n(p.compra)], ["Frete", p => n(p.frete)], ["Restauro", p => n(p.restauro)], ["NF e leiloeiro", p => n(p.nf) + n(p.leiloeiro)]];
+    const totalCat = new Map(); D.despesas.itens.forEach(d => totalCat.set(d.categoria || "Sem categoria", (totalCat.get(d.categoria || "Sem categoria") || 0) + n(d.valor)));
+    const catsDesp = [...totalCat].sort((a, b) => b[1] - a[1]).map(x => x[0]);
+    const PALETA = [COR.vinho, COR.mostarda, COR.azul, COR.verde, COR.barro, "#6250d6", "#e87ba4", "#008300"], OUTROS = "#A39C94";
+    const tipos = [...fixos.map(f => f[0]), ...catsDesp];
+    const cor = t => PALETA[tipos.indexOf(t)] || OUTROS;
+    const valorDe = (t, filtroMes = "") => {
+      const f = fixos.find(x => x[0] === t);
+      if (f) return compras.filter(p => (p.data_compra || "").startsWith(filtroMes)).reduce((s, p) => s + f[1](p), 0);
+      return ds.filter(d => (d.categoria || "Sem categoria") === t && (d.data || "").startsWith(filtroMes)).reduce((s, d) => s + n(d.valor), 0);
+    };
+    let marcados;
+    try { marcados = JSON.parse(localStorage.getItem("crm-tipos") || "null"); } catch {}
+    if (!Array.isArray(marcados)) marcados = tipos.filter(t => t !== "Compra de peças");
+    const chips = document.getElementById("chips");
+    chips.innerHTML = tipos.map(t => `<label class="chip" style="--c:${cor(t)}"><input type="checkbox" value="${e(t)}" ${marcados.includes(t) ? "checked" : ""}><i></i>${e(t)}</label>`).join("")
+      + `<button class="lnk" type="button" data-sel="todos">Marcar todos</button><button class="lnk" type="button" data-sel="desp">Tudo menos compra de peças</button><button class="lnk" type="button" data-sel="nada">Limpar</button>`;
+    const desenhar = () => {
+      graficosTipo.splice(0).forEach(g => { g.destroy(); const i = graficos.indexOf(g); if (i >= 0) graficos.splice(i, 1); });
+      marcados = [...chips.querySelectorAll("input:checked")].map(i => i.value);
+      try { localStorage.setItem("crm-tipos", JSON.stringify(marcados)); } catch {}
+      const linhas = tipos.filter(t => marcados.includes(t)).map(t => [t, valorDe(t)]).filter(x => x[1] > 0).sort((a, b) => b[1] - a[1]);
+      const total = linhas.reduce((s, x) => s + x[1], 0);
+      document.getElementById("total-tipos").textContent = R(total);
+      const area = document.getElementById("a-pizza"), areaMes = document.getElementById("a-tipos-mes");
+      if (!linhas.length) {
+        area.innerHTML = `<div class="vazio">Nada marcado ou sem gastos no período</div>`; areaMes.innerHTML = `<div class="vazio">—</div>`;
+        document.getElementById("t-tipos").innerHTML = ""; return;
+      }
+      if (!area.querySelector("canvas")) area.innerHTML = `<canvas id="g-pizza"></canvas>`;
+      if (!areaMes.querySelector("canvas")) areaMes.innerHTML = `<canvas id="g-tipos-mes"></canvas>`;
+      // Pizza: no máximo 8 fatias com cor própria; o que passar disso vira "Outros"
+      const comCor = linhas.filter(x => PALETA[tipos.indexOf(x[0])]), resto = linhas.filter(x => !PALETA[tipos.indexOf(x[0])]);
+      const fatias = [...comCor, ...(resto.length ? [["Outros", resto.reduce((s, x) => s + x[1], 0)]] : [])];
+      const antes = graficos.length;
+      novo("g-pizza", { type: "doughnut", data: { labels: fatias.map(x => x[0]), datasets: [{ data: fatias.map(x => x[1]), backgroundColor: fatias.map(x => x[0] === "Outros" ? OUTROS : cor(x[0])), borderColor: "#fff", borderWidth: 2, hoverOffset: 6 }] },
+        options: { cutout: "58%", interaction: { mode: "nearest", intersect: true }, plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => `${c.label}: ${R(c.parsed)} (${P(c.parsed / total)})` } } } } });
+      // Por mês: soma dos tipos marcados
+      const ms = mesesDe([...compras.map(p => p.data_compra), ...ds.map(d => d.data)]);
+      const vals = ms.map(m => linhas.reduce((s, [t]) => s + valorDe(t, m), 0));
+      document.getElementById("sub-tipos-mes").textContent = linhas.length === 1 ? linhas[0][0] : `Soma de ${linhas.length} tipos marcados`;
+      novo("g-tipos-mes", { type: "bar", data: { labels: ms.map(rotMes), datasets: [{ label: "Gasto", data: vals, backgroundColor: linhas.length === 1 ? cor(linhas[0][0]) : COR.vinho, borderRadius: 4, borderSkipped: "start", maxBarThickness: 34 }] },
+        options: { plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => R(c.parsed.y) } } }, scales: { x: { grid: { display: false } }, y: eixoR } } });
+      graficosTipo = graficos.slice(antes);
+      tabelaNum("t-tipos", ["Tipo", "Valor", "% do marcado"], [...linhas.map(([t, v]) => [`<span class="sw" style="background:${cor(t)}"></span>${e(t)}`, R(v), P(v / total)]), ["<b>Total</b>", `<b>${R(total)}</b>`, "100%"]]);
+    };
+    chips.addEventListener("change", desenhar);
+    chips.addEventListener("click", ev => {
+      const b = ev.target.closest("[data-sel]"); if (!b) return;
+      chips.querySelectorAll("input").forEach(i => { i.checked = b.dataset.sel === "todos" || (b.dataset.sel === "desp" && i.value !== "Compra de peças"); });
+      desenhar();
+    });
+    desenhar();
   }
 
   carregar();
