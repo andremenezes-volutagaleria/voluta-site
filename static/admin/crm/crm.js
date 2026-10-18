@@ -21,7 +21,14 @@
   const hoje = () => new Date().toISOString().slice(0, 10);
   const dias = (a, b) => (a && b) ? Math.round((new Date(b) - new Date(a)) / 864e5) : null;
   // Aceita número, "1234.5" (campo numérico) ou "1.234,50" (digitado no formato brasileiro)
-  const n = v => { const s = String(v ?? "").trim(); const x = typeof v === "number" ? v : parseFloat(s.includes(",") ? s.replace(/\./g, "").replace(",", ".") : s); return isFinite(x) ? Math.round(x * 10000) / 10000 : 0; };
+  const n = v => {
+    if (typeof v === "number") return isFinite(v) ? Math.round(v * 10000) / 10000 : 0;
+    let s = String(v ?? "").replace(/R\$|\s/g, "");
+    if (s.includes(",")) s = s.replace(/\./g, "").replace(",", ".");          // 1.234,50
+    else if (/^-?\d{1,3}(\.\d{3})+$/.test(s)) s = s.replace(/\./g, "");      // 1.500 = mil e quinhentos
+    const x = parseFloat(s); return isFinite(x) ? Math.round(x * 10000) / 10000 : 0;
+  };
+  const numCel = v => n(v) ? n(v).toLocaleString("pt-BR", { maximumFractionDigits: 2 }) : "";
   const MES = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
   const rotMes = m => `${MES[+m.slice(5, 7) - 1]}/${m.slice(2, 4)}`;
   const ROT_ST = { disponivel: "Disponível", reservado: "Reservado", vendido: "Vendido" };
@@ -184,29 +191,60 @@
   const conteudo = () => document.getElementById("conteudo");
 
   // Tabela genérica com busca, ordenação e totais
-  function tabela({ colunas, linhas, filtros = "", aplicar = () => true, totais, aoClicar, chaveInicial, dirInicial = 1, botoes = "", nomeCsv }) {
+  function tabela({ colunas, linhas, filtros = "", aplicar = () => true, totais, aoClicar, aoEditar, chaveInicial, dirInicial = 1, botoes = "", nomeCsv }) {
     conteudo().innerHTML = `
       <div class="filtros"><input type="search" id="q" placeholder="Buscar" aria-label="Buscar">${filtros}
-        <div class="dir"><span class="cont" id="cont"></span>${nomeCsv ? `<button class="bt bt--peq" id="csv" type="button">Baixar CSV</button>` : ""}${botoes}</div></div>
+        <div class="dir"><span class="cont" id="salvo" role="status"></span><span class="cont" id="cont"></span>${nomeCsv ? `<button class="bt bt--peq" id="csv" type="button">Baixar CSV</button>` : ""}${botoes}</div></div>
       <div class="rolagem"><table class="tabela"><thead><tr>${colunas.map((c, i) => `<th scope="col" class="${c.n ? "n" : ""}" data-i="${i}">${c.r ? `<button>${c.r}</button>` : `<span class="visually-hidden">${c.oculto || ""}</span>`}</th>`).join("")}</tr></thead>
       <tbody id="corpo"></tbody><tfoot id="pe"></tfoot></table></div>`;
     let ci = colunas.findIndex(c => c.k === chaveInicial), dir = dirInicial, atuais = [];
+    const celula = (c, l, j) => `<td data-c="${j}" class="${c.n ? "n num" : ""} ${c.cls || ""} ${c.ed ? "td-ed" : ""}">${c.ed
+      ? `<input class="cel" inputmode="decimal" data-j="${j}" value="${e(numCel(c.v(l)))}" aria-label="${e(c.r)} ${e(l.codigo || "")}" placeholder="0">`
+      : c.h ? c.h(l) : e(c.v(l))}</td>`;
+    const rodapeTab = () => { document.getElementById("pe").innerHTML = totais && atuais.length ? `<tr>${colunas.map(c => `<td class="${c.n ? "n num" : ""}">${c.t ? c.t(atuais) : ""}</td>`).join("")}</tr>` : ""; };
     const desenhar = () => {
       const q = norm(document.getElementById("q").value);
       atuais = linhas().filter(l => aplicar(l) && (!q || norm(colunas.map(c => c.busca ? c.busca(l) : (c.v ? c.v(l) : "")).join(" ")).includes(q)));
       if (ci >= 0) { const c = colunas[ci], v = c.ord || c.v; atuais.sort((a, b) => { const x = v(a), y = v(b); if (x === "" || x == null) return 1; if (y === "" || y == null) return -1; return (x > y ? 1 : x < y ? -1 : 0) * dir; }); }
       document.getElementById("cont").textContent = `${atuais.length} ${atuais.length === 1 ? "item" : "itens"}`;
-      document.getElementById("corpo").innerHTML = atuais.map((l, i) => `<tr data-l="${i}" tabindex="0">${colunas.map(c => `<td class="${c.n ? "n num" : ""} ${c.cls || ""}">${c.h ? c.h(l) : e(c.v(l))}</td>`).join("")}</tr>`).join("")
+      document.getElementById("corpo").innerHTML = atuais.map((l, i) => `<tr data-l="${i}" tabindex="0">${colunas.map((c, j) => celula(c, l, j)).join("")}</tr>`).join("")
         || `<tr><td colspan="${colunas.length}" class="cinza" style="padding:24px">Nada encontrado.</td></tr>`;
-      document.getElementById("pe").innerHTML = totais && atuais.length ? `<tr>${colunas.map(c => `<td class="${c.n ? "n num" : ""}">${c.t ? c.t(atuais) : ""}</td>`).join("")}</tr>` : "";
+      rodapeTab();
       document.querySelectorAll("th[data-i]").forEach(th => th.removeAttribute("aria-sort"));
       if (ci >= 0) document.querySelector(`th[data-i="${ci}"]`)?.setAttribute("aria-sort", dir > 0 ? "ascending" : "descending");
     };
     document.querySelectorAll("th[data-i] button").forEach(b => b.addEventListener("click", () => { const i = +b.parentElement.dataset.i; dir = ci === i ? -dir : 1; ci = i; desenhar(); }));
     conteudo().querySelectorAll(".filtros input, .filtros select").forEach(x => x.addEventListener("input", desenhar));
     const corpo = document.getElementById("corpo");
-    corpo.addEventListener("click", ev => { const tr = ev.target.closest("tr[data-l]"); if (tr && !ev.target.closest("a")) aoClicar?.(atuais[+tr.dataset.l]); });
-    corpo.addEventListener("keydown", ev => { if (ev.key === "Enter") { const tr = ev.target.closest("tr[data-l]"); if (tr) aoClicar?.(atuais[+tr.dataset.l]); } });
+    corpo.addEventListener("click", ev => { const tr = ev.target.closest("tr[data-l]"); if (tr && !ev.target.closest("a, input, .td-ed")) aoClicar?.(atuais[+tr.dataset.l]); });
+    corpo.addEventListener("keydown", ev => {
+      const inp = ev.target.closest("input.cel");
+      if (inp && ev.key === "Enter") {             // Enter: grava e desce para a linha de baixo, como na planilha
+        ev.preventDefault();
+        const prox = inp.closest("tr").nextElementSibling?.querySelector(`input.cel[data-j="${inp.dataset.j}"]`);
+        if (prox) { prox.focus(); prox.select(); } else inp.blur();
+        return;
+      }
+      if (inp && ev.key === "Escape") { const tr = inp.closest("tr"); inp.value = numCel(colunas[+inp.dataset.j].v(atuais[+tr.dataset.l])); inp.blur(); return; }
+      if (!inp && ev.key === "Enter") { const tr = ev.target.closest("tr[data-l]"); if (tr) aoClicar?.(atuais[+tr.dataset.l]); }
+    });
+    corpo.addEventListener("focusin", ev => { if (ev.target.matches("input.cel")) ev.target.select(); });
+    // Edição direto na célula: grava em fila (uma alteração de cada vez) e recalcula a linha e os totais
+    let fila = Promise.resolve();
+    const salvo = document.getElementById("salvo");
+    corpo.addEventListener("change", ev => {
+      const inp = ev.target.closest("input.cel"); if (!inp) return;
+      const tr = inp.closest("tr"), l = atuais[+tr.dataset.l], c = colunas[+inp.dataset.j];
+      const antes = n(c.v(l)), novo = n(inp.value);
+      inp.value = numCel(novo);
+      if (novo === antes) return;
+      c.ed(l, novo);
+      const redesenhaLinha = () => tr.querySelectorAll("td[data-c]").forEach(td => { const k = colunas[+td.dataset.c]; if (!k.ed) td.innerHTML = k.h ? k.h(l) : e(k.v(l)); });
+      redesenhaLinha(); rodapeTab();
+      salvo.textContent = "Salvando…"; salvo.className = "cont";
+      fila = fila.then(() => aoEditar(l, c)).then(() => { salvo.textContent = "Salvo"; setTimeout(() => { if (salvo.textContent === "Salvo") salvo.textContent = ""; }, 2500); })
+        .catch(err => { c.ed(l, antes); inp.value = numCel(antes); redesenhaLinha(); rodapeTab(); salvo.textContent = "Não salvou: " + (err.message || err); salvo.className = "cont neg"; });
+    });
     document.getElementById("csv")?.addEventListener("click", () => {
       const cols = colunas.filter(c => c.r && c.v);
       const esc = s => `"${String(s ?? "").replace(/"/g, '""')}"`;
@@ -235,28 +273,32 @@
       { r: "Compra em", v: p => p.data_compra, h: p => dataBR(p.data_compra) || '<span class="cinza">—</span>', cls: "num" },
       { r: "Status", v: p => ROT_ST[p.status] || p.status, h: stHtml },
     ];
+    const custos = [
+      { r: "Compra", n: 1, v: p => n(p.compra), ed: (p, x) => { p.compra = x; }, t: soma(p => n(p.compra)) },
+      { r: "Frete", n: 1, v: p => n(p.frete), ed: (p, x) => { p.frete = x; }, t: soma(p => n(p.frete)) },
+      { r: "Restauro", n: 1, v: p => n(p.restauro), ed: (p, x) => { p.restauro = x; }, t: soma(p => n(p.restauro)) },
+    ];
     const detalhe = [
-      { r: "Compra", n: 1, v: p => n(p.compra), h: p => R(p.compra), t: soma(p => n(p.compra)) },
-      { r: "Frete", n: 1, v: p => n(p.frete), h: p => R(p.frete), t: soma(p => n(p.frete)) },
-      { r: "Restauro", n: 1, v: p => n(p.restauro), h: p => R(p.restauro), t: soma(p => n(p.restauro)) },
       { r: "NF + leiloeiro", n: 1, v: p => n(p.nf) + n(p.leiloeiro), h: p => R(n(p.nf) + n(p.leiloeiro)), t: soma(p => n(p.nf) + n(p.leiloeiro)) },
+      { r: "Custo op.", n: 1, v: p => n(p.custo_op), h: p => R(p.custo_op), t: soma(p => n(p.custo_op)) },
     ];
     const fim = [
       { r: "Custo total", n: 1, v: custoTotal, h: p => R(custoTotal(p)), t: soma(custoTotal) },
-      { r: "Preço Pix", n: 1, v: p => n(p.preco_pix), h: p => R(p.preco_pix), t: soma(p => n(p.preco_pix)) },
+      { r: "Preço Pix", n: 1, v: p => n(p.preco_pix), ed: (p, x) => { p.preco_pix = x; }, t: soma(p => n(p.preco_pix)) },
       { r: "Lucro", n: 1, v: lucroPrev, h: p => `<span class="${lucroPrev(p) < 0 ? "neg" : ""}">${R(lucroPrev(p))}</span>`, t: soma(lucroPrev) },
       { r: "Margem real", n: 1, v: p => n(p.preco_pix) ? lucroPrev(p) / n(p.preco_pix) : "", h: p => n(p.preco_pix) ? P(lucroPrev(p) / n(p.preco_pix)) : "—",
         t: l => { const pr = l.reduce((s, p) => s + n(p.preco_pix), 0); return pr ? P(l.reduce((s, p) => s + lucroPrev(p), 0) / pr) : ""; } },
-      { r: "Dias", n: 1, v: p => { const v = p.status === "vendido" ? vendaDe(p.codigo)?.data : hoje(); return dias(p.data_compra, v) ?? ""; }, h: p => { const v = p.status === "vendido" ? vendaDe(p.codigo)?.data : hoje(); const d = dias(p.data_compra, v); return d == null ? "—" : `${d}`; } },
+      { r: "Dias", n: 1, v: p => { const v = p.status === "vendido" ? vendaDe(p.codigo)?.data : hoje(); return dias(p.data_compra, v) ?? ""; }, h: p => { const v = p.status === "vendido" ? vendaDe(p.codigo)?.data : hoje(); const d = dias(p.data_compra, v); return d == null || d < 0 ? "—" : `${d}`; } },
     ];
     const filtros = `
       <select id="fst" aria-label="Status"><option value="">Todos os status</option><option value="disponivel">Disponível</option><option value="reservado">Reservado</option><option value="vendido">Vendido</option></select>
       <select id="fcat" aria-label="Categoria"><option value="">Todas as categorias</option>${opts(cats)}</select>
       <select id="forig" aria-label="Origem"><option value="">Leilão e direto</option><option>Leilão</option><option>Direto</option></select>
-      <label><input type="checkbox" id="fdet"> Detalhar custos</label>`;
+      <label><input type="checkbox" id="fdet"> Mostrar NF, leiloeiro e custo op.</label>`;
     const montarTabela = () => {
       const st = document.getElementById("fst")?.value || "", cat = document.getElementById("fcat")?.value || "", org = document.getElementById("forig")?.value || "";
-      tabela({ colunas: [...base, ...(detalhar ? detalhe : []), ...fim], linhas: pecas, filtros, totais: true, chaveInicial: "codigo", nomeCsv: "voluta-inventario",
+      tabela({ colunas: [...base, ...custos, ...(detalhar ? detalhe : []), ...fim],
+        aoEditar: (p, c) => salvar("inventario", `${c.r.toLowerCase()} de ${p.codigo}`), linhas: pecas, filtros, totais: true, chaveInicial: "codigo", nomeCsv: "voluta-inventario",
         aplicar: p => (!document.getElementById("fst").value || p.status === document.getElementById("fst").value) && (!document.getElementById("fcat").value || p.categoria === document.getElementById("fcat").value) && (!document.getElementById("forig").value || p.origem === document.getElementById("forig").value),
         aoClicar: formPeca, botoes: `<button class="bt bt--prim bt--peq" id="nova" type="button">+ Nova peça</button>` });
       document.getElementById("fst").value = st; document.getElementById("fcat").value = cat; document.getElementById("forig").value = org;
