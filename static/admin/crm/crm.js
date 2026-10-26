@@ -114,7 +114,9 @@
     } catch {}
   }
   // Marcadores de acompanhamento da peça (bolinhas na tabela e caixas no formulário)
-  const MARCAS = [["foto_tirada", "Foto tirada"], ["foto_postada", "Foto postada"], ["em_restauro", "Em restauro"], ["entregue", "Entregue"]];
+  const MARCAS = [["em_restauro", "Em restauro"], ["entregue", "Entregue"], ["foto_tirada", "Foto tirada"], ["foto_postada", "Foto postada"]];
+  // Data de hoje no fuso do computador (a postagem das 22h fica no dia certo, não no dia seguinte)
+  const hojeLocal = () => { const d = new Date(); return new Date(d - d.getTimezoneOffset() * 6e4).toISOString().slice(0, 10); };
   const linhaDe = el => document.getElementById("corpo")?._linhas?.[+el.closest("tr")?.dataset.l];
   const linkSeguro = u => /^https?:\/\//i.test(u || "") ? u : u ? "https://" + u : "";
   const vendaDe = cod =>D.vendas.itens.filter(v => v.codigo === cod).sort((a, b) => a.data.localeCompare(b.data))[0];
@@ -314,6 +316,7 @@
       { r: "Designer", v: p => p.designer },
       { r: "Origem", v: p => p.origem, h: p => p.origem === "Leilão" && p.link_leilao ? `<a class="lk" href="${e(linkSeguro(p.link_leilao))}" target="_blank" rel="noopener" title="Abrir o leilão">Leilão ↗</a>` : e(p.origem) },
       ...MARCAS.map(([k, r]) => ({ r, v: p => p[k] ? "Sim" : "Não", cls: "td-ed td-marca", h: p => `<button type="button" class="ok ${p[k] ? "ok--feito" : ""}" data-marca="${k}" aria-pressed="${!!p[k]}" aria-label="${r}: ${p[k] ? "sim" : "não"}" title="${r}${p[k] ? "" : " (clique para marcar)"}">✓</button>` })),
+      { r: "Postada em", v: p => p.data_postagem || "", h: p => dataBR(p.data_postagem) || '<span class="cinza">—</span>', cls: "num col-postagem" },
       { r: "Compra em", v: p => p.data_compra, h: p => dataBR(p.data_compra) || '<span class="cinza">—</span>', cls: "num" },
       { r: "Status", v: p => ROT_ST[p.status] || p.status, h: stHtml },
     ];
@@ -359,10 +362,15 @@
         const p = linhaDe(b), k = b.dataset.marca, r = MARCAS.find(m => m[0] === k)[1]; if (!p) return;
         const pinta = () => { b.classList.toggle("ok--feito", !!p[k]); b.setAttribute("aria-pressed", !!p[k]); b.setAttribute("aria-label", `${r}: ${p[k] ? "sim" : "não"}`); b.title = r + (p[k] ? "" : " (clique para marcar)"); };
         const salvo = document.getElementById("salvo");
-        p[k] = !p[k]; pinta();
+        const dataAntes = p.data_postagem;
+        p[k] = !p[k];
+        if (k === "foto_postada") { if (p[k]) p.data_postagem = hojeLocal(); else delete p.data_postagem; }
+        const celData = b.closest("tr").querySelector("td.col-postagem");
+        const pintaData = () => { if (celData) celData.innerHTML = dataBR(p.data_postagem) || '<span class="cinza">—</span>'; };
+        pinta(); pintaData();
         salvo.textContent = "Salvando…"; salvo.className = "cont";
         try { await salvar("inventario", `${r.toLowerCase()}: ${p[k] ? "sim" : "não"} ${p.codigo}`); salvo.textContent = "Salvo"; setTimeout(() => { if (salvo.textContent === "Salvo") salvo.textContent = ""; }, 2500); }
-        catch (err) { p[k] = !p[k]; pinta(); salvo.textContent = "Não salvou: " + err.message; salvo.className = "cont neg"; }
+        catch (err) { p[k] = !p[k]; if (dataAntes) p.data_postagem = dataAntes; else delete p.data_postagem; pinta(); pintaData(); salvo.textContent = "Não salvou: " + err.message; salvo.className = "cont neg"; }
       });
       document.getElementById("q").dispatchEvent(new Event("input"));
     };
@@ -426,7 +434,8 @@
           </div>
         </div>
         <div class="campo campo--3"><span class="campo__r">Acompanhamento</span>
-          <div class="marcas">${MARCAS.map(([k, r]) => `<label class="foto-peca__flag"><input type="checkbox" id="f-m-${k}" ${x[k] ? "checked" : ""}> ${r}</label>`).join("")}</div>
+          <div class="marcas">${MARCAS.map(([k, r]) => `<label class="foto-peca__flag"><input type="checkbox" id="f-m-${k}" ${x[k] ? "checked" : ""}> ${r}</label>`).join("")}
+            <label class="foto-peca__flag" id="f-postagem-caixa" ${x.foto_postada ? "" : "hidden"}>Postada em <input type="date" id="f-postagem" value="${e(x.data_postagem || "")}"></label></div>
         </div>
       </div>
       <div class="resumo" id="resumo"></div>
@@ -450,6 +459,11 @@
         raiz.querySelector("#f-prev").innerHTML = fotoDe(x.codigo) ? `<img src="${e(fotoDe(x.codigo))}" alt="">` : `<div class="sf"></div>`;
         raiz.querySelector("#f-foto-info").textContent = tirarFoto ? "A foto será removida ao salvar." : "Sem foto ainda.";
       });
+      // Foto postada: ao marcar, guarda a data de hoje (dá para corrigir no campo ao lado)
+      raiz.querySelector("#f-m-foto_postada").addEventListener("change", ev => {
+        raiz.querySelector("#f-postagem-caixa").hidden = !ev.target.checked;
+        if (ev.target.checked && !raiz.querySelector("#f-postagem").value) raiz.querySelector("#f-postagem").value = hojeLocal();
+      });
       // Link do leilão: só aparece quando a origem é Leilão
       const origem = raiz.querySelector("#f-origem"), caixaLink = raiz.querySelector("#f-link").closest(".campo");
       origem.addEventListener("change", () => caixaLink.classList.toggle("oculto", origem.value !== "Leilão"));
@@ -458,7 +472,8 @@
         fornecedor: val(raiz, "f-fornecedor"), origem: val(raiz, "f-origem"), data_compra: val(raiz, "f-data"), status: val(raiz, "f-status"),
         compra: n(val(raiz, "f-compra")), frete: n(val(raiz, "f-frete")), restauro: n(val(raiz, "f-restauro")), nf: n(val(raiz, "f-nf")), leiloeiro: n(val(raiz, "f-leiloeiro")),
         custo_op: n(val(raiz, "f-op")), preco_pix: n(val(raiz, "f-preco")), mercado: n(val(raiz, "f-mercado")), dimensoes: val(raiz, "f-dim"), obs: val(raiz, "f-obs"),
-        link_leilao: val(raiz, "f-origem") === "Leilão" ? val(raiz, "f-link") : "", ...Object.fromEntries(MARCAS.map(([k]) => [k, raiz.querySelector("#f-m-" + k).checked])) });
+        link_leilao: val(raiz, "f-origem") === "Leilão" ? val(raiz, "f-link") : "", ...Object.fromEntries(MARCAS.map(([k]) => [k, raiz.querySelector("#f-m-" + k).checked])),
+        data_postagem: raiz.querySelector("#f-m-foto_postada").checked ? (val(raiz, "f-postagem") || hojeLocal()) : "" });
       const resumo = () => { const y = ler(); raiz.querySelector("#resumo").innerHTML = `<span>Custo total <b>${R(custoTotal(y))}</b></span><span>Lucro <b class="${lucroPrev(y) < 0 ? "neg" : ""}">${R(lucroPrev(y))}</b></span><span>Margem real <b>${y.preco_pix ? P(lucroPrev(y) / y.preco_pix) : "—"}</b></span><span>Markup <b>${custoTotal(y) ? P(y.preco_pix / custoTotal(y) - 1) : "—"}</b></span>`; };
       raiz.querySelectorAll("input,select,textarea").forEach(i => i.addEventListener("input", resumo));
       raiz.querySelectorAll("[data-pct]").forEach(b => b.addEventListener("click", () => { raiz.querySelector(`#f-${b.dataset.pct}`).value = (n(val(raiz, "f-compra")) * par()[b.dataset.pct]).toFixed(2); resumo(); }));
