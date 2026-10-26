@@ -113,6 +113,8 @@
       await gh(CRM, `/contents/${caminho}`, { method: "DELETE", body: JSON.stringify({ message: `CRM: remove foto antiga`, sha, branch: CRM.ramo }) });
     } catch {}
   }
+  // Marcadores de acompanhamento da peça (bolinhas na tabela e caixas no formulário)
+  const MARCAS = [["foto_tirada", "Foto tirada"], ["foto_postada", "Foto postada"], ["em_restauro", "Em restauro"], ["entregue", "Entregue"]];
   const linhaDe = el => document.getElementById("corpo")?._linhas?.[+el.closest("tr")?.dataset.l];
   const linkSeguro = u => /^https?:\/\//i.test(u || "") ? u : u ? "https://" + u : "";
   const vendaDe = cod =>D.vendas.itens.filter(v => v.codigo === cod).sort((a, b) => a.data.localeCompare(b.data))[0];
@@ -311,7 +313,7 @@
       { r: "Categoria", v: p => p.categoria },
       { r: "Designer", v: p => p.designer },
       { r: "Origem", v: p => p.origem, h: p => p.origem === "Leilão" && p.link_leilao ? `<a class="lk" href="${e(linkSeguro(p.link_leilao))}" target="_blank" rel="noopener" title="Abrir o leilão">Leilão ↗</a>` : e(p.origem) },
-      { r: "Foto tirada", v: p => p.foto_tirada ? "Sim" : "Não", cls: "td-ed", h: p => `<button type="button" class="ok ${p.foto_tirada ? "ok--feito" : ""}" data-fototirada aria-pressed="${!!p.foto_tirada}" title="${p.foto_tirada ? "Foto tirada (clique para desmarcar)" : "Falta foto (clique para marcar)"}">✓</button>` },
+      ...MARCAS.map(([k, r]) => ({ r, v: p => p[k] ? "Sim" : "Não", cls: "td-ed td-marca", h: p => `<button type="button" class="ok ${p[k] ? "ok--feito" : ""}" data-marca="${k}" aria-pressed="${!!p[k]}" aria-label="${r}: ${p[k] ? "sim" : "não"}" title="${r}${p[k] ? "" : " (clique para marcar)"}">✓</button>` })),
       { r: "Compra em", v: p => p.data_compra, h: p => dataBR(p.data_compra) || '<span class="cinza">—</span>', cls: "num" },
       { r: "Status", v: p => ROT_ST[p.status] || p.status, h: stHtml },
     ];
@@ -336,29 +338,31 @@
       <select id="fst" aria-label="Status"><option value="">Todos os status</option><option value="disponivel">Disponível</option><option value="reservado">Reservado</option><option value="vendido">Vendido</option></select>
       <select id="fcat" aria-label="Categoria"><option value="">Todas as categorias</option>${opts(cats)}</select>
       <select id="forig" aria-label="Origem"><option value="">Leilão e direto</option><option>Leilão</option><option>Direto</option></select>
-      <select id="ffoto" aria-label="Foto tirada"><option value="">Com e sem foto</option><option value="sim">Foto tirada</option><option value="nao">Falta foto</option></select>
+      <select id="fmarca" aria-label="Marcadores"><option value="">Todos os marcadores</option>${MARCAS.map(([k, r]) => `<option value="${k}:1">${r}</option><option value="${k}:0">${{ foto_tirada: "Falta tirar foto", foto_postada: "Falta postar", em_restauro: "Fora do restauro", entregue: "Não entregue" }[k]}</option>`).join("")}</select>
       <label><input type="checkbox" id="fdet"> Mostrar NF, leiloeiro e custo op.</label>`;
     const montarTabela = () => {
-      const st = document.getElementById("fst")?.value || "", cat = document.getElementById("fcat")?.value || "", org = document.getElementById("forig")?.value || "", fot = document.getElementById("ffoto")?.value || "";
+      const st = document.getElementById("fst")?.value || "", cat = document.getElementById("fcat")?.value || "", org = document.getElementById("forig")?.value || "", fot = document.getElementById("fmarca")?.value || "";
       tabela({ colunas: [...base, ...custos, ...(detalhar ? detalhe : []), ...fim],
         aoEditar: (p, c) => salvar("inventario", `${c.r.toLowerCase()} de ${p.codigo}`), linhas: pecas, filtros, totais: true, chaveInicial: "codigo", nomeCsv: "voluta-inventario",
         aplicar: p => (!document.getElementById("fst").value || p.status === document.getElementById("fst").value) && (!document.getElementById("fcat").value || p.categoria === document.getElementById("fcat").value) && (!document.getElementById("forig").value || p.origem === document.getElementById("forig").value)
-          && (!document.getElementById("ffoto").value || (document.getElementById("ffoto").value === "sim") === !!p.foto_tirada),
+          && (() => { const [k, v] = (document.getElementById("fmarca").value || ":").split(":"); return !k || !!p[k] === (v === "1"); })(),
         aoClicar: formPeca, botoes: `<button class="bt bt--prim bt--peq" id="nova" type="button">+ Nova peça</button>` });
-      document.getElementById("fst").value = st; document.getElementById("fcat").value = cat; document.getElementById("forig").value = org; document.getElementById("ffoto").value = fot;
+      document.getElementById("fst").value = st; document.getElementById("fcat").value = cat; document.getElementById("forig").value = org; document.getElementById("fmarca").value = fot;
       document.getElementById("fdet").checked = detalhar;
       document.getElementById("fdet").addEventListener("change", ev => { detalhar = ev.target.checked; montarTabela(); });
       document.getElementById("nova").addEventListener("click", () => formPeca(null));
-      // Foto tirada: marca e desmarca direto na tabela
+      // Marcadores: marca e desmarca direto na tabela
+      document.getElementById("corpo").addEventListener("mousedown", ev => { if (ev.target.closest("[data-marca]")) ev.preventDefault(); });   // sem foco = a tabela não rola
       document.getElementById("corpo").addEventListener("click", async ev => {
-        const b = ev.target.closest("[data-fototirada]"); if (!b) return;
+        const b = ev.target.closest("[data-marca]"); if (!b) return;
         ev.stopPropagation();
-        const p = pecas()[pecas().indexOf(linhaDe(b))]; if (!p) return;
+        const p = linhaDe(b), k = b.dataset.marca, r = MARCAS.find(m => m[0] === k)[1]; if (!p) return;
+        const pinta = () => { b.classList.toggle("ok--feito", !!p[k]); b.setAttribute("aria-pressed", !!p[k]); b.setAttribute("aria-label", `${r}: ${p[k] ? "sim" : "não"}`); b.title = r + (p[k] ? "" : " (clique para marcar)"); };
         const salvo = document.getElementById("salvo");
-        p.foto_tirada = !p.foto_tirada; b.classList.toggle("ok--feito", p.foto_tirada); b.setAttribute("aria-pressed", p.foto_tirada);
+        p[k] = !p[k]; pinta();
         salvo.textContent = "Salvando…"; salvo.className = "cont";
-        try { await salvar("inventario", `foto ${p.foto_tirada ? "tirada" : "pendente"} ${p.codigo}`); salvo.textContent = "Salvo"; }
-        catch (err) { p.foto_tirada = !p.foto_tirada; b.classList.toggle("ok--feito", p.foto_tirada); b.setAttribute("aria-pressed", p.foto_tirada); salvo.textContent = "Não salvou: " + err.message; salvo.className = "cont neg"; }
+        try { await salvar("inventario", `${r.toLowerCase()}: ${p[k] ? "sim" : "não"} ${p.codigo}`); salvo.textContent = "Salvo"; setTimeout(() => { if (salvo.textContent === "Salvo") salvo.textContent = ""; }, 2500); }
+        catch (err) { p[k] = !p[k]; pinta(); salvo.textContent = "Não salvou: " + err.message; salvo.className = "cont neg"; }
       });
       document.getElementById("q").dispatchEvent(new Event("input"));
     };
@@ -419,8 +423,10 @@
               <button type="button" class="bt bt--peq bt--perigo" id="f-foto-tirar" ${x.foto ? "" : "hidden"}>Remover foto</button>
               <p class="cinza" id="f-foto-info" style="font-size:11.5px;margin:0">${x.foto ? "Foto enviada pelo CRM." : fotoDe(x.codigo) ? "Mostrando a foto do site. Envie uma para usar outra aqui." : "Sem foto ainda."}</p>
             </div>
-            <label class="foto-peca__flag"><input type="checkbox" id="f-tirada" ${x.foto_tirada ? "checked" : ""}> Foto tirada</label>
           </div>
+        </div>
+        <div class="campo campo--3"><span class="campo__r">Acompanhamento</span>
+          <div class="marcas">${MARCAS.map(([k, r]) => `<label class="foto-peca__flag"><input type="checkbox" id="f-m-${k}" ${x[k] ? "checked" : ""}> ${r}</label>`).join("")}</div>
         </div>
       </div>
       <div class="resumo" id="resumo"></div>
@@ -436,7 +442,7 @@
           raiz.querySelector("#f-prev").innerHTML = `<img src="${URL.createObjectURL(fotoNova)}" alt="">`;
           raiz.querySelector("#f-foto-tirar").hidden = false;
           info.textContent = "Nova foto. Ela é enviada quando você clicar em Salvar.";
-          raiz.querySelector("#f-tirada").checked = true;
+          raiz.querySelector("#f-m-foto_tirada").checked = true;
         } catch (err) { info.textContent = err.message || "Não consegui ler essa imagem."; }
       });
       raiz.querySelector("#f-foto-tirar").addEventListener("click", ev => {
@@ -452,7 +458,7 @@
         fornecedor: val(raiz, "f-fornecedor"), origem: val(raiz, "f-origem"), data_compra: val(raiz, "f-data"), status: val(raiz, "f-status"),
         compra: n(val(raiz, "f-compra")), frete: n(val(raiz, "f-frete")), restauro: n(val(raiz, "f-restauro")), nf: n(val(raiz, "f-nf")), leiloeiro: n(val(raiz, "f-leiloeiro")),
         custo_op: n(val(raiz, "f-op")), preco_pix: n(val(raiz, "f-preco")), mercado: n(val(raiz, "f-mercado")), dimensoes: val(raiz, "f-dim"), obs: val(raiz, "f-obs"),
-        link_leilao: val(raiz, "f-origem") === "Leilão" ? val(raiz, "f-link") : "", foto_tirada: raiz.querySelector("#f-tirada").checked });
+        link_leilao: val(raiz, "f-origem") === "Leilão" ? val(raiz, "f-link") : "", ...Object.fromEntries(MARCAS.map(([k]) => [k, raiz.querySelector("#f-m-" + k).checked])) });
       const resumo = () => { const y = ler(); raiz.querySelector("#resumo").innerHTML = `<span>Custo total <b>${R(custoTotal(y))}</b></span><span>Lucro <b class="${lucroPrev(y) < 0 ? "neg" : ""}">${R(lucroPrev(y))}</b></span><span>Margem real <b>${y.preco_pix ? P(lucroPrev(y) / y.preco_pix) : "—"}</b></span><span>Markup <b>${custoTotal(y) ? P(y.preco_pix / custoTotal(y) - 1) : "—"}</b></span>`; };
       raiz.querySelectorAll("input,select,textarea").forEach(i => i.addEventListener("input", resumo));
       raiz.querySelectorAll("[data-pct]").forEach(b => b.addEventListener("click", () => { raiz.querySelector(`#f-${b.dataset.pct}`).value = (n(val(raiz, "f-compra")) * par()[b.dataset.pct]).toFixed(2); resumo(); }));
