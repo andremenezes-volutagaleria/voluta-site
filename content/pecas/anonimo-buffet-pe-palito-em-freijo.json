@@ -1,0 +1,24 @@
+{
+  "imagens": [
+    "/uploads/pecas/1.png",
+    "/uploads/pecas/2.png",
+    "/uploads/pecas/3.png",
+    "/uploads/pecas/4.png",
+    "/uploads/pecas/5.png",
+    "/uploads/pecas/6.png",
+    "/uploads/pecas/7.png",
+    "/uploads/pecas/8.png",
+    "/uploads/pecas/9.png",
+    "/uploads/pecas/10.png"
+  ],
+  "destaque": false,
+  "ano": "1960",
+  "descricao": "Um clássico do mobiliário brasileiro dos anos 60, de proporção baixa e alongada. A fachada é dividida com equilíbrio: à esquerda, quatro gavetas sobrepostas; à direita, duas portas de correr que revelam um amplo espaço interno. A lâmina de madeira tem veios intensos e desenhados, que correm contínuos de uma porta à outra como uma única superfície.\n\nOs puxadores em barra cromada, horizontais nas gavetas e verticais nas portas, dão ritmo à composição. A peça repousa sobre os característicos pés palito, cônicos e levemente inclinados, arrematados por ponteiras metálicas, o que deixa o volume suspenso e leve.\n\nPreserva as marcas do tempo, uma pátina honesta de quem atravessou décadas em uso.",
+  "ordem": 100,
+  "data": "2026-10-26",
+  "designer": "Anonimo",
+  "status": "disponivel",
+  "categoria": "Aparadores/Buffet",
+  "titulo": "Buffet Pé Palito em Freijó",
+  "dimensoes": "1,50 m (C) 43 cm (P) 80 cm (A) "
+}
