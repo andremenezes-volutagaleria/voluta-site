@@ -77,7 +77,45 @@
   const lucroVenda = v => liquido(v) - n(v.custo) - n(v.custo_op);
   const codigosDe = s => (String(s || "").toUpperCase().match(/VLT-\d+/g) || []);
   const fotoDe = cod => { const f = fichaDe[cod]; const u = f?.dados?.imagens?.find(Boolean); return !u ? "" : u.includes("static-assets.artlogic.net") ? u.replace(/w_\d+,h_\d+,c_limit/, "w_100,h_100,c_limit") : u; };
-  const vendaDe = cod => D.vendas.itens.filter(v => v.codigo === cod).sort((a, b) => a.data.localeCompare(b.data))[0];
+  // Fotos enviadas pelo CRM ficam no repositório privado (pasta fotos/); como não têm endereço público,
+  // são baixadas com o login e mostradas a partir da memória do navegador.
+  const fotosCRM = {};
+  const urlFotoCRM = caminho => fotosCRM[caminho] ||= fetch(`https://api.github.com/repos/${CRM.dono}/${CRM.nome}/contents/${caminho}?ref=${CRM.ramo}`,
+    { cache: "no-store", headers: { Authorization: "token " + token, Accept: "application/vnd.github.raw" } })
+    .then(r => r.ok ? r.blob() : null).then(b => b ? URL.createObjectURL(b) : "").catch(() => "");
+  const hidratarFotos = raiz => raiz?.querySelectorAll("img[data-crmfoto]").forEach(img => {
+    const c = img.dataset.crmfoto; img.removeAttribute("data-crmfoto");
+    urlFotoCRM(c).then(u => { if (u) img.src = u; else img.replaceWith(Object.assign(document.createElement("div"), { className: "sf" })); });
+  });
+  const miniatura = p => p.foto ? `<img data-crmfoto="${e(p.foto)}" alt="" loading="lazy">` : fotoDe(p.codigo) ? `<img src="${e(fotoDe(p.codigo))}" alt="" loading="lazy">` : `<div class="sf"></div>`;
+  // Reduz a foto (no máximo 1400 px, JPEG) antes de enviar, respeitando a rotação do celular
+  async function reduzirFoto(arq) {
+    const bmp = await createImageBitmap(arq, { imageOrientation: "from-image" });
+    const k = Math.min(1, 1400 / Math.max(bmp.width, bmp.height));
+    const cv = Object.assign(document.createElement("canvas"), { width: Math.round(bmp.width * k), height: Math.round(bmp.height * k) });
+    cv.getContext("2d").drawImage(bmp, 0, 0, cv.width, cv.height);
+    return new Promise((ok, erro) => cv.toBlob(b => b ? ok(b) : erro(new Error("Não consegui ler a imagem.")), "image/jpeg", 0.84));
+  }
+  async function enviarFoto(blob, codigo) {
+    const bytes = new Uint8Array(await blob.arrayBuffer()); let t = "";
+    for (let i = 0; i < bytes.length; i += 0x8000) t += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+    const caminho = `fotos/${codigo}-${Date.now().toString(36)}.jpg`;
+    const r = await gh(CRM, `/contents/${caminho}`, { method: "PUT", body: JSON.stringify({ message: `CRM: foto de ${codigo}`, content: btoa(t), branch: CRM.ramo }) });
+    if (r.status === 401) throw new Error("Seu login expirou. Entre de novo no painel.");
+    if (!r.ok) throw new Error(`Não consegui enviar a foto (GitHub respondeu ${r.status}).`);
+    fotosCRM[caminho] = Promise.resolve(URL.createObjectURL(blob));
+    return caminho;
+  }
+  async function apagarFoto(caminho) {          // limpeza da foto antiga; se falhar, não atrapalha nada
+    try {
+      const r = await gh(CRM, `/contents/${caminho}?ref=${CRM.ramo}`); if (!r.ok) return;
+      const { sha } = await r.json();
+      await gh(CRM, `/contents/${caminho}`, { method: "DELETE", body: JSON.stringify({ message: `CRM: remove foto antiga`, sha, branch: CRM.ramo }) });
+    } catch {}
+  }
+  const linhaDe = el => document.getElementById("corpo")?._linhas?.[+el.closest("tr")?.dataset.l];
+  const linkSeguro = u => /^https?:\/\//i.test(u || "") ? u : u ? "https://" + u : "";
+  const vendaDe = cod =>D.vendas.itens.filter(v => v.codigo === cod).sort((a, b) => a.data.localeCompare(b.data))[0];
   const proxId = (lista, pre) => pre + String(Math.max(0, ...lista.map(x => parseInt(String(x.id || "").slice(1)) || 0)) + 1).padStart(3, "0");
   const proxCodigo = () => "VLT-" + String(Math.max(0, ...pecas().map(p => parseInt(p.codigo.slice(4)) || 0), ...Object.keys(fichaDe).map(c => parseInt(c.slice(4)) || 0)) + 1).padStart(3, "0");
 
@@ -208,10 +246,11 @@
       const q = norm(document.getElementById("q").value);
       atuais = linhas().filter(l => aplicar(l) && (!q || norm(colunas.map(c => c.busca ? c.busca(l) : (c.v ? c.v(l) : "")).join(" ")).includes(q)));
       if (ci >= 0) { const c = colunas[ci], v = c.ord || c.v; atuais.sort((a, b) => { const x = v(a), y = v(b); if (x === "" || x == null) return 1; if (y === "" || y == null) return -1; return (x > y ? 1 : x < y ? -1 : 0) * dir; }); }
+      document.getElementById("corpo")._linhas = atuais;
       document.getElementById("cont").textContent = `${atuais.length} ${atuais.length === 1 ? "item" : "itens"}`;
       document.getElementById("corpo").innerHTML = atuais.map((l, i) => `<tr data-l="${i}" tabindex="0">${colunas.map((c, j) => celula(c, l, j)).join("")}</tr>`).join("")
         || `<tr><td colspan="${colunas.length}" class="cinza" style="padding:24px">Nada encontrado.</td></tr>`;
-      rodapeTab();
+      rodapeTab(); hidratarFotos(document.getElementById("corpo"));
       document.querySelectorAll("th[data-i]").forEach(th => th.removeAttribute("aria-sort"));
       if (ci >= 0) document.querySelector(`th[data-i="${ci}"]`)?.setAttribute("aria-sort", dir > 0 ? "ascending" : "descending");
     };
@@ -228,7 +267,7 @@
         return;
       }
       if (inp && ev.key === "Escape") { const tr = inp.closest("tr"); inp.value = numCel(colunas[+inp.dataset.j].v(atuais[+tr.dataset.l])); inp.blur(); return; }
-      if (!inp && ev.key === "Enter") { const tr = ev.target.closest("tr[data-l]"); if (tr) aoClicar?.(atuais[+tr.dataset.l]); }
+      if (!inp && ev.key === "Enter" && !ev.target.closest("button, a")) { const tr = ev.target.closest("tr[data-l]"); if (tr) aoClicar?.(atuais[+tr.dataset.l]); }
     });
     corpo.addEventListener("focusin", ev => { if (ev.target.matches("input.cel")) ev.target.select(); });
     // Edição direto na célula: grava em fila (uma alteração de cada vez) e recalcula a linha e os totais
@@ -241,7 +280,7 @@
       inp.value = numCel(novo);
       if (novo === antes) return;
       c.ed(l, novo);
-      const redesenhaLinha = () => tr.querySelectorAll("td[data-c]").forEach(td => { const k = colunas[+td.dataset.c]; if (!k.ed) td.innerHTML = k.h ? k.h(l) : e(k.v(l)); });
+      const redesenhaLinha = () => tr.querySelectorAll("td[data-c]").forEach(td => { const k = colunas[+td.dataset.c]; if (!k.ed) td.innerHTML = k.h ? k.h(l) : e(k.v(l)); }) || hidratarFotos(tr);
       redesenhaLinha(); rodapeTab();
       salvo.textContent = "Salvando…"; salvo.className = "cont";
       fila = fila.then(() => aoEditar(l, c)).then(() => { salvo.textContent = "Salvo"; setTimeout(() => { if (salvo.textContent === "Salvo") salvo.textContent = ""; }, 2500); })
@@ -266,12 +305,13 @@
     const cats = unicos(pecas(), p => p.categoria);
     let detalhar = false;
     const base = [
-      { oculto: "Foto", h: p => { const f = fotoDe(p.codigo); return f ? `<img src="${e(f)}" alt="" loading="lazy">` : `<div class="sf"></div>`; } },
+      { oculto: "Foto", h: miniatura },
       { r: "Código", k: "codigo", v: p => p.codigo, cls: "num" },
       { r: "Peça", v: p => p.peca, cls: "larga", busca: p => [p.peca, p.designer, p.fornecedor, p.codigo].join(" ") },
       { r: "Categoria", v: p => p.categoria },
       { r: "Designer", v: p => p.designer },
-      { r: "Origem", v: p => p.origem },
+      { r: "Origem", v: p => p.origem, h: p => p.origem === "Leilão" && p.link_leilao ? `<a class="lk" href="${e(linkSeguro(p.link_leilao))}" target="_blank" rel="noopener" title="Abrir o leilão">Leilão ↗</a>` : e(p.origem) },
+      { r: "Foto tirada", v: p => p.foto_tirada ? "Sim" : "Não", cls: "td-ed", h: p => `<button type="button" class="ok ${p.foto_tirada ? "ok--feito" : ""}" data-fototirada aria-pressed="${!!p.foto_tirada}" title="${p.foto_tirada ? "Foto tirada (clique para desmarcar)" : "Falta foto (clique para marcar)"}">✓</button>` },
       { r: "Compra em", v: p => p.data_compra, h: p => dataBR(p.data_compra) || '<span class="cinza">—</span>', cls: "num" },
       { r: "Status", v: p => ROT_ST[p.status] || p.status, h: stHtml },
     ];
@@ -296,17 +336,30 @@
       <select id="fst" aria-label="Status"><option value="">Todos os status</option><option value="disponivel">Disponível</option><option value="reservado">Reservado</option><option value="vendido">Vendido</option></select>
       <select id="fcat" aria-label="Categoria"><option value="">Todas as categorias</option>${opts(cats)}</select>
       <select id="forig" aria-label="Origem"><option value="">Leilão e direto</option><option>Leilão</option><option>Direto</option></select>
+      <select id="ffoto" aria-label="Foto tirada"><option value="">Com e sem foto</option><option value="sim">Foto tirada</option><option value="nao">Falta foto</option></select>
       <label><input type="checkbox" id="fdet"> Mostrar NF, leiloeiro e custo op.</label>`;
     const montarTabela = () => {
-      const st = document.getElementById("fst")?.value || "", cat = document.getElementById("fcat")?.value || "", org = document.getElementById("forig")?.value || "";
+      const st = document.getElementById("fst")?.value || "", cat = document.getElementById("fcat")?.value || "", org = document.getElementById("forig")?.value || "", fot = document.getElementById("ffoto")?.value || "";
       tabela({ colunas: [...base, ...custos, ...(detalhar ? detalhe : []), ...fim],
         aoEditar: (p, c) => salvar("inventario", `${c.r.toLowerCase()} de ${p.codigo}`), linhas: pecas, filtros, totais: true, chaveInicial: "codigo", nomeCsv: "voluta-inventario",
-        aplicar: p => (!document.getElementById("fst").value || p.status === document.getElementById("fst").value) && (!document.getElementById("fcat").value || p.categoria === document.getElementById("fcat").value) && (!document.getElementById("forig").value || p.origem === document.getElementById("forig").value),
+        aplicar: p => (!document.getElementById("fst").value || p.status === document.getElementById("fst").value) && (!document.getElementById("fcat").value || p.categoria === document.getElementById("fcat").value) && (!document.getElementById("forig").value || p.origem === document.getElementById("forig").value)
+          && (!document.getElementById("ffoto").value || (document.getElementById("ffoto").value === "sim") === !!p.foto_tirada),
         aoClicar: formPeca, botoes: `<button class="bt bt--prim bt--peq" id="nova" type="button">+ Nova peça</button>` });
-      document.getElementById("fst").value = st; document.getElementById("fcat").value = cat; document.getElementById("forig").value = org;
+      document.getElementById("fst").value = st; document.getElementById("fcat").value = cat; document.getElementById("forig").value = org; document.getElementById("ffoto").value = fot;
       document.getElementById("fdet").checked = detalhar;
       document.getElementById("fdet").addEventListener("change", ev => { detalhar = ev.target.checked; montarTabela(); });
       document.getElementById("nova").addEventListener("click", () => formPeca(null));
+      // Foto tirada: marca e desmarca direto na tabela
+      document.getElementById("corpo").addEventListener("click", async ev => {
+        const b = ev.target.closest("[data-fototirada]"); if (!b) return;
+        ev.stopPropagation();
+        const p = pecas()[pecas().indexOf(linhaDe(b))]; if (!p) return;
+        const salvo = document.getElementById("salvo");
+        p.foto_tirada = !p.foto_tirada; b.classList.toggle("ok--feito", p.foto_tirada); b.setAttribute("aria-pressed", p.foto_tirada);
+        salvo.textContent = "Salvando…"; salvo.className = "cont";
+        try { await salvar("inventario", `foto ${p.foto_tirada ? "tirada" : "pendente"} ${p.codigo}`); salvo.textContent = "Salvo"; }
+        catch (err) { p.foto_tirada = !p.foto_tirada; b.classList.toggle("ok--feito", p.foto_tirada); b.setAttribute("aria-pressed", p.foto_tirada); salvo.textContent = "Não salvou: " + err.message; salvo.className = "cont neg"; }
+      });
       document.getElementById("q").dispatchEvent(new Event("input"));
     };
     montarTabela();
@@ -343,6 +396,7 @@
         ${campo("f-designer", "Designer ou fabricante", x.designer, { lista: unicos(pecas(), q => q.designer) })}
         ${campo("f-fornecedor", "Fornecedor", x.fornecedor, { lista: unicos(pecas(), q => q.fornecedor) })}
         ${campo("f-origem", "Origem da compra", "", { tipo: "select", extra: opts(["Direto", "Leilão"], x.origem) })}
+        ${campo("f-link", "Link do leilão", x.link_leilao || "", { tipo: "url", cls: "campo--2" + (x.origem === "Leilão" ? "" : " oculto"), atalho: `<a class="atalho" id="f-link-abrir" target="_blank" rel="noopener" ${x.link_leilao ? `href="${e(linkSeguro(x.link_leilao))}"` : "hidden"}>Abrir o leilão ↗</a>` })}
         ${campo("f-data", "Data da compra", x.data_compra, { tipo: "date" })}
         ${campo("f-status", "Status", "", { tipo: "select", extra: Object.entries(ROT_ST).map(([k, r]) => `<option value="${k}" ${k === x.status ? "selected" : ""}>${r}</option>`).join("") })}
         ${campo("f-compra", "Compra (R$)", x.compra ?? "", { tipo: "number" })}
@@ -355,13 +409,50 @@
         ${campo("f-mercado", "Média de mercado (R$)", x.mercado || "", { tipo: "number" })}
         ${campo("f-dim", "Dimensões", x.dimensoes)}
         ${campo("f-obs", "Observações", x.obs, { tipo: "textarea", cls: "campo--3" })}
+        <div class="campo campo--3 foto-peca">
+          <span class="campo__r">Foto da peça</span>
+          <div class="foto-peca__linha">
+            <div class="foto-peca__prev" id="f-prev">${miniatura(x)}</div>
+            <div class="foto-peca__acoes">
+              <label class="bt bt--peq" for="f-foto">${x.foto ? "Trocar foto" : "Enviar foto"}</label>
+              <input type="file" id="f-foto" accept="image/*" class="visually-hidden">
+              <button type="button" class="bt bt--peq bt--perigo" id="f-foto-tirar" ${x.foto ? "" : "hidden"}>Remover foto</button>
+              <p class="cinza" id="f-foto-info" style="font-size:11.5px;margin:0">${x.foto ? "Foto enviada pelo CRM." : fotoDe(x.codigo) ? "Mostrando a foto do site. Envie uma para usar outra aqui." : "Sem foto ainda."}</p>
+            </div>
+            <label class="foto-peca__flag"><input type="checkbox" id="f-tirada" ${x.foto_tirada ? "checked" : ""}> Foto tirada</label>
+          </div>
+        </div>
       </div>
       <div class="resumo" id="resumo"></div>
       ${rodape(!novo)}`, raiz => {
+      // Foto: a nova só sobe para o GitHub quando clicar em Salvar
+      let fotoNova = null, tirarFoto = false;
+      hidratarFotos(raiz);
+      raiz.querySelector("#f-foto").addEventListener("change", async ev => {
+        const arq = ev.target.files[0]; if (!arq) return;
+        const info = raiz.querySelector("#f-foto-info"); info.textContent = "Preparando a foto…";
+        try {
+          fotoNova = await reduzirFoto(arq); tirarFoto = false;
+          raiz.querySelector("#f-prev").innerHTML = `<img src="${URL.createObjectURL(fotoNova)}" alt="">`;
+          raiz.querySelector("#f-foto-tirar").hidden = false;
+          info.textContent = "Nova foto. Ela é enviada quando você clicar em Salvar.";
+          raiz.querySelector("#f-tirada").checked = true;
+        } catch (err) { info.textContent = err.message || "Não consegui ler essa imagem."; }
+      });
+      raiz.querySelector("#f-foto-tirar").addEventListener("click", ev => {
+        fotoNova = null; tirarFoto = !!x.foto; ev.currentTarget.hidden = true;
+        raiz.querySelector("#f-prev").innerHTML = fotoDe(x.codigo) ? `<img src="${e(fotoDe(x.codigo))}" alt="">` : `<div class="sf"></div>`;
+        raiz.querySelector("#f-foto-info").textContent = tirarFoto ? "A foto será removida ao salvar." : "Sem foto ainda.";
+      });
+      // Link do leilão: só aparece quando a origem é Leilão
+      const origem = raiz.querySelector("#f-origem"), caixaLink = raiz.querySelector("#f-link").closest(".campo");
+      origem.addEventListener("change", () => caixaLink.classList.toggle("oculto", origem.value !== "Leilão"));
+      raiz.querySelector("#f-link").addEventListener("input", ev => { const a = raiz.querySelector("#f-link-abrir"), u = linkSeguro(ev.target.value.trim()); a.hidden = !u; if (u) a.href = u; });
       const ler = () => ({ ...x, codigo: val(raiz, "f-codigo").toUpperCase(), peca: val(raiz, "f-peca"), categoria: val(raiz, "f-categoria") || "Sem categoria", designer: val(raiz, "f-designer"),
         fornecedor: val(raiz, "f-fornecedor"), origem: val(raiz, "f-origem"), data_compra: val(raiz, "f-data"), status: val(raiz, "f-status"),
         compra: n(val(raiz, "f-compra")), frete: n(val(raiz, "f-frete")), restauro: n(val(raiz, "f-restauro")), nf: n(val(raiz, "f-nf")), leiloeiro: n(val(raiz, "f-leiloeiro")),
-        custo_op: n(val(raiz, "f-op")), preco_pix: n(val(raiz, "f-preco")), mercado: n(val(raiz, "f-mercado")), dimensoes: val(raiz, "f-dim"), obs: val(raiz, "f-obs") });
+        custo_op: n(val(raiz, "f-op")), preco_pix: n(val(raiz, "f-preco")), mercado: n(val(raiz, "f-mercado")), dimensoes: val(raiz, "f-dim"), obs: val(raiz, "f-obs"),
+        link_leilao: val(raiz, "f-origem") === "Leilão" ? val(raiz, "f-link") : "", foto_tirada: raiz.querySelector("#f-tirada").checked });
       const resumo = () => { const y = ler(); raiz.querySelector("#resumo").innerHTML = `<span>Custo total <b>${R(custoTotal(y))}</b></span><span>Lucro <b class="${lucroPrev(y) < 0 ? "neg" : ""}">${R(lucroPrev(y))}</b></span><span>Margem real <b>${y.preco_pix ? P(lucroPrev(y) / y.preco_pix) : "—"}</b></span><span>Markup <b>${custoTotal(y) ? P(y.preco_pix / custoTotal(y) - 1) : "—"}</b></span>`; };
       raiz.querySelectorAll("input,select,textarea").forEach(i => i.addEventListener("input", resumo));
       raiz.querySelectorAll("[data-pct]").forEach(b => b.addEventListener("click", () => { raiz.querySelector(`#f-${b.dataset.pct}`).value = (n(val(raiz, "f-compra")) * par()[b.dataset.pct]).toFixed(2); resumo(); }));
@@ -372,10 +463,14 @@
           if (!/^VLT-\d+$/.test(y.codigo)) throw new Error("O código precisa ser no formato VLT-123.");
           if ((novo || y.codigo !== x.codigo) && peca(y.codigo)) throw new Error(`Já existe uma peça com o código ${y.codigo}.`);
           if (!y.peca) throw new Error("Preencha o nome da peça.");
+          const fotoAntiga = x.foto || "";
+          if (fotoNova) { raiz.querySelector("#f-foto-info").textContent = "Enviando a foto…"; y.foto = await enviarFoto(fotoNova, y.codigo); }
+          else if (tirarFoto) delete y.foto;
           const lista = pecas(), i = lista.indexOf(p);
           if (novo) lista.push(y); else lista[i] = y;
           const mudouStatus = novo || y.status !== x.status;
           try { await salvar("inventario", `${novo ? "nova peça" : "alteração"} ${y.codigo}`); } catch (err) { if (novo) lista.pop(); else lista[i] = p; throw err; }
+          if (fotoAntiga && fotoAntiga !== y.foto) apagarFoto(fotoAntiga);
           const falhas = mudouStatus ? await refletirNoSite([y.codigo]) : [];
           dlg.close(); montar(falhas.length ? "" : `${y.codigo} salvo.`);
           if (falhas.length) alertaFaixa(`Salvo no CRM, mas não consegui atualizar o status no site de: ${falhas.join(", ")}. Mude pelo painel do site.`);
