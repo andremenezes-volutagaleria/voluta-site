@@ -341,19 +341,25 @@
       <select id="fst" aria-label="Status"><option value="">Todos os status</option><option value="disponivel">Disponível</option><option value="reservado">Reservado</option><option value="vendido">Vendido</option></select>
       <select id="fcat" aria-label="Categoria"><option value="">Todas as categorias</option>${opts(cats)}</select>
       <select id="forig" aria-label="Origem"><option value="">Leilão e direto</option><option>Leilão</option><option>Direto</option></select>
-      <select id="fmarca" aria-label="Marcadores"><option value="">Todos os marcadores</option>${MARCAS.map(([k, r]) => `<option value="${k}:1">${r}</option><option value="${k}:0">${{ foto_tirada: "Falta tirar foto", foto_postada: "Falta postar", em_restauro: "Fora do restauro", entregue: "Não entregue" }[k]}</option>`).join("")}</select>
+      ${MARCAS.map(([k, r]) => `<select class="fmarca" data-k="${k}" aria-label="${r}"><option value="">${r}: todos</option><option value="1">${r}: sim</option><option value="0">${{ em_restauro: "Fora do restauro", entregue: "Não entregue", foto_tirada: "Falta tirar foto", foto_postada: "Falta postar" }[k]}</option></select>`).join("")}
+      <button type="button" class="bt bt--peq" id="flimpa">Limpar filtros</button>
       <label><input type="checkbox" id="fdet"> Mostrar NF, leiloeiro e custo op.</label>`;
     const montarTabela = () => {
-      const st = document.getElementById("fst")?.value || "", cat = document.getElementById("fcat")?.value || "", org = document.getElementById("forig")?.value || "", fot = document.getElementById("fmarca")?.value || "";
+      const st = document.getElementById("fst")?.value || "", cat = document.getElementById("fcat")?.value || "", org = document.getElementById("forig")?.value || "", fot = [...document.querySelectorAll(".fmarca")].map(x => x.value);
       tabela({ colunas: [...base, ...custos, ...(detalhar ? detalhe : []), ...fim],
         aoEditar: (p, c) => salvar("inventario", `${c.r.toLowerCase()} de ${p.codigo}`), linhas: pecas, filtros, totais: true, chaveInicial: "codigo", nomeCsv: "voluta-inventario",
         aplicar: p => (!document.getElementById("fst").value || p.status === document.getElementById("fst").value) && (!document.getElementById("fcat").value || p.categoria === document.getElementById("fcat").value) && (!document.getElementById("forig").value || p.origem === document.getElementById("forig").value)
-          && (() => { const [k, v] = (document.getElementById("fmarca").value || ":").split(":"); return !k || !!p[k] === (v === "1"); })(),
+          && [...document.querySelectorAll(".fmarca")].every(x => !x.value || !!p[x.dataset.k] === (x.value === "1")),
         aoClicar: formPeca, botoes: `<button class="bt bt--prim bt--peq" id="nova" type="button">+ Nova peça</button>` });
-      document.getElementById("fst").value = st; document.getElementById("fcat").value = cat; document.getElementById("forig").value = org; document.getElementById("fmarca").value = fot;
+      document.getElementById("fst").value = st; document.getElementById("fcat").value = cat; document.getElementById("forig").value = org; document.querySelectorAll(".fmarca").forEach((x, j) => { x.value = fot[j] || ""; x.classList.toggle("ativo", !!x.value); });
       document.getElementById("fdet").checked = detalhar;
       document.getElementById("fdet").addEventListener("change", ev => { detalhar = ev.target.checked; montarTabela(); });
       document.getElementById("nova").addEventListener("click", () => formPeca(null));
+      document.querySelectorAll(".fmarca").forEach(x => x.addEventListener("change", () => x.classList.toggle("ativo", !!x.value)));
+      document.getElementById("flimpa").addEventListener("click", () => {
+        document.querySelectorAll(".filtros select").forEach(x => { x.value = ""; x.classList.remove("ativo"); });
+        document.getElementById("q").value = ""; document.getElementById("q").dispatchEvent(new Event("input"));
+      });
       // Marcadores: marca e desmarca direto na tabela
       document.getElementById("corpo").addEventListener("mousedown", ev => { if (ev.target.closest("[data-marca]")) ev.preventDefault(); });   // sem foco = a tabela não rola
       document.getElementById("corpo").addEventListener("click", async ev => {
