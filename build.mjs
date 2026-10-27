@@ -29,9 +29,23 @@ const paragrafos = txt => txt.split(/\n\n+/).map(b => b.startsWith("## ") ? `<h2
 const write = (rel, html) => { const f = path.join(OUT, rel); fs.mkdirSync(path.dirname(f), { recursive: true }); fs.writeFileSync(f, html); };
 
 // ---------- dados ----------
+// Foto com caminho errado (ex.: /uploads/pecas/10.png, fora da pasta da peça) quebrava a galeria.
+// Se o arquivo existir na pasta da peça, usa esse; se não existir em lugar nenhum, tira da lista e avisa no log.
+const existe = u => fs.existsSync(path.join(ROOT, "static", decodeURIComponent(u)));
+function conferirFotos(p) {
+  const vistas = new Set();
+  p.imagens = (p.imagens || []).filter(Boolean).map(u => {
+    if (!u.startsWith("/uploads/") || existe(u)) return u;
+    const naPasta = `/uploads/pecas/${p.slug}/${u.split("/").pop()}`;
+    if (existe(naPasta)) { console.warn(`Foto corrigida em ${p.slug}: ${u} -> ${naPasta}`); return naPasta; }
+    console.warn(`Foto não encontrada em ${p.slug}: ${u} (removida da galeria)`); return null;
+  }).filter(u => u && !vistas.has(u) && vistas.add(u));
+  return p;
+}
 const pecas = fs.readdirSync(path.join(ROOT, "content/pecas"))
   .filter(f => f.endsWith(".json"))
   .map(f => ({ slug: f.replace(/\.json$/, ""), ...JSON.parse(fs.readFileSync(path.join(ROOT, "content/pecas", f), "utf8")) }))
+  .map(conferirFotos)
   .filter(p => p.status !== "oculto" && (p.imagens || []).filter(Boolean).length) // peça sem foto só aparece no painel
   .sort((a, b) => (a.status === "vendido") - (b.status === "vendido") || (a.ordem ?? 999) - (b.ordem ?? 999));
 
