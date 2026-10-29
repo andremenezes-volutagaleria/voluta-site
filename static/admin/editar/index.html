@@ -9,7 +9,20 @@
 <body>
   <script src="/admin/editar/fotos.js"></script>
   <script src="https://unpkg.com/decap-cms@^3.0.0/dist/decap-cms.js"></script>
+  <script src="/admin/consertar.js"></script>
   <script src="/admin/editar/preview.js"></script>
+  <script>
+    CMS.registerEventListener({ name: "preSave", handler: ({ entry }) => {
+      const slug = entry.get("slug"), dados = entry.get("data").toJS();
+      if (entry.get("collection") !== "pecas" || !slug) return entry.get("data");
+      const certo = window.voltaFichaCerta(slug + ".json", dados);
+      let d = entry.get("data");
+      if (certo === dados) return d;
+      if (certo.codigo !== dados.codigo) d = d.set("codigo", certo.codigo);
+      if (d.get("imagens") && JSON.stringify(certo.imagens) !== JSON.stringify(dados.imagens)) d = d.set("imagens", d.get("imagens").map((u, i) => certo.imagens[i]));
+      return d;
+    } });
+  </script>
   <script>
     // A tela de lista do editor foi substituída pela tabela em /admin.
     // Sempre que o editor (ou o botão "voltar" do navegador) cair numa lista, vai para a tabela.

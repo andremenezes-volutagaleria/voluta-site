@@ -64,6 +64,7 @@
   <div id="app"><div class="aviso"><p>Carregando o inventário…</p></div></div>
 </main>
 
+<script src="/admin/consertar.js"></script>
 <script>
 (() => {
   const REPO = { dono: "andremenezes-volutagaleria", nome: "voluta-site", ramo: "main", pasta: "content/pecas" };
@@ -93,7 +94,7 @@
       const entradas = j?.data?.repository?.object?.entries;
       if (!entradas) throw new Error(j?.errors?.[0]?.message || "sem dados");
       const dados = entradas.filter(x => x.name.endsWith(".json") && x.object?.text).map(x => {
-        const d = JSON.parse(x.object.text);
+        const d = window.voltaFichaCerta(x.name, JSON.parse(x.object.text));
         return { s: x.name.replace(/\.json$/, ""), c: d.codigo || "", t: d.titulo || "", d: d.designer || "", k: d.categoria || "",
           st: d.status || "", dc: d.data_compra || "", dt: (d.data || "").slice(0, 10), m: !!d.destaque, o: d.ordem ?? 100, nf: (d.imagens || []).filter(Boolean).length, h: "", i: foto((d.imagens || [])[0]) };
       });
@@ -101,6 +102,7 @@
       window.VOLUTA_INV = { repo: REPO, token: usuario.token, fichas: entradas.filter(x => x.name.endsWith(".json") && x.object?.text).map(x => ({ arquivo: x.name, dados: JSON.parse(x.object.text) })) };
       document.dispatchEvent(new CustomEvent("inventario-pronto"));
       montar(dados);
+      window.voltaGravarConsertos(window.VOLUTA_INV);
     })
     .catch(err => err.message === "login"
       ? pedirLogin("Seu login expirou. Entre de novo para ver o inventário.")

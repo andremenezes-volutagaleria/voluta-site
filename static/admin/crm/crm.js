@@ -75,7 +75,7 @@
   const lucroPrev = p => n(p.preco_pix) - custoTotal(p);
   const liquido = v => n(v.valor) * (1 - n(v.taxa));
   const lucroVenda = v => liquido(v) - n(v.custo) - n(v.custo_op);
-  const codigosDe = s => (String(s || "").toUpperCase().match(/VLT-\d+/g) || []);
+  const codigosDe = s => (String(s || "").toUpperCase().match(/VLT\s*-?\s*\d+/g) || []).map(c => "VLT-" + c.match(/\d+/)[0]);
   const fotoDe = cod => { const f = fichaDe[cod]; const u = f?.dados?.imagens?.find(Boolean); return !u ? "" : u.includes("static-assets.artlogic.net") ? u.replace(/w_\d+,h_\d+,c_limit/, "w_100,h_100,c_limit") : u; };
   // Fotos enviadas pelo CRM ficam no repositório privado (pasta fotos/); como não têm endereço público,
   // são baixadas com o login e mostradas a partir da memória do navegador.
@@ -175,7 +175,7 @@
     if (r.status === 401) throw new Error("login");
     const j = await r.json(), ent = j?.data?.repository?.object?.entries;
     if (!ent) throw new Error(j?.errors?.[0]?.message || "sem dados do site");
-    fichas = ent.filter(x => x.name.endsWith(".json") && x.object?.text).map(x => ({ arquivo: x.name, dados: JSON.parse(x.object.text) }));
+    fichas = ent.filter(x => x.name.endsWith(".json") && x.object?.text).map(x => ({ arquivo: x.name, dados: window.voltaFichaCerta ? window.voltaFichaCerta(x.name, JSON.parse(x.object.text)) : JSON.parse(x.object.text) }));
     fichaDe = {};
     for (const f of fichas) for (const c of codigosDe(f.dados.codigo)) fichaDe[c] = f;
     window.VOLUTA_INV = { repo: SITE, token, fichas };

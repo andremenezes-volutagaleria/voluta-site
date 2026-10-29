@@ -33,6 +33,9 @@ const write = (rel, html) => { const f = path.join(OUT, rel); fs.mkdirSync(path.
 // Se o arquivo existir na pasta da peça, usa esse; se não existir em lugar nenhum, tira da lista e avisa no log.
 const existe = u => fs.existsSync(path.join(ROOT, "static", decodeURIComponent(u)));
 function conferirFotos(p) {
+  // Campos de texto vazios não podem derrubar a publicação (ex.: peça cadastrada sem descrição)
+  for (const k of ["titulo", "descricao", "categoria", "dimensoes", "materiais"]) p[k] = String(p[k] ?? "").trim();
+  p.designer = String(p.designer ?? "").trim() || "Anônimo";
   const vistas = new Set();
   p.imagens = (p.imagens || []).filter(Boolean).map(u => {
     if (!u.startsWith("/uploads/") || existe(u)) return u;
@@ -292,7 +295,7 @@ pecas.forEach((p, i) => {
       ${p.materiais ? `<dt>Materiais</dt><dd>${esc(p.materiais)}</dd>` : ""}
       ${p.codigo ? `<dt>Código</dt><dd>${esc(p.codigo)}</dd>` : ""}
     </dl>
-    <div class="ficha__texto">${paragrafos(p.descricao)}</div>
+    ${p.descricao ? `<div class="ficha__texto">${paragrafos(p.descricao)}</div>` : ""}
     <p class="ficha__garantia"><a href="/politica-de-devolucao/">Política de devolução</a></p>
   </div>
 </article>
