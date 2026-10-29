@@ -223,7 +223,8 @@ h1, h2, h3 { margin: 0; font-weight: 500; line-height: 1.3; }
   .acervo__conteudo { display: contents; }
   .acervo__cab { order: 1; }
   .contagem { order: 3; }
-  .grade--acervo { order: 4; }
+  .grade--acervo, .acervo__conteudo > .vazio { order: 4; }
+  .ja-vendidas { order: 5; } /* vendidas sempre depois das disponíveis */
   .filtrar-btn { display: block; }
 }
 
