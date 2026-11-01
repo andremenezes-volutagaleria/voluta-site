@@ -1,0 +1,17 @@
+{
+  "imagens": [
+    "/uploads/pecas/16.png",
+    "/uploads/pecas/13.png",
+    "/uploads/pecas/15.png"
+  ],
+  "destaque": true,
+  "ano": "1960",
+  "descricao": "Um par de mesas laterais que repete, em escala menor, a gramática do conjunto Novo Rumo: base estofada em veludo, tampo em mármore e cantoneiras curvas em lâmina de jacarandá marcando cada quina.\n\nO mármore claro, de textura suave, se encaixa entre as cantoneiras como uma peça de joalheria, e o veludo faz a ponte entre a pedra e a madeira. A curva do compensado, fixada por parafusos aparentes, é ao mesmo tempo estrutura e ornamento — um detalhe que resume bem o modernismo brasileiro dos anos 60.\n\nAo lado das poltronas, completam a composição; sozinhas, funcionam como apoio ou pequena mesa de canto em qualquer ambiente de alma modernista.",
+  "ordem": 100,
+  "data": "2026-11-01",
+  "designer": "Novo Rumo",
+  "status": "disponivel",
+  "categoria": "Mesas laterais",
+  "titulo": "Par de mesas laterais em veludo e jacaranda",
+  "dimensoes": "67 x 67 x 38cm"
+}
