@@ -1,15 +1,4 @@
 {
-  "titulo": "Poltrona Moleca",
-  "designer": "Sérgio Rodrigues",
-  "ano": "",
-  "categoria": "Poltronas",
-  "status": "disponivel",
-  "preco": 43000,
-  "preco_obs": "",
-  "parcelamento": "em até 12x",
-  "dimensoes": "",
-  "materiais": "Madeira maciça, cintas de couro, almofadas em camurça gelo",
-  "descricao": "Versão mais compacta da icônica Poltrona Mole, a Moleca surgiu nos anos 1960 como adaptação para exportação. Estrutura em madeira maciça, assento sustentado por cintas de couro e almofadas soltas e generosas em camurça gelo. O sistema de cunhas permite montar e desmontar a peça com facilidade. Exemplar original, com selo de autenticidade do fabricante, em estado de época.",
   "imagens": [
     "https://static-assets.artlogic.net/w_2400,h_2400,c_limit,f_auto,fl_lossy,q_auto/artlogicstorage/voluta/images/view/b41d482fcba1d3886bdd23540bf51fd6p/voluta-s-rgio-rodrigues-poltrona-moleca-s-rgio-rodrigues.png",
     "https://static-assets.artlogic.net/w_2400,h_2400,c_limit,f_auto,fl_lossy,q_auto/artlogicstorage/voluta/images/view/b9aa7d9dcea31522f383d3fd709c330fp/voluta-s-rgio-rodrigues-poltrona-moleca-s-rgio-rodrigues.png",
@@ -20,11 +9,22 @@
     "https://static-assets.artlogic.net/w_2400,h_2400,c_limit,f_auto,fl_lossy,q_auto/artlogicstorage/voluta/images/view/652dcbb52364f195f2966d43a0ecfae0p/voluta-s-rgio-rodrigues-poltrona-moleca-s-rgio-rodrigues.png",
     "https://static-assets.artlogic.net/w_2400,h_2400,c_limit,f_auto,fl_lossy,q_auto/artlogicstorage/voluta/images/view/8ebe986b90bcdad4f3c33aa650696241p/voluta-s-rgio-rodrigues-poltrona-moleca-s-rgio-rodrigues.png"
   ],
-  "destaque": true,
-  "ordem": 1,
-  "codigo": "VLT-089",
-  "url_antiga": "63-sergio-rodrigues-poltrona-moleca-sergio-rodrigues",
+  "destaque": false,
+  "ano": "",
   "categoria_antiga": "1",
+  "descricao": "Versão mais compacta da icônica Poltrona Mole, a Moleca surgiu nos anos 1960 como adaptação para exportação. Estrutura em madeira maciça, assento sustentado por cintas de couro e almofadas soltas e generosas em camurça gelo. O sistema de cunhas permite montar e desmontar a peça com facilidade. Exemplar original, com selo de autenticidade do fabricante, em estado de época.",
+  "ordem": 1,
   "data": "2026-08-25",
-  "data_compra": "2026-06-02"
+  "designer": "Sérgio Rodrigues",
+  "url_antiga": "63-sergio-rodrigues-poltrona-moleca-sergio-rodrigues",
+  "preco": 43000,
+  "materiais": "Madeira maciça, cintas de couro, almofadas em camurça gelo",
+  "preco_obs": "",
+  "status": "disponivel",
+  "categoria": "Poltronas",
+  "data_compra": "2026-06-02",
+  "parcelamento": "em até 12x",
+  "codigo": "VLT-089",
+  "titulo": "Poltrona Moleca",
+  "dimensoes": ""
 }
