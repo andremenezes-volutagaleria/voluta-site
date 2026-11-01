@@ -1,0 +1,12 @@
+{
+  "status": "vendido",
+  "destaque": false,
+  "ordem": 100,
+  "titulo": "Luminaria Sergio Augusto",
+  "designer": "Sergio Rodrigues",
+  "categoria": "Iluminação",
+  "imagens": [
+    "/uploads/pecas/1.png"
+  ],
+  "data": "2026-08-18"
+}
