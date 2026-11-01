@@ -542,11 +542,16 @@
   function formVenda(v) {
     const nova = !v, taxas = par().taxas;
     const x = v || { data: hoje(), forma: "Pix / à vista", taxa: 0, custo_op: par().custo_op };
-    const disp = pecas().filter(p => p.status !== "vendido" || p.codigo === x.codigo).sort((a, b) => a.codigo.localeCompare(b.codigo));
+    // Peças que dá para vender: disponíveis/reservadas e também as marcadas como Vendido que ainda não têm venda registrada
+    const semVenda = p => p.status === "vendido" && !D.vendas.itens.some(o => o.codigo === p.codigo);
+    const disp = pecas().filter(p => p.status !== "vendido" || semVenda(p) || p.codigo === x.codigo).sort((a, b) => a.codigo.localeCompare(b.codigo));
+    const rotPeca = p => `${p.codigo} · ${p.peca}${p.designer ? " · " + p.designer : ""}${semVenda(p) && p.codigo !== x.codigo ? " (marcada vendida, sem venda)" : ""}`;
+    const opcoesPeca = (lista, sel) => `<option value="">Sem código (peça fora do inventário)</option>` + lista.map(p => `<option value="${e(p.codigo)}" ${p.codigo === sel ? "selected" : ""}>${e(rotPeca(p))}</option>`).join("");
     const cli = cliente(x.cliente_id) || {};
     abrir(`<h2>${nova ? "Registrar venda" : "Venda · " + e(dataBR(x.data))}</h2>
       <div class="campos">
-        ${campo("v-cod", "Peça", "", { tipo: "select", cls: "campo--2", extra: `<option value="">Sem código (peça fora do inventário)</option>` + disp.map(p => `<option value="${e(p.codigo)}" ${p.codigo === x.codigo ? "selected" : ""}>${e(p.codigo)} · ${e(p.peca)}</option>`).join("") })}
+        ${campo("v-busca", "Buscar peça (nome, designer ou código)", "", { cls: "campo--3" })}
+        ${campo("v-cod", "Peça", "", { tipo: "select", cls: "campo--2", extra: opcoesPeca(disp, x.codigo) })}
         ${campo("v-data", "Data da venda", x.data, { tipo: "date" })}
         ${campo("v-desc", "Descrição", x.descricao, { cls: "campo--3" })}
         ${campo("v-cli", "Cliente", cli.nome || "", { lista: D.clientes.itens.map(c => c.nome) })}
@@ -565,12 +570,25 @@
       const ler = () => ({ ...x, codigo: val(raiz, "v-cod"), data: val(raiz, "v-data"), descricao: val(raiz, "v-desc"), forma: val(raiz, "v-forma"),
         valor: n(val(raiz, "v-valor")), taxa: n(val(raiz, "v-taxa")) / 100, custo: n(val(raiz, "v-custo")), custo_op: n(val(raiz, "v-op")), obs: val(raiz, "v-obs") });
       const resumo = () => { const y = ler(); raiz.querySelector("#resumo").innerHTML = `<span>Líquido <b>${R(liquido(y))}</b></span><span>Lucro <b class="${lucroVenda(y) < 0 ? "neg" : ""}">${R(lucroVenda(y))}</b></span><span>Margem real <b>${y.valor ? P(lucroVenda(y) / y.valor) : "—"}</b></span>`; };
+      let valorAuto = null;                       // preço que o formulário preencheu sozinho (troca se mudar a peça)
       raiz.querySelector("#v-cod").addEventListener("change", ev => {
         const p = peca(ev.target.value); if (!p) return;
         raiz.querySelector("#v-desc").value = p.peca; raiz.querySelector("#v-custo").value = custoPeca(p); raiz.querySelector("#v-op").value = p.custo_op ?? par().custo_op;
-        if (!n(val(raiz, "v-valor"))) raiz.querySelector("#v-valor").value = p.preco_pix || "";
+        const vAtual = n(val(raiz, "v-valor"));
+        if (!vAtual || vAtual === valorAuto) { raiz.querySelector("#v-valor").value = p.preco_pix || ""; valorAuto = n(p.preco_pix); }
         resumo();
       });
+      // Busca por nome, designer ou código: filtra a lista de peças e já escolhe a primeira que bate
+      const selCod = raiz.querySelector("#v-cod");
+      raiz.querySelector("#v-busca").addEventListener("input", ev => {
+        const termos = norm(ev.target.value).split(/\s+/).filter(Boolean);
+        const achou = termos.length ? disp.filter(p => { const t = norm(rotPeca(p) + " " + (p.categoria || "")); return termos.every(w => t.includes(w)); }) : disp;
+        const atual = selCod.value;
+        selCod.innerHTML = opcoesPeca(achou, achou.some(p => p.codigo === atual) ? atual : "");
+        if (termos.length && achou.length && !achou.some(p => p.codigo === atual)) { selCod.value = achou[0].codigo; selCod.dispatchEvent(new Event("change")); }
+        ev.target.title = termos.length ? `${achou.length} ${achou.length === 1 ? "peça encontrada" : "peças encontradas"}` : "";
+      });
+      raiz.querySelector("#v-busca").addEventListener("keydown", ev => { if (ev.key === "Enter") { ev.preventDefault(); selCod.focus(); } });
       raiz.querySelector("#v-forma").addEventListener("change", ev => { raiz.querySelector("#v-taxa").value = ((taxas[ev.target.value] || 0) * 100).toFixed(2); resumo(); });
       raiz.querySelector("#v-cli").addEventListener("change", ev => { const c = D.clientes.itens.find(c => norm(c.nome) === norm(ev.target.value)); if (c) { raiz.querySelector("#v-email").value = c.email || ""; raiz.querySelector("#v-tel").value = c.telefone || ""; } });
       raiz.querySelectorAll("input,select,textarea").forEach(i => i.addEventListener("input", resumo));
