@@ -132,6 +132,24 @@
     }
   }
 
+  // Quando o custo de uma peça muda no inventário, a venda dela acompanha (custo da peça e custo operacional).
+  // Só mexe em venda que estava batendo com o custo anterior da peça: vendas antigas com custo próprio ficam como estão.
+  const cent = x => Math.round(n(x) * 100) / 100;
+  const custoBase = {};                                   // custo de cada peça como estava da última vez que foi salvo/carregado
+  const guardarCustos = () => pecas().forEach(p => { custoBase[p.codigo] = { c: cent(custoPeca(p)), op: n(p.custo_op ?? par().custo_op) }; });
+  async function custoNasVendas(cod) {
+    const p = peca(cod), velho = custoBase[cod]; if (!p) return 0;
+    const novo = { c: cent(custoPeca(p)), op: n(p.custo_op ?? par().custo_op) };
+    custoBase[cod] = novo;
+    if (!velho || (velho.c === novo.c && velho.op === novo.op)) return 0;
+    const vs = D.vendas.itens.filter(v => v.codigo === cod && cent(v.custo) === velho.c && n(v.custo_op) === velho.op);
+    if (!vs.length) return 0;
+    const antes = structuredClone(D.vendas.itens);
+    vs.forEach(v => { v.custo = novo.c; v.custo_op = novo.op; });
+    try { await salvar("vendas", `custo de ${cod} atualizado pelo inventário`); } catch (err) { D.vendas.itens = antes; custoBase[cod] = velho; throw err; }
+    return vs.length;
+  }
+
   // O status de cada peça segue o site; quando a ficha está oculta, vale o status do CRM.
   function sincronizarDoSite() {
     const mudou = [];
@@ -192,6 +210,7 @@
       if (arqs.every(x => !x)) return telaImportar();
       if (painelSalvo?.json?.widgets) { D.dashboard = painelSalvo.json; SHA.dashboard = painelSalvo.sha; } else D.dashboard = painelExemplo();
       ARQUIVOS.forEach((a, i) => { if (arqs[i]) { D[a] = arqs[i].json; SHA[a] = arqs[i].sha; } D[a].itens ||= []; });
+      guardarCustos();
       const mud = sincronizarDoSite();
       if (mud.length) { try { await salvar("inventario", `status atualizado pelo site (${mud.length})`); } catch {} }
       montar(mud.length ? `${mud.length} ${mud.length === 1 ? "peça teve" : "peças tiveram"} o status atualizado pelo site: ${mud.slice(0, 6).join(", ")}${mud.length > 6 ? "…" : ""}` : "");
@@ -347,7 +366,7 @@
     const montarTabela = () => {
       const st = document.getElementById("fst")?.value || "", cat = document.getElementById("fcat")?.value || "", org = document.getElementById("forig")?.value || "", fot = [...document.querySelectorAll(".fmarca")].map(x => x.value);
       tabela({ colunas: [...base, ...custos, ...(detalhar ? detalhe : []), ...fim],
-        aoEditar: (p, c) => salvar("inventario", `${c.r.toLowerCase()} de ${p.codigo}`), linhas: pecas, filtros, totais: true, chaveInicial: "codigo", nomeCsv: "voluta-inventario",
+        aoEditar: async (p, c) => { await salvar("inventario", `${c.r.toLowerCase()} de ${p.codigo}`); try { await custoNasVendas(p.codigo); } catch { alertaFaixa(`${p.codigo} salvo, mas não consegui atualizar o custo na venda dela. Recarregue a página.`); } }, linhas: pecas, filtros, totais: true, chaveInicial: "codigo", nomeCsv: "voluta-inventario",
         aplicar: p => (!document.getElementById("fst").value || p.status === document.getElementById("fst").value) && (!document.getElementById("fcat").value || p.categoria === document.getElementById("fcat").value) && (!document.getElementById("forig").value || p.origem === document.getElementById("forig").value)
           && [...document.querySelectorAll(".fmarca")].every(x => !x.value || !!p[x.dataset.k] === (x.value === "1")),
         aoClicar: formPeca, botoes: `<button class="bt bt--prim bt--peq" id="nova" type="button">+ Nova peça</button>` });
@@ -498,8 +517,11 @@
           const mudouStatus = novo || y.status !== x.status;
           try { await salvar("inventario", `${novo ? "nova peça" : "alteração"} ${y.codigo}`); } catch (err) { if (novo) lista.pop(); else lista[i] = p; throw err; }
           if (fotoAntiga && fotoAntiga !== y.foto) apagarFoto(fotoAntiga);
+          let nVendas = 0, erroVendas = false;
+          try { nVendas = await custoNasVendas(y.codigo); } catch { erroVendas = true; }
           const falhas = mudouStatus ? await refletirNoSite([y.codigo]) : [];
-          dlg.close(); montar(falhas.length ? "" : `${y.codigo} salvo.`);
+          dlg.close(); montar(falhas.length ? "" : `${y.codigo} salvo.${nVendas ? ` Custo atualizado na venda (${nVendas}).` : ""}`);
+          if (erroVendas) alertaFaixa(`${y.codigo} salvo, mas não consegui atualizar o custo na venda dela. Recarregue a página e salve a peça de novo.`);
           if (falhas.length) alertaFaixa(`Salvo no CRM, mas não consegui atualizar o status no site de: ${falhas.join(", ")}. Mude pelo painel do site.`);
         } catch (err) { erroForm(raiz, err); }
       });
