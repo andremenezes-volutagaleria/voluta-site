@@ -1,0 +1,19 @@
+{
+  "imagens": [
+    "/uploads/pecas/1.png",
+    "/uploads/pecas/7.png",
+    "/uploads/pecas/5.png",
+    "/uploads/pecas/6.png",
+    "/uploads/pecas/2.png"
+  ],
+  "destaque": true,
+  "ano": "1960",
+  "descricao": "Um par de poltronas de volume generoso e desenho rigoroso, produzidas pela Novo Rumo no auge do mobiliário moderno brasileiro. O assento largo e o encosto inclinado convidam à permanência, enquanto a estrutura se resolve em poucos gestos.\n\nO destaque está nas cantoneiras em lâmina de jacarandá sobre compensado curvado: peças em \"L\" que abraçam as quinas do estofado, sustentam o corpo e fazem as vezes de pés. A madeira escura, de veios intensos, contrasta com o veludo e revela a inteligência construtiva de uma época que transformava solução técnica em linguagem.\n\nFazem parte de um conjunto completo, com mesa de centro e par de mesas laterais do mesmo desenho — apresentados aqui em posts separados.",
+  "ordem": 100,
+  "data": "2026-11-01",
+  "designer": "Novo Rumo",
+  "status": "disponivel",
+  "categoria": "Poltronas",
+  "titulo": "Par de Poltronas Novo Rumo",
+  "dimensoes": "72 x 85 x 92 cm"
+}
