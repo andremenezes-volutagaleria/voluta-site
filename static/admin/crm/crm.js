@@ -657,8 +657,17 @@
   }
 
   // ---------- Despesas ----------
+  // Categorias fixas de despesa (aparecem mesmo sem nenhum lançamento ainda); as outras vêm dos próprios lançamentos.
+  const CAT_DESPESA = {
+    "Loja Reforma": ["Tinta", "Material", "Placa de inox", "Cortina", "Mão de obra", "Pedreiro", "Pintura"],
+  };
+  const catsDespesa = () => [...new Set([...Object.keys(CAT_DESPESA), ...unicos(D.despesas.itens, d => d.categoria)])];
+  const subsDespesa = cat => {
+    const daCat = [...(CAT_DESPESA[cat] || []), ...D.despesas.itens.filter(d => d.categoria === cat).map(d => d.subcategoria)].filter(Boolean);
+    return [...new Set(daCat.length ? daCat : [...Object.values(CAT_DESPESA).flat(), ...unicos(D.despesas.itens, d => d.subcategoria)])];
+  };
   function despesas() {
-    const cats = unicos(D.despesas.itens, d => d.categoria), anos = unicos(D.despesas.itens, d => (d.data || "").slice(0, 4)).reverse();
+    const cats = catsDespesa(), anos = unicos(D.despesas.itens, d => (d.data || "").slice(0, 4)).reverse();
     tabela({
       linhas: () => D.despesas.itens, chaveInicial: "data", dirInicial: -1, totais: true, nomeCsv: "voluta-despesas", aoClicar: formDespesa,
       filtros: `<select id="fcat" aria-label="Categoria"><option value="">Todas as categorias</option>${opts(cats)}</select><select id="fano" aria-label="Ano"><option value="">Todos os anos</option>${opts(anos)}</select>`,
@@ -680,12 +689,16 @@
       <p class="cinza" style="font-size:12px;margin:-8px 0 14px">Gastos que não são de uma peça específica (anúncios, embalagem, equipamentos…). Compra, frete e restauro de peça vão no Inventário.</p>
       <div class="campos">
         ${campo("d-data", "Data", x.data, { tipo: "date" })}
-        ${campo("d-cat", "Categoria", x.categoria, { lista: unicos(D.despesas.itens, y => y.categoria) })}
-        ${campo("d-sub", "Subcategoria", x.subcategoria, { lista: unicos(D.despesas.itens, y => y.subcategoria) })}
+        ${campo("d-cat", "Categoria", x.categoria, { lista: catsDespesa() })}
+        ${campo("d-sub", "Subcategoria", x.subcategoria, { lista: subsDespesa(x.categoria) })}
         ${campo("d-desc", "Descrição", x.descricao, { cls: "campo--2" })}
         ${campo("d-valor", "Valor (R$)", x.valor ?? "", { tipo: "number" })}
         ${campo("d-obs", "Observações", x.obs, { tipo: "textarea", cls: "campo--3" })}
       </div>${rodape(!nova)}`, raiz => {
+      // As sugestões de subcategoria seguem a categoria escolhida
+      raiz.querySelector("#d-cat").addEventListener("input", () => {
+        raiz.querySelector("#d-sub-l").innerHTML = subsDespesa(val(raiz, "d-cat")).map(o => `<option value="${e(o)}">`).join("");
+      });
       raiz.querySelector("#salvar").addEventListener("click", async ev => {
         ev.currentTarget.disabled = true;
         const y = { ...x, data: val(raiz, "d-data"), categoria: val(raiz, "d-cat"), subcategoria: val(raiz, "d-sub"), descricao: val(raiz, "d-desc"), valor: n(val(raiz, "d-valor")), obs: val(raiz, "d-obs") };
