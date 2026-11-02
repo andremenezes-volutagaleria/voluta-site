@@ -61,6 +61,33 @@ if (principal && minis.length > 1) {
   }, { passive: true });
 }
 
+// Compartilhar a peça: no celular abre a tela nativa; no computador, mostra as opções
+document.querySelectorAll(".compartilhar").forEach(box => {
+  const btn = box.querySelector(".compartilhar__btn");
+  const opcoes = box.querySelector(".compartilhar__opcoes");
+  const aviso = box.querySelector(".compartilhar__aviso");
+  const { url, titulo } = box.dataset;
+  const registrar = rede => window.gtag?.("event", "share", { method: rede, item_id: location.pathname, content_type: "peca" });
+  const abrir = on => { opcoes.hidden = !on; btn.setAttribute("aria-expanded", on); };
+  btn.addEventListener("click", async () => {
+    if (navigator.share && matchMedia("(pointer: coarse)").matches) {
+      try { await navigator.share({ title: titulo, text: `Olha essa peça da Voluta: ${titulo}`, url }); registrar("nativo"); } catch {}
+      return;
+    }
+    abrir(opcoes.hidden);
+  });
+  opcoes.addEventListener("click", async e => {
+    const el = e.target.closest("[data-rede]"); if (!el) return;
+    registrar(el.dataset.rede);
+    if (el.dataset.rede !== "copiar") return;
+    try { await navigator.clipboard.writeText(url); aviso.textContent = "Link copiado"; }
+    catch { prompt("Copie o link:", url); }
+    setTimeout(() => aviso.textContent = "", 2500);
+  });
+  document.addEventListener("click", e => { if (!box.contains(e.target)) abrir(false); });
+  document.addEventListener("keydown", e => { if (e.key === "Escape" && !opcoes.hidden) { abrir(false); btn.focus(); } });
+});
+
 // Conversão: clique em "Tenho interesse" (GA4 + Meta, se configurados)
 document.querySelectorAll('[data-evento="interesse"]').forEach(a => {
   a.addEventListener("click", () => {
@@ -72,7 +99,7 @@ document.querySelectorAll('[data-evento="interesse"]').forEach(a => {
 
 // Conversão: qualquer clique para o WhatsApp (botão flutuante, rodapé, contato, peça)
 document.addEventListener("click", e => {
-  const a = e.target.closest?.('a[href*="wa.me/"]'); if (!a) return;
+  const a = e.target.closest?.('a[href*="wa.me/"]'); if (!a || a.closest(".compartilhar")) return;
   const onde = a.closest(".wa-float") ? "botao_flutuante" : a.closest(".rodape") ? "rodape" : a.closest(".contatos") ? "contato" : a.dataset.evento === "interesse" ? "peca" : "outro";
   window.gtag?.("event", "clique_whatsapp", { local: onde, pagina: location.pathname });
   if (a.dataset.evento !== "interesse") window.fbq?.("track", "Contact");

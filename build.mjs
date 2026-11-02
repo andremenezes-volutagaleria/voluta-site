@@ -74,6 +74,7 @@ const ICONE = {
   wa: `<svg class="ico" viewBox="0 0 32 32" aria-hidden="true"><path fill="currentColor" d="M16 3a13 13 0 0 0-11.2 19.6L3 29l6.6-1.7A13 13 0 1 0 16 3Zm0 23.6c-2 0-4-.6-5.7-1.6l-.4-.2-3.9 1 1-3.8-.3-.4A10.6 10.6 0 1 1 16 26.6Zm5.8-7.9c-.3-.2-1.9-.9-2.2-1s-.5-.2-.7.2-.8 1-1 1.2-.4.2-.7 0a8.7 8.7 0 0 1-4.3-3.8c-.3-.5.3-.5.9-1.6.1-.2 0-.4 0-.5l-1-2.4c-.3-.6-.5-.5-.7-.5h-.6a1.2 1.2 0 0 0-.9.4 3.6 3.6 0 0 0-1.1 2.7 6.3 6.3 0 0 0 1.3 3.3 14.4 14.4 0 0 0 5.5 4.9c2 .9 2.8.9 3.8.8a3.3 3.3 0 0 0 2.2-1.5 2.7 2.7 0 0 0 .2-1.5c-.1-.2-.3-.3-.6-.4Z"/></svg>`,
   email: `<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M3.5 6l8.5 7 8.5-7" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>`,
   ig: `<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="12" cy="12" r="4.2" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="17.4" cy="6.6" r="1.1" fill="currentColor"/></svg>`,
+  compartilhar: `<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V3.5M7.5 8 12 3.5 16.5 8" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M8 11H5.5v9.5h13V11H16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>`,
   local: `<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21Z" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="12" cy="9.5" r="2.5" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>`,
 };
 const VENDA = "https://venda.volutagaleria.com.br/";
@@ -290,6 +291,15 @@ pecas.forEach((p, i) => {
       ? `<a class="botao botao--linha" href="${wa(`Olá! Vi a peça vendida "${p.titulo}" no site. Vocês têm algo parecido?`)}">Procurar peça parecida</a>`
       : `<a class="botao botao--wa" href="${wa(msg)}" data-evento="interesse">Tenho interesse</a>
          <div class="cta-fixo"><a class="botao botao--wa" href="${wa(msg)}" data-evento="interesse">Tenho interesse</a></div>`}
+    ${(() => { const nome = p.designer === "Anônimo" ? p.titulo : `${p.titulo}, ${p.designer}`; return `<div class="compartilhar" data-url="${site.url}${url}" data-titulo="${esc(nome)}">
+      <button type="button" class="compartilhar__btn" aria-expanded="false" aria-controls="compartilhar-${p.slug}">${ICONE.compartilhar}<span>Compartilhar</span></button>
+      <ul class="compartilhar__opcoes" id="compartilhar-${p.slug}" hidden>
+        <li><a href="https://wa.me/?text=${encodeURIComponent(`Olha essa peça da Voluta: ${nome}\n${site.url}${url}`)}" target="_blank" rel="noopener" data-rede="whatsapp">WhatsApp</a></li>
+        <li><button type="button" data-rede="copiar">Copiar link</button></li>
+        <li><a href="mailto:?subject=${encodeURIComponent(`${nome} · Voluta`)}&body=${encodeURIComponent(`Olha essa peça da Voluta:\n${site.url}${url}`)}" data-rede="email">E-mail</a></li>
+      </ul>
+      <span class="compartilhar__aviso" role="status" aria-live="polite"></span>
+    </div>`; })()}
     <dl class="ficha__dados">
       ${p.dimensoes ? `<dt>Dimensões</dt><dd>${esc(p.dimensoes)}</dd>` : ""}
       ${p.materiais ? `<dt>Materiais</dt><dd>${esc(p.materiais)}</dd>` : ""}

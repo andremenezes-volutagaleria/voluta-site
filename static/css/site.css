@@ -246,6 +246,16 @@ h1, h2, h3 { margin: 0; font-weight: 500; line-height: 1.3; }
 .ficha__preco { margin: 22px 0 0; font-size: 15px; font-weight: 400; }
 .ficha__obs { margin: 0; font-size: 12px; color: var(--cinza); }
 .ficha .botao { margin-top: 18px; width: 100%; text-align: center; }
+/* Compartilhar */
+.compartilhar { position: relative; margin-top: 14px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; font-size: 12px; }
+.compartilhar__btn { display: inline-flex; align-items: center; gap: 7px; background: none; border: 0; padding: 4px 0; line-height: 1.4; color: var(--vinho); font: inherit; font-family: var(--titulo); text-transform: uppercase; letter-spacing: .06em; font-weight: 500; cursor: pointer; }
+.compartilhar__btn .ico { width: 16px; height: 16px; }
+.compartilhar__btn:hover span { text-decoration: underline; text-underline-offset: 3px; }
+.compartilhar__opcoes { display: flex; align-items: center; gap: 16px; list-style: none; margin: 0; padding: 0 0 0 14px; border-left: 1px solid var(--linha); }
+.compartilhar__opcoes[hidden] { display: none; }
+.compartilhar__opcoes a, .compartilhar__opcoes button { display: inline-block; background: none; border: 0; padding: 4px 0; font: inherit; line-height: 1.4; color: var(--tinta); text-decoration: none; cursor: pointer; }
+.compartilhar__opcoes a:hover, .compartilhar__opcoes button:hover { color: var(--burle); }
+.compartilhar__aviso { color: var(--cinza); }
 .ficha__dados { display: grid; grid-template-columns: max-content 1fr; gap: 4px 20px; margin: 28px 0 0; padding: 16px 0; border-top: 1px solid var(--mostarda); border-bottom: 1px solid var(--linha); font-size: 13px; }
 .ficha__dados dt { color: var(--cinza); }
 .ficha__dados dd { margin: 0; }
