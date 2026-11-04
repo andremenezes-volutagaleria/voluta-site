@@ -11,6 +11,7 @@
   <script src="https://unpkg.com/decap-cms@^3.0.0/dist/decap-cms.js"></script>
   <script src="/admin/consertar.js"></script>
   <script src="/admin/editar/preview.js"></script>
+  <script src="/admin/editar/fotos-multiplas.js"></script>
   <script>
     CMS.registerEventListener({ name: "preSave", handler: ({ entry }) => {
       const slug = entry.get("slug"), dados = entry.get("data").toJS();

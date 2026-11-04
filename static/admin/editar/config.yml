@@ -70,7 +70,7 @@ collections:
       - { name: dimensoes, label: Dimensões, widget: string, required: false, hint: "ex.: L 86 × P 75 × A 70 cm" }
       - { name: materiais, label: Materiais, widget: string, required: false }
       - { name: descricao, label: Descrição, widget: text, required: false }
-      - { name: imagens, label: Fotos (a primeira é a capa), widget: list, required: false, field: { name: imagem, label: Foto, widget: image }, hint: "Peça sem foto não aparece no site, mesmo marcada como Disponível." }
+      - { name: imagens, label: Fotos (a primeira é a capa), widget: fotos, required: false, hint: "Peça sem foto não aparece no site, mesmo marcada como Disponível." }
       - { name: data, label: Data de entrada no acervo, widget: datetime, format: "YYYY-MM-DD", date_format: "DD/MM/YYYY", time_format: false, hint: "Define a ordem do acervo (mais recentes primeiro)." }
       - { name: codigo, label: Código interno (VLT), widget: string, required: false, hint: "Mais de uma unidade: separe por vírgula, ex.: VLT-032, VLT-033" }
       - { name: data_compra, label: Data da compra (uso interno, não aparece no site), widget: datetime, format: "YYYY-MM-DD", date_format: "DD/MM/YYYY", time_format: false, required: false }

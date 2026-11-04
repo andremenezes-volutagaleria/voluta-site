@@ -47,6 +47,9 @@
     if (fs) Array.prototype.forEach.call(fs, function (f) { locais[chave(f.name)] = URL.createObjectURL(f); });
   }, true);
 
+  // Usado pelo campo de várias fotos (fotos-multiplas.js), que pode renomear o arquivo antes de enviar
+  window.voltaGuardarFotoLocal = function (nome, arquivo) { locais[chave(nome)] = URL.createObjectURL(arquivo); return locais[chave(nome)]; };
+
   function consertar(img) {
     if (!img || img.dataset.voltaFoto) return;
     var src = img.currentSrc || img.src;

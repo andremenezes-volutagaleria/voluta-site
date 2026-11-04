@@ -42,6 +42,7 @@ fs.writeFileSync(path.join(OUT, "index.html"), `<!doctype html>
   <div class="aviso-teste">Modo teste: pode mexer à vontade. Nada é salvo; ao recarregar, tudo volta ao original.</div>
   <script src="https://unpkg.com/decap-cms@^3.0.0/dist/decap-cms.js"></script>
   <script src="/admin/editar/preview.js"></script>
+  <script src="/admin/editar/fotos-multiplas.js"></script>
 </body>
 </html>
 `);
