@@ -1,0 +1,36 @@
+{
+  "titulo": "Jacarandá e veludo",
+  "subtitulo": "O conjunto Novo Rumo",
+  "inicio": "2026-11-10",
+  "fim": "2027-01-31",
+  "capa": "/uploads/pecas/novo-rumo-par-de-poltronas-novo-rumo/1.png",
+  "resumo": "Poltronas, mesa de centro e mesas laterais de um mesmo desenho, reunidas como saíram da fábrica nos anos 1960.",
+  "texto": "Poltronas, mesa de centro e mesas laterais de um mesmo desenho, reunidas como saíram da fábrica. Um conjunto completo da Novo Rumo, fabricante que ajudou a levar o mobiliário moderno para a sala de estar brasileira nos anos 1960.\n\nO que une as peças é um único gesto construtivo: cantoneiras em lâmina de jacarandá sobre compensado curvado. Nas poltronas, essas peças em \"L\" abraçam as quinas do estofado, sustentam o corpo e fazem as vezes de pés. Na mesa de centro e nas laterais, prendem o tampo de mármore claro à base estofada em veludo.\n\nPedra, madeira e veludo. Macio nas bordas, sólido no centro, quente nos detalhes. Uma época que transformava solução técnica em linguagem.",
+  "fotos": [
+    {
+      "foto": "/uploads/pecas/novo-rumo-par-de-poltronas-novo-rumo/2.png",
+      "legenda": "O conjunto montado."
+    },
+    {
+      "foto": "/uploads/pecas/novo-rumo-mesa-de-centro-em-veludo-e-jacaranda/12.png",
+      "legenda": "A cantoneira curva prende o mármore à base estofada."
+    },
+    {
+      "foto": "/uploads/pecas/novo-rumo-par-de-poltronas-novo-rumo/7.png",
+      "legenda": ""
+    },
+    {
+      "foto": "/uploads/pecas/novo-rumo-par-de-mesas-laterais-em-veludo-e-jacaranda/16.png",
+      "legenda": ""
+    },
+    {
+      "foto": "/uploads/pecas/novo-rumo-mesa-de-centro-em-veludo-e-jacaranda/9.png",
+      "legenda": "A mesa de centro organiza a sala a partir do chão."
+    }
+  ],
+  "pecas": [
+    "novo-rumo-par-de-poltronas-novo-rumo",
+    "novo-rumo-mesa-de-centro-em-veludo-e-jacaranda",
+    "novo-rumo-par-de-mesas-laterais-em-veludo-e-jacaranda"
+  ]
+}

@@ -50,7 +50,8 @@ collections:
     sortable_fields: ["codigo", "titulo", "designer", "data"]
     fields:
       - { name: titulo, label: Nome da peça, widget: string }
-      - { name: designer, label: Designer ou fabricante, widget: string, hint: "Escreva igual às outras peças (ex.: Sérgio Rodrigues) para agrupar certo." }
+      - { name: designer, label: Designer ou fabricante, widget: string, hint: "Escreva igual às outras peças (ex.: Sérgio Rodrigues) para agrupar certo. Sem autoria conhecida: Anônimo (aparece no site como Autoria desconhecida)." }
+      - { name: fabricante, label: Fabricante, widget: string, required: false, hint: "Só quando for diferente do designer (ex.: Hobjeto, L'Atelier, Novo Rumo). Não repita o nome do designer no Nome da peça." }
       - { name: ano, label: Ano ou década, widget: string, required: false, hint: "ex.: 1973 ou déc. 1960" }
       - name: categoria
         label: Tipo de peça
@@ -70,11 +71,16 @@ collections:
       - { name: dimensoes, label: Dimensões, widget: string, required: false, hint: "ex.: L 86 × P 75 × A 70 cm" }
       - { name: materiais, label: Materiais, widget: string, required: false }
       - { name: descricao, label: Descrição, widget: text, required: false }
-      - { name: imagens, label: Fotos (a primeira é a capa), widget: fotos, required: false, hint: "Peça sem foto não aparece no site, mesmo marcada como Disponível." }
+      - { name: estado, label: Estado de conservação, widget: string, required: false, hint: "ex.: Estrutura original com pátina natural. Vazio = não aparece." }
+      - { name: procedencia, label: Procedência, widget: string, required: false, hint: "ex.: Coleção particular, São Paulo. Vazio = não aparece." }
+      - { name: restauro_mantido, label: "Restauro: o que foi mantido", widget: string, required: false, hint: "Preenchendo qualquer campo de restauro, a ficha ganha o bloco Registro de restauro." }
+      - { name: restauro_refeito, label: "Restauro: o que foi refeito", widget: string, required: false }
+      - { name: restauro_oficina, label: "Restauro: oficina", widget: string, required: false }
+      - { name: imagens, label: Fotos (a primeira é a capa), widget: fotos, required: false, hint: "Ordem importa: 1ª = foto grande de abertura (de preferência ambientada); 2ª e 3ª, 4ª e 5ª… ficam lado a lado (bons para detalhes); a última fica larga se sobrar sozinha. Peça sem foto não aparece no site." }
       - { name: data, label: Data de entrada no acervo, widget: datetime, format: "YYYY-MM-DD", date_format: "DD/MM/YYYY", time_format: false, hint: "Define a ordem do acervo (mais recentes primeiro)." }
       - { name: codigo, label: Código interno (VLT), widget: string, required: false, hint: "Mais de uma unidade: separe por vírgula, ex.: VLT-032, VLT-033" }
       - { name: data_compra, label: Data da compra (uso interno, não aparece no site), widget: datetime, format: "YYYY-MM-DD", date_format: "DD/MM/YYYY", time_format: false, required: false }
-      - { name: destaque, label: Mostrar na página inicial, widget: boolean, default: false, hint: "A home mostra 8 peças: primeiro as marcadas aqui (pela Ordem), depois completa com as mais recentes." }
+      - { name: destaque, label: Mostrar na página inicial (reserva), widget: boolean, default: false, hint: "A home usa a Seleção do acervo, em Textos e contatos. Esta marcação só vale se a seleção estiver vazia." }
       - { name: ordem, label: Ordem no acervo, widget: number, value_type: int, default: 100, hint: "Números menores aparecem primeiro." }
       - { name: url_antiga, label: Endereço antigo (Artlogic), widget: hidden, required: false }
       - { name: categoria_antiga, label: Categoria antiga, widget: hidden, required: false }
@@ -90,26 +96,45 @@ collections:
         media_folder: "/static/uploads/home"   # fotos do carrossel e logo
         public_folder: "/uploads/home"
         fields:
-          - name: fotos_capa
-            label: Fotos da capa (uma aparece por vez, sorteada a cada visita)
-            label_singular: Foto da capa
-            widget: list
-            summary: "{{fields.descricao_foto}}"
-            max: 13
-            hint: "Até 13 fotos horizontais (paisagem), 2560 × 1440 px. Cada vez que alguém abre ou recarrega a home, o site sorteia uma delas (sem repetir a anterior)."
+          - name: capa
+            label: Foto da capa da home
+            widget: object
+            collapsed: false
+            hint: "Uma foto só, fixa. Troque por temporada. Horizontal, 2560 × 1440 px ou maior."
             fields:
-              - { name: foto, label: Foto horizontal, widget: image }
+              - { name: foto, label: Foto, widget: image }
               - { name: descricao_foto, label: "Descrição da foto (para Google e acessibilidade)", widget: string, required: false }
-          - name: galeria
-            label: Carrossel do fim da página
+              - { name: credito, label: "Legenda / crédito (aparece embaixo da foto)", widget: string, required: false, hint: "ex.: Acervo Voluta, Belo Horizonte · Fotografia: Nome" }
+          - name: manifesto
+            label: Texto de abertura da home
+            widget: object
+            fields:
+              - { name: sobretitulo, label: Sobretítulo, widget: string, required: false }
+              - { name: titulo, label: Frase principal, widget: string }
+              - { name: texto, label: Texto, widget: text, required: false }
+          - name: selecao
+            label: Seleção do acervo (home)
+            label_singular: Peça da seleção
+            widget: list
+            max: 5
+            summary: "{{fields.peca}}"
+            hint: "Até 5 peças, nesta ordem: 1ª destaque grande (foto vertical), 2ª média ao lado (foto quadrada funciona bem), 3ª a 5ª na fileira de baixo. Peça vendida sai sozinha da home."
+            fields:
+              - { name: peca, label: Peça, widget: relation, collection: pecas, search_fields: [titulo, designer, codigo], value_field: "{{slug}}", display_fields: ["{{designer}} · {{titulo}}"] }
+              - { name: foto_n, label: "Usar a foto nº (da ficha da peça)", widget: number, value_type: int, min: 1, default: 1, required: false, hint: "1 = capa da peça." }
+              - { name: foto, label: "Ou enviar uma foto só para a home (opcional)", widget: image, required: false }
+          - { name: restauro_resumo, label: "Faixa Restauro da home: texto", widget: text, required: false }
+          - name: restauro_fotos
+            label: "Faixa Restauro da home: fotos"
             label_singular: Foto
             widget: list
-            summary: "{{fields.descricao_foto}}"
-            hint: "Fotos que passam sozinhas no fim da home. Formato vertical (1200 × 1600 px). A ordem aqui é a ordem no site."
+            max: 3
+            hint: "3 fotos de detalhe ou bastidor. A 1ª fica larga em cima."
             fields:
               - { name: foto, label: Foto, widget: image }
               - { name: descricao_foto, label: "Descrição da foto", widget: string, required: false }
-              - { name: link, label: "Link ao clicar (opcional), ex.: /acervo/tipo/poltronas/", widget: string, required: false }
+          - { name: fotos_capa, label: fotos_capa, widget: hidden, required: false }   # antigo, não usado
+          - { name: galeria, label: galeria, widget: hidden, required: false }   # antigo, não usado
           - { name: nome, label: Nome, widget: string }
           - { name: url, label: Endereço do site, widget: string }
           - { name: descricao, label: Descrição para o Google, widget: text }
@@ -130,7 +155,101 @@ collections:
             fields:
               - { name: nome, label: Nome do tipo, widget: string, hint: "Tem que ser igual ao tipo escolhido nas fichas das peças." }
               - { name: foto, label: Foto da categoria, widget: image, required: false, hint: "Foto vertical, 1200 × 1600 px." }
-          - { name: designers, label: Designers, widget: list, summary: "{{fields.nome}}", fields: [ { name: nome, label: Nome, widget: string }, { name: info, label: "Nacionalidade e datas", widget: string, required: false } ] }
+          - name: designers
+            label: Designers
+            label_singular: Designer
+            widget: list
+            summary: "{{fields.nome}}"
+            hint: "Com Bio preenchida, a página do designer ganha abertura com foto, texto e cronologia."
+            fields:
+              - { name: nome, label: Nome, widget: string, hint: "Igual ao campo Designer das peças." }
+              - { name: info, label: "Nacionalidade e datas", widget: string, required: false }
+              - { name: resumo, label: "Resumo (1 ou 2 frases)", widget: text, required: false }
+              - { name: foto, label: "Foto de abertura (horizontal, larga)", widget: image, required: false }
+              - { name: bio, label: Bio, widget: text, required: false, hint: "Parágrafos separados por uma linha em branco. Linha começando com ## vira intertítulo." }
+              - { name: cronologia, label: Cronologia, label_singular: Data, widget: list, required: false, summary: "{{fields.ano}} · {{fields.fato}}", fields: [ { name: ano, label: Ano, widget: string }, { name: fato, label: Fato, widget: string } ] }
           - { name: sobre, label: Texto da página Sobre, widget: markdown }
           - { name: restauro, label: Texto da página Restauro, widget: markdown }
           - { name: devolucao, label: Política de devolução, widget: markdown }
+
+  - name: exposicoes
+    label: Exposições
+    label_singular: Exposição
+    folder: content/exposicoes
+    media_folder: "/static/uploads/exposicoes/{{filename}}"
+    public_folder: "/uploads/exposicoes/{{filename}}"
+    extension: json
+    format: json
+    create: true
+    delete: true
+    slug: "{{titulo}}"
+    summary: "{{titulo}} · {{inicio}}"
+    fields:
+      - { name: titulo, label: Título, widget: string }
+      - { name: subtitulo, label: Subtítulo, widget: string, required: false, hint: "ex.: O conjunto Novo Rumo" }
+      - { name: inicio, label: Início, widget: datetime, format: "YYYY-MM-DD", date_format: "DD/MM/YYYY", time_format: false }
+      - { name: fim, label: Fim, widget: datetime, format: "YYYY-MM-DD", date_format: "DD/MM/YYYY", time_format: false, required: false, hint: "Depois desta data ela vai para Exposições anteriores." }
+      - { name: destaque, label: Mostrar na home, widget: boolean, default: false, required: false, hint: "Sem nenhuma marcada, a home mostra a mais recente em cartaz." }
+      - { name: capa, label: Foto de abertura, widget: image, hint: "A foto mais forte do conjunto, horizontal e grande." }
+      - { name: resumo, label: "Resumo (1 ou 2 frases)", widget: text, required: false }
+      - { name: texto, label: Texto curatorial, widget: text, hint: "3 a 5 parágrafos, separados por uma linha em branco. Linha começando com ## vira intertítulo." }
+      - name: fotos
+        label: Fotos editoriais
+        label_singular: Foto
+        widget: list
+        required: false
+        summary: "{{fields.legenda}}"
+        hint: "Na ordem em que aparecem. Foto com legenda fica larga; duas seguidas sem legenda ficam lado a lado."
+        fields:
+          - { name: foto, label: Foto, widget: image }
+          - { name: legenda, label: Legenda, widget: string, required: false }
+      - name: pecas
+        label: Peças da exposição
+        label_singular: Peça
+        widget: relation
+        collection: pecas
+        multiple: true
+        required: false
+        search_fields: [titulo, designer, codigo]
+        value_field: "{{slug}}"
+        display_fields: ["{{designer}} · {{titulo}}"]
+      - { name: oculto, label: Ocultar do site, widget: boolean, default: false, required: false }
+
+  - name: diario
+    label: Diário
+    label_singular: Ensaio
+    folder: content/diario
+    media_folder: "/static/uploads/diario/{{filename}}"
+    public_folder: "/uploads/diario/{{filename}}"
+    extension: json
+    format: json
+    create: true
+    delete: true
+    slug: "{{titulo}}"
+    summary: "{{data}} · {{titulo}}"
+    fields:
+      - { name: titulo, label: Título, widget: string }
+      - { name: categoria, label: Categoria, widget: select, options: [Designers, Fabricantes, Materiais, Colecionar, Bastidores], required: false }
+      - { name: data, label: Data, widget: datetime, format: "YYYY-MM-DD", date_format: "DD/MM/YYYY", time_format: false }
+      - { name: capa, label: Foto de capa, widget: image, required: false }
+      - { name: resumo, label: "Resumo (1 frase, aparece no cartão)", widget: string, required: false }
+      - { name: texto, label: Texto, widget: text, hint: "Parágrafos separados por uma linha em branco. Linha começando com ## vira intertítulo." }
+      - name: fotos
+        label: Fotos no fim do texto
+        label_singular: Foto
+        widget: list
+        required: false
+        fields:
+          - { name: foto, label: Foto, widget: image }
+          - { name: legenda, label: Legenda, widget: string, required: false }
+      - name: pecas
+        label: Peças citadas
+        label_singular: Peça
+        widget: relation
+        collection: pecas
+        multiple: true
+        required: false
+        search_fields: [titulo, designer, codigo]
+        value_field: "{{slug}}"
+        display_fields: ["{{designer}} · {{titulo}}"]
+      - { name: oculto, label: Ocultar do site, widget: boolean, default: false, required: false }

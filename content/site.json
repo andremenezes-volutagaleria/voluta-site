@@ -133,6 +133,35 @@
     {
       "nome": "De Sede",
       "info": "Fabricante suíço"
+    },
+    {
+      "nome": "Geraldo de Barros",
+      "info": "Brasileiro, 1923–1998",
+      "foto": "/uploads/pecas/geraldo-de-barros-par-de-poltronas-geraldo-barros-hobjeto/6.png",
+      "resumo": "Pintor, fotógrafo e designer. Levou o rigor geométrico do concretismo para dentro da casa brasileira, convicto de que o desenho moderno deveria ser produzido em série.",
+      "bio": "Geraldo de Barros chegou ao mobiliário pela arte. Um dos fundadores do Grupo Ruptura, marco do concretismo em São Paulo, ele já investigava na pintura e na fotografia a mesma pergunta que depois levaria à marcenaria: como construir forma a partir de poucos elementos, sem ornamento.\n\nAntes da Hobjeto, fundou a Unilabor, cooperativa operária que pensava o móvel moderno como projeto social. Na Hobjeto, a ideia ganhou escala industrial. Os móveis revelam a montagem em vez de escondê-la: ferragens aparentes, laterais contínuas, vazados que deixam a luz atravessar a madeira.",
+      "cronologia": [
+        {
+          "ano": "1923",
+          "fato": "Nasce em Chavantes, São Paulo"
+        },
+        {
+          "ano": "1952",
+          "fato": "Cofunda o Grupo Ruptura"
+        },
+        {
+          "ano": "1954",
+          "fato": "Funda a cooperativa Unilabor"
+        },
+        {
+          "ano": "1964",
+          "fato": "Cria a Hobjeto"
+        },
+        {
+          "ano": "1998",
+          "fato": "Morre em São Paulo"
+        }
+      ]
     }
   ],
   "descricao": "Voluta é uma galeria brasileira especializada em design vintage, mobiliário de colecionador e cerâmica autoral. Peças garimpadas, restauradas e selecionadas com curadoria para uma nova história.",
@@ -241,5 +270,47 @@
     {
       "foto": "/uploads/home/13.png"
     }
-  ]
+  ],
+  "capa": {
+    "foto": "/uploads/home/1.png",
+    "descricao_foto": "Poltrona do acervo à luz da manhã, com o cachorro da casa deitado no piso de madeira",
+    "credito": "Acervo Voluta, Belo Horizonte"
+  },
+  "manifesto": {
+    "sobretitulo": "Mobiliário modernista brasileiro",
+    "titulo": "O Brasil está fadado ao modernismo.",
+    "texto": "Uma galeria dedicada ao design brasileiro de 1950 a 1980. Cada peça é pesquisada, autenticada e restaurada com técnicas de época antes de entrar no acervo."
+  },
+  "selecao": [
+    {
+      "peca": "geraldo-de-barros-par-de-poltronas-geraldo-barros-hobjeto"
+    },
+    {
+      "peca": "percival-lafer-poltrona-mp-71"
+    },
+    {
+      "peca": "banco-ripado"
+    },
+    {
+      "peca": "sergio-rodrigues-poltrona-cimba-par"
+    },
+    {
+      "peca": "jean-gillon-mesa-de-centro-com-base-em-jacaranda"
+    }
+  ],
+  "restauro_fotos": [
+    {
+      "foto": "/uploads/home/10.png",
+      "descricao_foto": "Detalhe de etiqueta de fabricante na madeira"
+    },
+    {
+      "foto": "/uploads/home/6.png",
+      "descricao_foto": "Detalhe de couro e madeira"
+    },
+    {
+      "foto": "/uploads/home/8.png",
+      "descricao_foto": "Livro de design apoiado em poltrona de couro"
+    }
+  ],
+  "restauro_resumo": "Marcenaria tradicional e tapeçaria de época, com madeiras tratadas para preservar pátina e cor. Cada intervenção é documentada e acompanha a peça como parte da sua procedência."
 }

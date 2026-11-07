@@ -10,6 +10,7 @@ const OUT = path.join(ROOT, "dist");
 const versao = f => createHash("md5").update(fs.readFileSync(path.join(ROOT, "static", f))).digest("hex").slice(0, 8);
 const V_CSS = versao("css/site.css"), V_JS = versao("js/site.js");
 const site = JSON.parse(fs.readFileSync(path.join(ROOT, "content/site.json"), "utf8"));
+const fichasDesigner = Object.fromEntries((site.designers || []).map(d => [d.nome, d])); // bio, foto e cronologia
 site.designers = Object.fromEntries((site.designers || []).map(d => [d.nome, d.info]));
 
 // ---------- utilidades ----------
@@ -63,6 +64,27 @@ const precoTexto = p => {
   return p.status === "vendido" ? "Vendida" : "Valor sob consulta";
 };
 
+// ---------- conteúdo editorial (exposições e diário) ----------
+const lerPasta = dir => {
+  const p = path.join(ROOT, "content", dir);
+  if (!fs.existsSync(p)) return [];
+  return fs.readdirSync(p).filter(f => f.endsWith(".json"))
+    .map(f => ({ slug: f.replace(/\.json$/, ""), ...JSON.parse(fs.readFileSync(path.join(p, f), "utf8")) }))
+    .filter(x => !x.oculto && x.titulo);
+};
+const porSlug = Object.fromEntries(pecas.map(p => [p.slug, p]));
+const pecasDe = lista => (lista || []).map(s => porSlug[typeof s === "string" ? s : s?.peca]).filter(Boolean);
+const hoje = new Date().toISOString().slice(0, 10);
+const MESES = ["janeiro", "fevereiro", "março", "abril", "maio", "junho", "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"];
+const mesAno = d => { if (!d) return ""; const [a, m] = String(d).split("-"); return `${MESES[+m - 1]} ${a}`; };
+const dataLonga = d => { if (!d) return ""; const [a, m, dia] = String(d).split("-"); return `${+dia} de ${MESES[+m - 1]} de ${a}`; };
+const periodo = e => [mesAno(e.inicio), mesAno(e.fim)].filter(Boolean).join(" — ");
+const exposicoes = lerPasta("exposicoes").sort((a, b) => (b.inicio || "").localeCompare(a.inicio || ""));
+const emCartaz = e => (!e.fim || e.fim >= hoje);
+const atual = exposicoes.find(e => e.destaque) || exposicoes.find(emCartaz) || null;
+const diario = lerPasta("diario").sort((a, b) => (b.data || "").localeCompare(a.data || ""));
+const nomeDesigner = d => d === "Anônimo" ? "Autoria desconhecida" : d;
+
 // ---------- layout ----------
 const analytics = () => [
   site.ga4_id && `<script async src="https://www.googletagmanager.com/gtag/js?id=${site.ga4_id}"></script><script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','${site.ga4_id}');</script>`,
@@ -78,7 +100,7 @@ const ICONE = {
   local: `<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21Z" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="12" cy="9.5" r="2.5" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>`,
 };
 const VENDA = "https://venda.volutagaleria.com.br/";
-const NAV = [["/", "Home"], ["/acervo/", "Acervo"], ["/designers/", "Designers"], [VENDA, "Venda seu móvel"], ["/sobre/", "Sobre"], ["/contato/", "Contato"]];
+const NAV = [["/acervo/", "Acervo"], ["/designers/", "Designers"], ...(exposicoes.length ? [["/exposicoes/", "Exposições"]] : []), ...(diario.length ? [["/diario/", "Diário"]] : []), ["/restauro/", "Restauro"], ["/sobre/", "Sobre"]];
 
 const page = ({ title, desc = site.descricao, url = "/", img, body, current = "", jsonld = "" }) => `<!doctype html>
 <html lang="pt-BR">
@@ -97,7 +119,7 @@ ${img ? `<meta property="og:image" content="${esc(thumb(img, 1200))}">` : ""}
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="/favicon.ico" sizes="48x48"><link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32"><link rel="icon" href="/favicon-192.png" type="image/png" sizes="192x192"><link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="preload" href="/fonts/poppins-latin-300-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="preload" href="/fonts/jost-latin-500-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/jost-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="/css/site.css?v=${V_CSS}">
 ${jsonld}
 ${analytics()}
@@ -106,13 +128,15 @@ ${analytics()}
 <a class="skip" href="#conteudo">Pular para o conteúdo</a>
 <header class="topo">
   <div class="topo__in">
-    <a class="marca" href="/" aria-label="Voluta, página inicial"><img src="${esc(site.logo)}" alt="Voluta" width="140" height="48"></a>
+    <a class="marca" href="/" aria-label="Voluta, página inicial">Voluta</a>
     <nav id="nav" class="nav" aria-label="Principal">
       ${NAV.map(([h, t]) => `<a href="${h}"${current === h ? ' aria-current="page"' : ""}>${t}</a>`).join("")}
+      <a class="nav__contato" href="/contato/"${current === "/contato/" ? ' aria-current="page"' : ""}>Contato</a>
     </nav>
     <div class="topo__acoes">
+      <a class="topo__contato" href="/contato/"${current === "/contato/" ? ' aria-current="page"' : ""}>Contato</a>
       <button class="busca-btn" aria-label="Buscar no acervo" aria-expanded="false" aria-controls="busca">
-        <svg viewBox="0 0 24 24" width="19" height="19" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M15.5 15.5 21 21" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+        <svg viewBox="0 0 24 24" width="19" height="19" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M15.5 15.5 21 21" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
       </button>
       <button class="menu-btn" aria-expanded="false" aria-controls="nav">Menu</button>
     </div>
@@ -139,76 +163,137 @@ ${body}
       <p>${esc(site.cidade)}</p>
     </div>
     <div class="rodape__links">
-      <a class="com-ico" href="${wa("Olá! Vim pelo site da Voluta")}">${ICONE.wa}<span>${esc(site.whatsapp_exibicao)}</span></a>
-      <a class="com-ico" href="mailto:${site.email}">${ICONE.email}<span>${site.email}</span></a>
-      <a class="com-ico" href="https://www.instagram.com/${site.instagram}/">${ICONE.ig}<span>@${site.instagram}</span></a>
+      <a href="/acervo/">Acervo</a><a href="/designers/">Designers</a>${exposicoes.length ? `<a href="/exposicoes/">Exposições</a>` : ""}${diario.length ? `<a href="/diario/">Diário</a>` : ""}
     </div>
     <div class="rodape__links">
-      <a href="/acervo/">Acervo</a><a href="/sobre/">Sobre a Voluta</a><a href="${VENDA}">Venda seu móvel</a><a href="/politica-de-devolucao/">Política de devolução</a>
+      <a href="/restauro/">Restauro</a><a href="/sobre/">Sobre a Voluta</a><a href="${VENDA}">Venda sua peça à Voluta</a><a href="/politica-de-devolucao/">Política de devolução</a>
+    </div>
+    <div class="rodape__links">
+      <a href="mailto:${site.email}">${site.email}</a>
+      <a href="${wa("Olá! Vim pelo site da Voluta")}">${esc(site.whatsapp_exibicao)}</a>
+      <a href="https://www.instagram.com/${site.instagram}/">@${site.instagram}</a>
     </div>
   </div>
   <p class="rodape__copy">© ${new Date().getFullYear()} Voluta</p>
 </footer>
-<a class="wa-float" href="${wa("Olá! Vim pelo site da Voluta")}" aria-label="Conversar no WhatsApp">
-  <svg viewBox="0 0 32 32" width="26" height="26" aria-hidden="true"><path fill="currentColor" d="M16 3a13 13 0 0 0-11.2 19.6L3 29l6.6-1.7A13 13 0 1 0 16 3Zm0 23.6c-2 0-4-.6-5.7-1.6l-.4-.2-3.9 1 1-3.8-.3-.4A10.6 10.6 0 1 1 16 26.6Zm5.8-7.9c-.3-.2-1.9-.9-2.2-1s-.5-.2-.7.2-.8 1-1 1.2-.4.2-.7 0a8.7 8.7 0 0 1-4.3-3.8c-.3-.5.3-.5.9-1.6.1-.2 0-.4 0-.5l-1-2.4c-.3-.6-.5-.5-.7-.5h-.6a1.2 1.2 0 0 0-.9.4 3.6 3.6 0 0 0-1.1 2.7 6.3 6.3 0 0 0 1.3 3.3 14.4 14.4 0 0 0 5.5 4.9c2 .9 2.8.9 3.8.8a3.3 3.3 0 0 0 2.2-1.5 2.7 2.7 0 0 0 .2-1.5c-.1-.2-.3-.3-.6-.4Z"/></svg>
-</a>
 <script src="/js/site.js?v=${V_JS}" defer></script>
 </body>
 </html>`;
 
 // ---------- componentes ----------
-const card = p => `<li class="card${p.status === "vendido" ? " card--vendido" : ""}" data-data="${esc(p.data || "")}">
+const card = (p, foto) => `<li class="card${p.status === "vendido" ? " card--vendido" : ""}" data-data="${esc(p.data || "")}">
   <a href="/acervo/${p.slug}/">
-    <div class="card__img${p.imagens[1] ? " card__img--troca" : ""}"><img src="${esc(thumb(p.imagens[0], 800))}" alt="${esc(`${p.titulo}, ${p.designer}`)}" loading="lazy">${p.imagens[1] ? `<img class="card__img2" src="${esc(thumb(p.imagens[1], 800))}" alt="" loading="lazy" aria-hidden="true">` : ""}${p.status === "vendido" ? `<span class="selo">Vendida</span>` : ""}</div>
-    <p class="card__designer">${esc(p.designer)}</p>
+    <div class="card__img${!foto && p.imagens[1] ? " card__img--troca" : ""}"><img src="${esc(thumb(foto || p.imagens[0], 900))}" alt="${esc(`${p.titulo}, ${nomeDesigner(p.designer)}`)}" loading="lazy">${!foto && p.imagens[1] ? `<img class="card__img2" src="${esc(thumb(p.imagens[1], 900))}" alt="" loading="lazy" aria-hidden="true">` : ""}${p.status === "vendido" ? `<span class="selo">Vendida</span>` : ""}</div>
+    <p class="card__designer">${esc(nomeDesigner(p.designer))}</p>
     <h3 class="card__titulo">${esc(p.titulo)}${p.ano ? `, <span class="card__ano">${esc(p.ano)}</span>` : ""}</h3>
   </a>
 </li>`;
+const cab = (titulo, link, texto, tag = "h2") => `<div class="secao__cab"><${tag}>${esc(titulo)}</${tag}>${link ? `<a href="${link}">${esc(texto)}</a>` : ""}</div>`;
+const linkTexto = (href, t, cls = "") => `<a class="link-linha${cls ? " " + cls : ""}" href="${href}">${esc(t)}</a>`;
+const cartaoDiario = d => `<li class="ensaio"><a href="/diario/${d.slug}/">
+  ${d.capa ? `<div class="ensaio__img"><img src="${esc(thumb(d.capa, 900))}" alt="" loading="lazy"></div>` : ""}
+  ${d.categoria ? `<p class="sobretitulo">${esc(d.categoria)}</p>` : ""}
+  <h3 class="ensaio__titulo">${esc(d.titulo)}</h3>
+  ${d.resumo ? `<p class="ensaio__resumo">${esc(d.resumo)}</p>` : ""}
+</a></li>`;
+const cartaoExpo = e => `<li class="expo-card"><a href="/exposicoes/${e.slug}/">
+  ${e.capa ? `<div class="expo-card__img"><img src="${esc(thumb(e.capa, 1200))}" alt="" loading="lazy"></div>` : ""}
+  <p class="sobretitulo">${emCartaz(e) ? "Em cartaz" : "Encerrada"}</p>
+  <h3 class="ensaio__titulo">${esc(e.titulo)}</h3>
+  <p class="ensaio__resumo">${esc([e.subtitulo, periodo(e)].filter(Boolean).join(" · "))}</p>
+</a></li>`;
+// Fotos editoriais: grandes, em sequência; duas seguidas sem legenda ficam lado a lado
+const sequenciaFotos = (fotos, w = 1800) => {
+  const lista = (fotos || []).map(f => typeof f === "string" ? { foto: f } : f).filter(f => f && f.foto);
+  const html = []; let i = 0;
+  while (i < lista.length) {
+    const a = lista[i], b = lista[i + 1];
+    const fig = (f, cls = "") => `<figure class="foto${cls}"><img src="${esc(thumb(f.foto, w))}" alt="${esc(f.legenda || f.descricao_foto || "")}" loading="lazy">${f.legenda ? `<figcaption>${esc(f.legenda)}</figcaption>` : ""}</figure>`;
+    if (i > 0 && b && !a.legenda && !b.legenda) { html.push(`<div class="fotos-par">${fig(a)}${fig(b)}</div>`); i += 2; }
+    else { html.push(fig(a, " foto--larga")); i += 1; }
+  }
+  return html.join("\n");
+};
 
 // ---------- páginas ----------
 fs.rmSync(OUT, { recursive: true, force: true });
 fs.cpSync(path.join(ROOT, "static"), OUT, { recursive: true });
 
-// Home
 const disponiveis = pecas.filter(p => p.status !== "vendido");
 const vendidos = pecas.filter(p => p.status === "vendido");
 const porData = [...disponiveis].sort((a, b) => (b.data || "").localeCompare(a.data || ""));
-// Home: 8 peças — primeiro as marcadas "Mostrar na página inicial" (pela ordem), depois as mais recentes
-const marcadas = disponiveis.filter(p => p.destaque).sort((a, b) => (a.ordem ?? 100) - (b.ordem ?? 100) || (b.data || "").localeCompare(a.data || ""));
-const naHome = [...marcadas, ...porData.filter(p => !marcadas.includes(p))].slice(0, 8);
-const fotosCapa = (site.fotos_capa || []).filter(f => f.foto).slice(0, 13).map(f => ({ src: thumb(f.foto, 2560), alt: f.descricao_foto || "Voluta" }));
-const galeria = (site.galeria || []).filter(f => f.foto);
 const tipos = categorias.map(c => ({ nome: c, slug: slugify(c), lista: disponiveis.filter(p => p.categoria === c) }));
 
+// Home: seleção escolhida no painel (peças vendidas saem sozinhas); sem seleção, usa as marcadas e as mais recentes
+const selecaoPainel = (site.selecao || []).map(s => ({ p: porSlug[s?.peca], foto: s?.foto || null, n: s?.foto_n })).filter(s => s.p && s.p.status !== "vendido")
+  .map(s => ({ p: s.p, foto: s.foto || (s.n > 1 ? s.p.imagens[s.n - 1] : null) }));
+const marcadas = disponiveis.filter(p => p.destaque).sort((a, b) => (a.ordem ?? 100) - (b.ordem ?? 100) || (b.data || "").localeCompare(a.data || ""));
+const selecao = (selecaoPainel.length ? selecaoPainel : [...marcadas, ...porData.filter(p => !marcadas.includes(p))].map(p => ({ p }))).slice(0, 5);
+const capa = site.capa?.foto ? site.capa : (site.fotos_capa || []).find(f => f.foto);
+const manifesto = site.manifesto || {};
+const peca = (s, cls) => `<a class="selecao__item ${cls}" href="/acervo/${s.p.slug}/">
+    <div class="selecao__img"><img src="${esc(thumb(s.foto || s.p.imagens[0], 1400))}" alt="${esc(`${s.p.titulo}, ${nomeDesigner(s.p.designer)}`)}" loading="lazy"></div>
+    <p class="card__designer">${esc(nomeDesigner(s.p.designer))}</p>
+    <p class="card__titulo">${esc(s.p.titulo)}${s.p.ano ? `, <span class="card__ano">${esc(s.p.ano)}</span>` : ""}</p>
+  </a>`;
+const restauroFotos = (site.restauro_fotos || []).filter(f => f.foto).slice(0, 3);
+
 write("index.html", page({
-  url: "/", img: (site.fotos_capa || [])[0]?.foto || disponiveis[0]?.imagens[0],
+  url: "/", img: capa?.foto || disponiveis[0]?.imagens[0],
   body: `
-<h1 class="visually-hidden">Voluta — mobiliário modernista brasileiro, garimpado e restaurado em Belo Horizonte</h1>
-${fotosCapa.length ? `<section class="capa">
-  <img id="capa-foto" alt="${esc(fotosCapa[0].alt)}" fetchpriority="high">
-  <script>(function(){var f=${JSON.stringify(fotosCapa).replace(/</g, "\\u003c")};var n=Math.floor(Math.random()*f.length);try{var u=+localStorage.getItem("capa");if(f.length>1&&n===u)n=(n+1+Math.floor(Math.random()*(f.length-1)))%f.length;localStorage.setItem("capa",n);}catch(x){}var e=f[n];var i=document.getElementById("capa-foto");i.src=e.src;i.alt=e.alt;})();</script>
-  <noscript><img src="${esc(fotosCapa[0].src)}" alt="${esc(fotosCapa[0].alt)}"></noscript>
-  ${naHome.length ? `<a class="capa__seta" href="#acervo-home"><span>Acervo</span><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M3 8l9 9 9-9" fill="none" stroke="currentColor" stroke-width="1.3"/></svg></a>` : ""}
+<h1 class="visually-hidden">Voluta — mobiliário modernista brasileiro, pesquisado e restaurado em Belo Horizonte</h1>
+${capa ? `<section class="capa">
+  <img src="${esc(thumb(capa.foto, 2560))}" alt="${esc(capa.descricao_foto || "Voluta")}" fetchpriority="high">
+  ${capa.credito ? `<p class="capa__credito">${esc(capa.credito)}</p>` : ""}
 </section>` : ""}
-${naHome.length ? `<section class="secao" id="acervo-home">
-  <div class="secao__cab"><h2>Acervo</h2><a href="/acervo/">Ver todo o acervo</a></div>
-  <ul class="grade grade--4">${naHome.map(card).join("")}</ul>
+<section class="manifesto">
+  ${manifesto.sobretitulo ? `<p class="sobretitulo">${esc(manifesto.sobretitulo)}</p>` : ""}
+  <p class="manifesto__titulo">${esc(manifesto.titulo || "O Brasil está fadado ao modernismo.")}</p>
+  ${manifesto.texto ? `<p class="manifesto__texto">${esc(manifesto.texto)}</p>` : ""}
+  ${linkTexto("/sobre/", "Sobre a Voluta")}
+</section>
+${atual ? `<section class="destaque-expo">
+  <a class="destaque-expo__img" href="/exposicoes/${atual.slug}/" tabindex="-1" aria-hidden="true"><img src="${esc(thumb(atual.capa, 1600))}" alt="" loading="lazy"></a>
+  <div class="destaque-expo__texto">
+    <p class="sobretitulo sobretitulo--vinho">Exposição online</p>
+    <h2 class="titulo-grande">${esc(atual.titulo)}</h2>
+    <p class="destaque-expo__periodo">${esc([atual.subtitulo, periodo(atual)].filter(Boolean).join(" · "))}</p>
+    ${paragrafos(atual.resumo || (atual.texto || "").split(/\n\n+/)[0] || "")}
+    ${linkTexto(`/exposicoes/${atual.slug}/`, "Visitar a exposição")}
+  </div>
 </section>` : ""}
-${galeria.length ? `<section class="vitrine" aria-label="Voluta em imagens">
-  <ul class="vitrine__trilho">
-    ${galeria.map(g => `<li>${g.link ? `<a href="${esc(g.link)}">` : ""}<img src="${esc(thumb(g.foto, 900))}" alt="${esc(g.descricao_foto || "")}" loading="lazy">${g.link ? "</a>" : ""}</li>`).join("")}
-  </ul>
+${selecao.length ? `<section class="secao" id="acervo-home">
+  ${cab("Seleção do acervo", "/acervo/", "Ver acervo completo")}
+  <div class="selecao">
+    ${selecao.slice(0, 2).map((s, n) => peca(s, n === 0 ? "selecao__item--grande" : "selecao__item--medio")).join("")}
+  </div>
+  ${selecao.length > 2 ? `<div class="selecao selecao--linha">${selecao.slice(2).map(s => peca(s, "")).join("")}</div>` : ""}
+</section>` : ""}
+<section class="faixa-restauro">
+  <div class="faixa-restauro__in">
+    <div class="faixa-restauro__texto">
+      <p class="sobretitulo">Restauro</p>
+      <h2 class="titulo-grande">Restaurar não é apagar o tempo.</h2>
+      <p>${esc(site.restauro_resumo || "")}</p>
+      ${linkTexto("/restauro/", "Conheça o processo", "link-linha--claro")}
+    </div>
+    ${restauroFotos.length ? `<div class="faixa-restauro__fotos">${restauroFotos.map(f => `<img src="${esc(thumb(f.foto, 1200))}" alt="${esc(f.descricao_foto || "")}" loading="lazy">`).join("")}</div>` : ""}
+  </div>
+</section>
+${diario.length ? `<section class="secao">
+  ${cab("Diário", "/diario/", "Todos os ensaios")}
+  <ul class="ensaios">${diario.slice(0, 3).map(cartaoDiario).join("")}</ul>
 </section>` : ""}
 <section class="faixa">
-  <p>Curadoria e histórias das peças no Instagram.</p>
-  <a class="botao botao--claro" href="https://www.instagram.com/${site.instagram}/">Seguir @${site.instagram}</a>
+  <p>Novas peças e bastidores, primeiro no Instagram.</p>
+  ${linkTexto(`https://www.instagram.com/${site.instagram}/`, `Seguir @${site.instagram}`)}
 </section>`,
   jsonld: `<script type="application/ld+json">${JSON.stringify({ "@context": "https://schema.org", "@type": "FurnitureStore", name: "Voluta", url: site.url, email: site.email, telephone: "+" + site.whatsapp, address: { "@type": "PostalAddress", addressLocality: "Belo Horizonte", addressRegion: "MG", addressCountry: "BR" }, sameAs: [`https://www.instagram.com/${site.instagram}/`] })}</script>`,
 }));
 
 // Índice de busca (lido pela lupa do topo)
 write("busca.json", JSON.stringify(pecas.map(p => ({
-  u: `/acervo/${p.slug}/`, t: p.titulo, d: p.designer, c: p.categoria, m: p.materiais || "", a: p.ano || "",
+  u: `/acervo/${p.slug}/`, t: p.titulo, d: nomeDesigner(p.designer), c: p.categoria, m: p.materiais || "", a: p.ano || "",
   i: thumb(p.imagens[0], 200), p: precoTexto(p),
 }))));
 
@@ -222,30 +307,30 @@ const lado = ativo => {
   </div>
   <div class="lateral__grupo">
     <h2>Designer</h2>
-    <ul>${designers.map(d => item(`/designers/${slugify(d)}/`, d, pecas.filter(p => p.designer === d && p.status !== "vendido").length, "designer:" + slugify(d))).join("")}</ul>
+    <ul>${designers.map(d => item(`/designers/${slugify(d)}/`, nomeDesigner(d), pecas.filter(p => p.designer === d && p.status !== "vendido").length, "designer:" + slugify(d))).join("")}</ul>
   </div>
   ${vendidos.length ? `<div class="lateral__grupo"><h2>Disponibilidade</h2><ul>${item("/acervo/", "Disponíveis", disponiveis.length, "disp")}${item("/acervo/vendidas/", "Vendidas", vendidos.length, "vendidas")}</ul></div>` : ""}
 </aside>`;
 };
 
-const listagem = ({ rel, url, titulo, sub = "", lista, ativo, desc, current = "/acervo/", vendidas = [] }) => write(rel, page({
+const listagem = ({ rel, url, titulo, sub = "", lista, ativo, desc, current = "/acervo/", vendidas = [], antes = "" }) => write(rel, page({
   title: titulo === "Acervo" ? "Acervo" : `${titulo} | Acervo`, url, current, desc, img: lista[0]?.imagens[0],
-  body: `
+  body: `${antes}
 <div class="acervo">
   ${lado(ativo)}
   <section class="acervo__conteudo">
     <div class="acervo__cab">
       <div>
-        <h1 class="titulo-pagina">${esc(titulo)}</h1>
-        ${sub ? `<p class="subtitulo">${esc(sub)}</p>` : ""}
+        ${antes ? `<h2 class="titulo-pagina">No acervo</h2>` : `<h1 class="titulo-pagina">${esc(titulo)}</h1>`}
+        ${sub && !antes ? `<p class="subtitulo">${esc(sub)}</p>` : ""}
       </div>
       <div class="acervo__ferramentas">
         <button class="filtrar-btn" aria-expanded="false" aria-controls="lateral">Filtrar</button>
       </div>
     </div>
-    <p class="contagem">${lista.length} ${lista.length === 1 ? "peça" : "peças"}</p>
-    ${lista.length ? `<ul class="grade grade--acervo" id="grade-acervo">${lista.map(card).join("")}</ul>` : `<p class="vazio">Nenhuma peça disponível aqui no momento. <a href="${wa(`Olá! Procuro peças de ${titulo}. Vocês têm algo chegando?`)}">Fale com a gente</a> pra saber das próximas.</p>`}
-    ${vendidas.length ? `<div class="ja-vendidas"><div class="secao__cab"><h2>Já passaram pela Voluta</h2></div><ul class="grade grade--acervo">${vendidas.map(card).join("")}</ul></div>` : ""}
+    <p class="contagem">${lista.length} ${lista.length === 1 ? "peça disponível" : "peças disponíveis"}</p>
+    ${lista.length ? `<ul class="grade grade--acervo" id="grade-acervo">${lista.map(p => card(p)).join("")}</ul>` : `<p class="vazio">Nenhuma peça disponível aqui no momento. <a href="${wa(`Olá! Procuro peças de ${titulo}. Vocês têm algo chegando?`)}">Registre seu interesse</a> e avisamos quando chegar.</p>`}
+    ${vendidas.length ? `<div class="ja-vendidas">${cab("Já passaram pela Voluta")}<ul class="grade grade--acervo">${vendidas.map(p => card(p)).join("")}</ul></div>` : ""}
   </section>
 </div>`,
 }));
@@ -257,100 +342,201 @@ tipos.forEach(t => listagem({ rel: `acervo/tipo/${t.slug}/index.html`, url: `/ac
   desc: `${t.nome} modernistas brasileiras disponíveis na Voluta.` }));
 if (vendidos.length) listagem({ rel: "acervo/vendidas/index.html", url: "/acervo/vendidas/", titulo: "Vendidas", sub: "Peças que já passaram pela Voluta.", lista: ordenarData(vendidos), ativo: "vendidas",
   desc: "Peças já vendidas pela Voluta." });
+
+// Designers: com bio cadastrada no painel, a página ganha abertura editorial; sem bio, fica só a listagem
 designers.forEach(d => {
+  const f = fichasDesigner[d] || {};
   const lista = ordenarData(disponiveis.filter(p => p.designer === d));
-  listagem({ rel: `designers/${slugify(d)}/index.html`, url: `/designers/${slugify(d)}/`, titulo: d, sub: site.designers[d] || "", lista, vendidas: ordenarData(vendidos.filter(p => p.designer === d)), ativo: "designer:" + slugify(d),
-    desc: `Peças de ${d} no acervo da Voluta.`, current: "/designers/" });
+  const nome = nomeDesigner(d);
+  const crono = (f.cronologia || []).filter(c => c && (c.ano || c.fato));
+  const antes = f.bio || f.resumo ? `
+<section class="designer">
+  <div class="designer__cab">
+    <div>
+      <p class="sobretitulo"><a href="/designers/">Designers</a>${f.info ? ` · ${esc(f.info)}` : ""}</p>
+      <h1 class="designer__nome">${esc(nome)}</h1>
+    </div>
+    ${f.resumo ? `<p class="designer__resumo">${esc(f.resumo)}</p>` : ""}
+  </div>
+</section>
+${f.foto ? `<img class="designer__foto" src="${esc(thumb(f.foto, 2400))}" alt="" loading="lazy">` : ""}
+${f.bio || crono.length ? `<section class="designer__corpo">
+  ${f.bio ? `<div class="designer__bio texto-longo">${paragrafos(f.bio)}</div>` : ""}
+  ${crono.length ? `<aside class="cronologia"><h2>Cronologia</h2><dl>${crono.map(c => `<dt>${esc(c.ano || "")}</dt><dd>${esc(c.fato || "")}</dd>`).join("")}</dl></aside>` : ""}
+</section>` : ""}` : "";
+  listagem({ rel: `designers/${slugify(d)}/index.html`, url: `/designers/${slugify(d)}/`, titulo: nome, sub: site.designers[d] || "", lista, vendidas: ordenarData(vendidos.filter(p => p.designer === d)), ativo: "designer:" + slugify(d),
+    desc: f.resumo || `Peças de ${nome} no acervo da Voluta.`, current: "/designers/", antes });
 });
 
 // Peças
+const linha = (rot, val) => val ? `<dt>${rot}</dt><dd>${esc(val)}</dd>` : "";
 pecas.forEach((p, i) => {
   const url = `/acervo/${p.slug}/`;
-  const msg = `Olá! Tenho interesse na peça "${p.titulo}" (${p.designer})${p.codigo ? `, código ${p.codigo}` : ""}. ${site.url}${url}`;
+  const nome = nomeDesigner(p.designer);
+  const msg = `Olá! Gostaria de mais informações sobre a peça "${p.titulo}" (${nome})${p.codigo ? `, código ${p.codigo}` : ""}. ${site.url}${url}`;
   const mesmos = pecas.filter(o => o !== p && o.designer === p.designer && o.status !== "vendido").slice(0, 3);
   const outros = mesmos.length ? mesmos : pecas.filter(o => o !== p && o.categoria === p.categoria && o.status !== "vendido").slice(0, 3);
   const ant = pecas[(i - 1 + pecas.length) % pecas.length], prox = pecas[(i + 1) % pecas.length];
   const ld = { "@context": "https://schema.org", "@type": "Product", name: p.titulo, description: p.descricao, image: p.imagens.map(u => thumb(u, 1600)), brand: { "@type": "Brand", name: p.designer } };
+  const alt = `${p.titulo}, ${nome}`;
+  const fotos = p.imagens.map((u, n) => `<figure class="foto${n === 0 || (n === p.imagens.length - 1 && n % 2 === 1) ? " foto--larga" : ""}"><img src="${esc(thumb(u, 1800))}" alt="${esc(n === 0 ? alt : `${alt}, foto ${n + 1}`)}"${n ? ' loading="lazy"' : ' fetchpriority="high"'}></figure>`);
+  const restauro = p.restauro_mantido || p.restauro_refeito || p.restauro_oficina;
+  const expo = exposicoes.find(e => (e.pecas || []).includes(p.slug));
   write(`acervo/${p.slug}/index.html`, page({
-    title: `${p.titulo}, ${p.designer}`, url, current: "/acervo/", img: p.imagens[0],
+    title: `${p.titulo}, ${nome}`, url, current: "/acervo/", img: p.imagens[0],
     desc: p.descricao.slice(0, 155),
     jsonld: `<script type="application/ld+json">${JSON.stringify(ld)}</script>`,
     body: `
-<nav class="migalha" aria-label="Você está em"><a href="/acervo/">Acervo</a> / <a href="/acervo/tipo/${slugify(p.categoria)}/">${esc(p.categoria)}</a></nav>
+<nav class="migalha" aria-label="Você está em"><a href="/acervo/">Acervo</a> · <a href="/acervo/tipo/${slugify(p.categoria)}/">${esc(p.categoria)}</a> · <a href="/designers/${slugify(p.designer)}/">${esc(nome)}</a></nav>
 <article class="peca">
-  <div class="galeria">
-    <div class="galeria__principal"><img id="foto-principal" src="${esc(thumb(p.imagens[0], 1600))}" alt="${esc(`${p.titulo}, ${p.designer}`)}"></div>
-    ${p.imagens.length > 1 ? `<ul class="galeria__mini">${p.imagens.map((u, n) => `<li><button data-src="${esc(thumb(u, 1600))}" aria-label="Ver foto ${n + 1} de ${p.imagens.length}"${n === 0 ? ' aria-current="true"' : ""}><img src="${esc(thumb(u, 200))}" alt="" loading="lazy"></button></li>`).join("")}</ul>` : ""}
-  </div>
+  <div class="galeria" aria-label="Fotos da peça">${fotos.join("")}</div>
   <div class="ficha">
-    <p class="ficha__designer"><a href="/designers/${slugify(p.designer)}/">${esc(p.designer)}</a>${site.designers[p.designer] ? `<span>${esc(site.designers[p.designer])}</span>` : ""}</p>
+    <p class="ficha__designer"><a href="/designers/${slugify(p.designer)}/">${esc(nome)}</a></p>
+    ${site.designers[p.designer] && p.designer !== "Anônimo" ? `<p class="ficha__info">${esc(site.designers[p.designer])}</p>` : ""}
     <h1 class="ficha__titulo">${esc(p.titulo)}</h1>
-    ${p.ano ? `<p class="ficha__ano">${esc(p.ano)}</p>` : ""}
-    <p class="ficha__preco">${esc(precoTexto(p))}</p>
+    ${p.ano || p.fabricante ? `<p class="ficha__ano">${esc([p.fabricante, p.ano].filter(Boolean).join(", "))}</p>` : ""}
+    <dl class="ficha__dados">
+      ${linha("Fabricante", p.fabricante)}
+      ${linha("Materiais", p.materiais)}
+      ${linha("Dimensões", p.dimensoes)}
+      ${linha("Estado", p.estado)}
+      ${linha("Procedência", p.procedencia)}
+      ${linha("Referência", p.codigo)}
+    </dl>
     ${p.status === "vendido"
-      ? `<a class="botao botao--linha" href="${wa(`Olá! Vi a peça vendida "${p.titulo}" no site. Vocês têm algo parecido?`)}">Procurar peça parecida</a>`
-      : `<a class="botao botao--wa" href="${wa(msg)}" data-evento="interesse">Tenho interesse</a>
-         <div class="cta-fixo"><a class="botao botao--wa" href="${wa(msg)}" data-evento="interesse">Tenho interesse</a></div>`}
-    ${(() => { const nome = p.designer === "Anônimo" ? p.titulo : `${p.titulo}, ${p.designer}`; return `<div class="compartilhar" data-url="${site.url}${url}" data-titulo="${esc(nome)}">
+      ? `<p class="ficha__preco">Vendida</p><a class="botao botao--linha" href="${wa(`Olá! Vi a peça vendida "${p.titulo}" no site. Vocês têm algo parecido?`)}">Procurar peça semelhante</a>`
+      : `<a class="botao" href="${wa(msg)}" data-evento="interesse">Solicitar informações</a>
+         <p class="ficha__obs">Valor sob consulta. Atendimento reservado por mensagem ou e-mail.</p>
+         <div class="cta-fixo"><a class="botao" href="${wa(msg)}" data-evento="interesse">Solicitar informações</a></div>`}
+    ${p.descricao ? `<div class="ficha__texto">${paragrafos(p.descricao)}</div>` : ""}
+    ${fichasDesigner[p.designer]?.bio ? `<p>${linkTexto(`/designers/${slugify(p.designer)}/`, "Ler sobre o designer")}</p>` : ""}
+    ${expo ? `<p class="ficha__expo">Esta peça integra a exposição <a href="/exposicoes/${expo.slug}/">${esc(expo.titulo)}</a>.</p>` : ""}
+    ${(() => { return `<div class="compartilhar" data-url="${site.url}${url}" data-titulo="${esc(alt)}">
       <button type="button" class="compartilhar__btn" aria-expanded="false" aria-controls="compartilhar-${p.slug}">${ICONE.compartilhar}<span>Compartilhar</span></button>
       <ul class="compartilhar__opcoes" id="compartilhar-${p.slug}" hidden>
-        <li><a href="https://wa.me/?text=${encodeURIComponent(`Olha essa peça da Voluta: ${nome}\n${site.url}${url}`)}" target="_blank" rel="noopener" data-rede="whatsapp">WhatsApp</a></li>
+        <li><a href="https://wa.me/?text=${encodeURIComponent(`Olha essa peça da Voluta: ${alt}\n${site.url}${url}`)}" target="_blank" rel="noopener" data-rede="whatsapp">WhatsApp</a></li>
         <li><button type="button" data-rede="copiar">Copiar link</button></li>
-        <li><a href="mailto:?subject=${encodeURIComponent(`${nome} · Voluta`)}&body=${encodeURIComponent(`Olha essa peça da Voluta:\n${site.url}${url}`)}" data-rede="email">E-mail</a></li>
+        <li><a href="mailto:?subject=${encodeURIComponent(`${alt} · Voluta`)}&body=${encodeURIComponent(`Olha essa peça da Voluta:\n${site.url}${url}`)}" data-rede="email">E-mail</a></li>
       </ul>
       <span class="compartilhar__aviso" role="status" aria-live="polite"></span>
     </div>`; })()}
-    <dl class="ficha__dados">
-      ${p.dimensoes ? `<dt>Dimensões</dt><dd>${esc(p.dimensoes)}</dd>` : ""}
-      ${p.materiais ? `<dt>Materiais</dt><dd>${esc(p.materiais)}</dd>` : ""}
-      ${p.codigo ? `<dt>Código</dt><dd>${esc(p.codigo)}</dd>` : ""}
-    </dl>
-    ${p.descricao ? `<div class="ficha__texto">${paragrafos(p.descricao)}</div>` : ""}
-    <p class="ficha__garantia"><a href="/politica-de-devolucao/">Política de devolução</a></p>
   </div>
 </article>
+${restauro ? `<section class="registro">
+  <div class="registro__in">
+    ${p.imagens[1] ? `<img src="${esc(thumb(p.imagens[1], 1200))}" alt="" loading="lazy">` : ""}
+    <div>
+      <p class="sobretitulo sobretitulo--vinho">Registro de restauro</p>
+      <h2 class="titulo-medio">O que foi feito, o que foi mantido</h2>
+      <dl class="ficha__dados ficha__dados--simples">${linha("Mantido", p.restauro_mantido)}${linha("Refeito", p.restauro_refeito)}${linha("Oficina", p.restauro_oficina)}</dl>
+    </div>
+  </div>
+</section>` : ""}
 <nav class="vizinhas" aria-label="Outras peças"><a href="/acervo/${ant.slug}/">Peça anterior</a><a href="/acervo/${prox.slug}/">Próxima peça</a></nav>
-${outros.length ? `<section class="secao"><div class="secao__cab"><h2>${mesmos.length ? `Mais de ${esc(p.designer)}` : `Outras ${esc(p.categoria.toLowerCase())}`}</h2></div><ul class="grade">${outros.map(card).join("")}</ul></section>` : ""}`,
+${outros.length ? `<section class="secao">${cab(mesmos.length ? `Mais de ${nome}` : `Outras ${p.categoria.toLowerCase()}`)}<ul class="grade grade--3">${outros.map(o => card(o)).join("")}</ul></section>` : ""}`,
   }));
 });
 
-// Designers
+// Designers (índice)
 write("designers/index.html", page({
   title: "Designers", url: "/designers/", current: "/designers/",
   desc: "Designers e fabricantes do modernismo brasileiro e internacional presentes no acervo da Voluta.",
-  body: `<section class="secao indice indice--pagina"><h1 class="titulo-pagina">Designers e fabricantes</h1><ul class="indice__lista">${designers.map(d => `<li><a href="/designers/${slugify(d)}/"><span class="indice__nome">${esc(d)}</span><span class="indice__info">${esc(site.designers[d] || "")}</span></a></li>`).join("")}</ul></section>`,
+  body: `<section class="secao indice indice--pagina"><h1 class="titulo-pagina">Designers e fabricantes</h1><ul class="indice__lista">${designers.map(d => `<li><a href="/designers/${slugify(d)}/"><span class="indice__nome">${esc(nomeDesigner(d))}</span><span class="indice__info">${esc(d === "Anônimo" ? "" : site.designers[d] || "")}</span></a></li>`).join("")}</ul></section>`,
 }));
+
+// Exposições
+if (exposicoes.length) {
+  const correntes = exposicoes.filter(emCartaz), anteriores = exposicoes.filter(e => !emCartaz(e));
+  write("exposicoes/index.html", page({
+    title: "Exposições", url: "/exposicoes/", current: "/exposicoes/",
+    desc: "Exposições online da Voluta: recortes curatoriais de mobiliário modernista brasileiro.",
+    body: `<section class="secao">
+  <h1 class="titulo-pagina">Exposições</h1>
+  ${correntes.map(e => `<a class="expo-abertura" href="/exposicoes/${e.slug}/">
+    ${e.capa ? `<img src="${esc(thumb(e.capa, 2400))}" alt="" loading="lazy">` : ""}
+    <div><p class="sobretitulo sobretitulo--vinho">Em cartaz</p><h2 class="titulo-grande">${esc(e.titulo)}</h2><p class="destaque-expo__periodo">${esc([e.subtitulo, periodo(e)].filter(Boolean).join(" · "))}</p>${e.resumo ? `<p>${esc(e.resumo)}</p>` : ""}</div>
+  </a>`).join("")}
+</section>
+${anteriores.length ? `<section class="secao">${cab("Exposições anteriores")}<ul class="ensaios">${anteriores.map(cartaoExpo).join("")}</ul></section>` : ""}`,
+  }));
+  exposicoes.forEach(e => {
+    const lista = pecasDe(e.pecas);
+    write(`exposicoes/${e.slug}/index.html`, page({
+      title: e.titulo, url: `/exposicoes/${e.slug}/`, current: "/exposicoes/", img: e.capa, desc: e.resumo || "",
+      body: `
+<section class="editorial__cab">
+  <p class="sobretitulo"><a href="/exposicoes/">Exposições</a> · ${emCartaz(e) ? "Em cartaz" : "Encerrada"}</p>
+  <h1 class="editorial__titulo">${esc(e.titulo)}</h1>
+  <p class="editorial__sub">${esc([e.subtitulo, periodo(e)].filter(Boolean).join(" · "))}</p>
+</section>
+${e.capa ? `<img class="editorial__capa" src="${esc(thumb(e.capa, 2560))}" alt="" fetchpriority="high">` : ""}
+<section class="editorial__corpo texto-longo">${paragrafos(e.texto || "")}</section>
+${(e.fotos || []).length ? `<section class="editorial__fotos">${sequenciaFotos(e.fotos)}</section>` : ""}
+${lista.length ? `<section class="secao">${cab("Peças da exposição", "/acervo/", "Ver acervo completo")}<ul class="grade grade--3">${lista.map(p => card(p)).join("")}</ul></section>` : ""}`,
+    }));
+  });
+}
+
+// Diário
+if (diario.length) {
+  write("diario/index.html", page({
+    title: "Diário", url: "/diario/", current: "/diario/",
+    desc: "Ensaios da Voluta sobre designers, fabricantes, materiais e restauro do mobiliário modernista brasileiro.",
+    body: `<section class="secao"><h1 class="titulo-pagina">Diário</h1><p class="subtitulo">Designers, fabricantes, materiais e bastidores do acervo.</p><ul class="ensaios">${diario.map(cartaoDiario).join("")}</ul></section>`,
+  }));
+  diario.forEach(d => {
+    const lista = pecasDe(d.pecas);
+    write(`diario/${d.slug}/index.html`, page({
+      title: d.titulo, url: `/diario/${d.slug}/`, current: "/diario/", img: d.capa, desc: d.resumo || "",
+      jsonld: `<script type="application/ld+json">${JSON.stringify({ "@context": "https://schema.org", "@type": "Article", headline: d.titulo, datePublished: d.data, image: d.capa ? [site.url + d.capa] : undefined, publisher: { "@type": "Organization", name: "Voluta" } })}</script>`,
+      body: `
+<section class="editorial__cab">
+  <p class="sobretitulo"><a href="/diario/">Diário</a>${d.categoria ? ` · ${esc(d.categoria)}` : ""}</p>
+  <h1 class="editorial__titulo editorial__titulo--medio">${esc(d.titulo)}</h1>
+  ${d.data ? `<p class="editorial__sub">${esc(dataLonga(d.data))}</p>` : ""}
+</section>
+${d.capa ? `<img class="editorial__capa" src="${esc(thumb(d.capa, 2560))}" alt="" fetchpriority="high">` : ""}
+<section class="editorial__corpo texto-longo">${paragrafos(d.texto || "")}</section>
+${(d.fotos || []).length ? `<section class="editorial__fotos">${sequenciaFotos(d.fotos)}</section>` : ""}
+${lista.length ? `<section class="secao">${cab("Peças citadas")}<ul class="grade grade--3">${lista.map(p => card(p)).join("")}</ul></section>` : ""}
+${diario.length > 1 ? `<section class="secao">${cab("Outros ensaios", "/diario/", "Todos os ensaios")}<ul class="ensaios">${diario.filter(x => x !== d).slice(0, 3).map(cartaoDiario).join("")}</ul></section>` : ""}`,
+    }));
+  });
+}
 
 // Páginas de texto
 const textoPagina = (rel, titulo, texto, current, img) => write(rel, page({
   title: titulo, url: "/" + rel.replace("index.html", ""), current,
-  body: `<section class="secao texto">${img ? `<img class="texto__img" src="${esc(img)}" alt="">` : ""}<div class="texto__corpo"><h1 class="titulo-pagina">${esc(titulo)}</h1>${paragrafos(texto)}</div></section>`,
+  body: `<section class="secao texto">${img ? `<img class="texto__img" src="${esc(thumb(img, 1600))}" alt="">` : ""}<div class="texto__corpo"><h1 class="titulo-pagina">${esc(titulo)}</h1>${paragrafos(texto)}</div></section>`,
 }));
 textoPagina("sobre/index.html", "Sobre a Voluta", site.sobre, "/sobre/", site.imagem_sobre);
-textoPagina("restauro/index.html", "Restauro", site.restauro, "/restauro/");
+textoPagina("restauro/index.html", "Restauro", site.restauro, "/restauro/", restauroFotos[0]?.foto);
 textoPagina("politica-de-devolucao/index.html", "Política de devolução", site.devolucao, "");
 
 write("contato/index.html", page({
   title: "Contato", url: "/contato/", current: "/contato/",
   body: `<section class="secao texto"><div class="texto__corpo">
   <h1 class="titulo-pagina">Contato</h1>
-  <p>O atendimento é feito de forma reservada, direto com a gente. O caminho mais rápido é o WhatsApp.</p>
+  <p>O atendimento é reservado e feito direto com a gente, por mensagem ou e-mail.</p>
   <ul class="contatos">
-    <li><a class="botao botao--wa com-ico" href="${wa("Olá! Vim pelo site da Voluta")}">${ICONE.wa}<span>Conversar no WhatsApp</span></a></li>
+    <li><a class="botao com-ico" href="${wa("Olá! Vim pelo site da Voluta")}">${ICONE.wa}<span>Enviar mensagem</span></a></li>
     <li><a class="com-ico" href="${wa("Olá! Vim pelo site da Voluta")}">${ICONE.wa}<span>${esc(site.whatsapp_exibicao)}</span></a></li>
     <li><a class="com-ico" href="mailto:${site.email}">${ICONE.email}<span>${site.email}</span></a></li>
     <li><a class="com-ico" href="https://www.instagram.com/${site.instagram}/">${ICONE.ig}<span>@${site.instagram}</span></a></li>
     <li><span class="com-ico">${ICONE.local}<span>${esc(site.cidade)}</span></span></li>
   </ul>
   <h2>Quer vender uma peça?</h2>
-  <p>Compramos mobiliário modernista. <a href="https://venda.volutagaleria.com.br">Envie as fotos da sua peça</a>.</p>
+  <p>Compramos mobiliário modernista dos anos 1950 a 1980. <a href="${VENDA}">Envie as fotos da sua peça</a>.</p>
 </div></section>`,
 }));
 
 write("404.html", page({ title: "Página não encontrada", body: `<section class="secao texto"><div class="texto__corpo"><h1 class="titulo-pagina">Esta página não existe mais</h1><p>A peça pode ter sido vendida ou mudado de endereço.</p><p><a class="botao" href="/acervo/">Ver o acervo</a></p></div></section>` }));
 
 // SEO: sitemap, robots
-const urls = ["/", "/acervo/", "/designers/", "/sobre/", "/restauro/", "/contato/", "/politica-de-devolucao/", ...pecas.map(p => `/acervo/${p.slug}/`), ...designers.map(d => `/designers/${slugify(d)}/`), ...tipos.map(t => `/acervo/tipo/${t.slug}/`)];
+const urls = ["/", "/acervo/", "/designers/", "/sobre/", "/restauro/", "/contato/", "/politica-de-devolucao/",
+  ...(exposicoes.length ? ["/exposicoes/", ...exposicoes.map(e => `/exposicoes/${e.slug}/`)] : []),
+  ...(diario.length ? ["/diario/", ...diario.map(d => `/diario/${d.slug}/`)] : []),
+  ...pecas.map(p => `/acervo/${p.slug}/`), ...designers.map(d => `/designers/${slugify(d)}/`), ...tipos.map(t => `/acervo/tipo/${t.slug}/`)];
 write("sitemap.xml", `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.map(u => `<url><loc>${site.url}${u}</loc></url>`).join("\n")}\n</urlset>`);
 write("robots.txt", `User-agent: *\nDisallow: /admin/\nSitemap: ${site.url}/sitemap.xml\n`);
 

@@ -194,3 +194,10 @@ if (vitrine && !matchMedia("(prefers-reduced-motion: reduce)").matches) {
   document.addEventListener("visibilitychange", () => document.hidden ? parar() : iniciar());
   iniciar();
 }
+
+// Topo: linha fina embaixo depois que a página rola
+const topo = document.querySelector(".topo");
+if (topo) {
+  const marcar = () => topo.classList.toggle("rolou", window.scrollY > 8);
+  marcar(); window.addEventListener("scroll", marcar, { passive: true });
+}
