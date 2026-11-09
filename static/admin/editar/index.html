@@ -28,10 +28,36 @@
     // A tela de lista do editor foi substituída pela tabela em /admin.
     // Sempre que o editor (ou o botão "voltar" do navegador) cair numa lista, vai para a tabela.
     (function () {
+      // Lembra para onde a pessoa queria ir (ex.: Exposições, Diário, uma peça). Se o editor pedir login,
+      // o GitLab devolve para /admin/editar/ sem esse destino; aí voltamos para ele em vez de cair na tabela.
+      var CHAVE = "voluta-destino";
+      var guardar = function () {
+        var h = location.hash || "";
+        if (/^#\/collections\/(?!pecas\/?(\?.*)?$)./.test(h)) { try { sessionStorage.setItem(CHAVE, h); } catch (e) {} }
+      };
+      guardar();   // só ao abrir a página (os cliques dentro do editor não mudam o destino)
+      var visto = 0;
       var paraTabela = function () {
         var h = location.hash || "";
-        if (h === "" || h === "#" || h === "#/" || /^#\/collections\/[^/]+\/?(\?.*)?$/.test(h) || /^#\/search\//.test(h)) {
+        // Chegou no destino já logado: esquece o destino (para não voltar a ele depois de salvar e sair)
+        try {
+          if (h && h === sessionStorage.getItem(CHAVE) && localStorage.getItem("decap-cms-user") && !sessionStorage.getItem("decap-cms-pkce-verifier-code")) {
+            if (++visto >= 2) sessionStorage.removeItem(CHAVE);
+          } else visto = 0;
+        } catch (e) {}
+        if (h === "" || h === "#" || h === "#/" || /^#\/collections\/pecas\/?(\?.*)?$/.test(h) || /^#\/search\//.test(h)) {
           if (document.querySelector("[class*='AuthenticationPage'], [class*='LoginButton']")) return; // ainda no login
+          if (/[?&](code|state)=/.test(location.search)) return; // voltando do login do GitLab: espera o editor terminar
+          try {
+            if (sessionStorage.getItem("decap-cms-pkce-verifier-code")) return;   // login com o GitLab em andamento
+            if (!localStorage.getItem("decap-cms-user")) return;                  // ainda não entrou: deixa a tela de login
+          } catch (e) {}
+          var destino = null; try { destino = sessionStorage.getItem(CHAVE); sessionStorage.removeItem(CHAVE); } catch (e) {}
+          var usado = 0; try { usado = +sessionStorage.getItem(CHAVE + "-em") || 0; } catch (e) {}
+          if (destino && destino !== h && Date.now() - usado > 15000) {
+            try { sessionStorage.setItem(CHAVE + "-em", String(Date.now())); } catch (e) {}   // evita ficar em círculo
+            location.replace("/admin/editar/" + destino); return;
+          }
           location.replace("/admin/");
         }
       };
