@@ -327,7 +327,14 @@
     {
       "titulo": "Poltrona Móveis CIMO “Pé de Foguete”",
       "texto": "Peça dos anos 1960 em imbuia maciça, desmontada para revisão completa da estrutura e revestida em bouclé verde de textura discreta.",
-      "fotos": []
+      "fotos": [
+        "/uploads/restauro/cimo-pe-de-foguete-01-antes.jpg",
+        "/uploads/restauro/cimo-pe-de-foguete-02-antes-costas.jpg",
+        "/uploads/restauro/cimo-pe-de-foguete-03-antes-estrutura.jpg",
+        "/uploads/restauro/cimo-pe-de-foguete-04-depois-lateral.jpg",
+        "/uploads/restauro/cimo-pe-de-foguete-05-depois-detalhe.jpg",
+        "/uploads/restauro/cimo-pe-de-foguete-06-depois.jpg"
+      ]
     },
     {
       "titulo": "Poltrona MP-97, Percival Lafer",
