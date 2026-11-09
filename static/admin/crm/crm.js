@@ -660,6 +660,7 @@
   // Categorias fixas de despesa (aparecem mesmo sem nenhum lançamento ainda); as outras vêm dos próprios lançamentos.
   const CAT_DESPESA = {
     "Embalagem": ["Filme stretch", "Plástico bolha", "Papelão", "Fitas e etiquetas", "Cobertores e mantas", "Mão de obra"],
+    "Restauro": ["Tecidos", "Verniz", "Tinta", "Outros materiais"],
     "Loja Reforma": ["Tinta", "Material", "Placa de inox", "Cortina", "Mão de obra", "Pedreiro", "Pintura", "Estrutura", "Parede de gesso"],
   };
   const catsDespesa = () => [...new Set([...Object.keys(CAT_DESPESA), ...unicos(D.despesas.itens, d => d.categoria)])];
