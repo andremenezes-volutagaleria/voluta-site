@@ -118,9 +118,9 @@ collections:
             widget: list
             max: 5
             summary: "{{fields.peca}}"
-            hint: "Até 5 peças, nesta ordem: 1ª destaque grande (foto vertical), 2ª média ao lado (foto quadrada funciona bem), 3ª a 5ª na fileira de baixo. Peça vendida sai sozinha da home."
+            hint: "Até 5 peças, nesta ordem: 1ª destaque grande (foto vertical), 2ª média ao lado (foto quadrada funciona bem), 3ª a 5ª na fileira de baixo. Só aparecem peças disponíveis. Peça vendida sai sozinha da home."
             fields:
-              - { name: peca, label: Peça, widget: relation, collection: pecas, search_fields: [titulo, designer, codigo], value_field: "{{slug}}", display_fields: ["{{designer}} · {{titulo}}"] }
+              - { name: peca, label: Peça, widget: relation, collection: pecas, search_fields: [titulo, designer, codigo], value_field: "{{slug}}", display_fields: ["{{designer}} · {{titulo}}"], filters: [{ field: status, values: [disponivel] }] }
               - { name: foto_n, label: "Usar a foto nº (da ficha da peça)", widget: number, value_type: int, min: 1, default: 1, required: false, hint: "1 = capa da peça." }
               - { name: foto, label: "Ou enviar uma foto só para a home (opcional)", widget: image, required: false }
           - { name: restauro_resumo, label: "Faixa Restauro da home: texto", widget: text, required: false }
