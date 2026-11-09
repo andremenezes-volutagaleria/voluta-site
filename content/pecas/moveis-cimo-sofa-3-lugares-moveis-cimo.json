@@ -1,0 +1,22 @@
+{
+  "imagens": [
+    "/uploads/pecas/1.png",
+    "/uploads/pecas/2.png",
+    "/uploads/pecas/3.png",
+    "/uploads/pecas/4.png",
+    "/uploads/pecas/5.png",
+    "/uploads/pecas/6.png",
+    "/uploads/pecas/7.png"
+  ],
+  "destaque": true,
+  "ano": "1950",
+  "descricao": "Um sofá de três lugares sem braços, de perfil contínuo e desenho limpo, produzido pela CIMO, uma das grandes fábricas de móveis do Brasil, em Rio Negrinho, Santa Catarina. Peça de um momento em que a indústria nacional começava a levar o desenho moderno para dentro das casas.\n\nAs laterais funcionam como uma concha: um único gesto curvo desce do encosto, abraça o assento e se recolhe em direção ao chão, em acabamento laqueado claro. Os pés palito cônicos erguem o conjunto e dão leveza a um volume generoso. O estofado em tecido de trama aparente, com capitonê discreto de botões no encosto, divide-se em três módulos que marcam o ritmo da peça.\n\nTraz as marcas do tempo que contam a história da peça, parte do seu caráter e não um defeito. Funciona bem no living, encostado à parede ou solto no meio da sala, onde seu perfil pode ser visto por inteiro.",
+  "ordem": 100,
+  "data": "2026-11-09",
+  "designer": "Móveis CIMO",
+  "status": "disponivel",
+  "categoria": "Sofás",
+  "codigo": "VLT-088",
+  "titulo": "Sofá 3 lugares Móveis CIMO",
+  "dimensoes": "L 200 × P 82 × A 82 cm"
+}
