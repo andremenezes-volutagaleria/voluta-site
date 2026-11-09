@@ -510,7 +510,25 @@ const textoPagina = (rel, titulo, texto, current, img) => write(rel, page({
   body: `<section class="secao texto">${img ? `<img class="texto__img" src="${esc(thumb(img, 1600))}" alt="">` : ""}<div class="texto__corpo"><h1 class="titulo-pagina">${esc(titulo)}</h1>${paragrafos(texto)}</div></section>`,
 }));
 textoPagina("sobre/index.html", "Sobre a Voluta", site.sobre, "/sobre/", site.imagem_sobre);
-textoPagina("restauro/index.html", "Restauro", site.restauro, "/restauro/", restauroFotos[0]?.foto);
+const restauroCasos = (site.restauro_casos || []).filter(c => c && (c.titulo || c.texto));
+const casosHtml = restauroCasos.length ? `<section class="casos" aria-labelledby="casos-titulo">
+  <div class="casos__cab"><h2 id="casos-titulo">Exemplos de restauro</h2></div>
+  ${restauroCasos.map((c, i) => {
+    const fotos = (c.fotos || []).map(f => typeof f === "string" ? f : f?.foto).filter(Boolean).slice(0, 4);
+    return `<article class="caso${fotos.length ? "" : " caso--sem-foto"}">
+    ${fotos.length ? `<div class="caso__fotos caso__fotos--${fotos.length}">${fotos.map((f, j) => `<img src="${esc(thumb(f, j === 0 ? 1600 : 1000))}" alt="${esc(c.titulo || "")}${fotos.length > 1 ? ` — foto ${j + 1}` : ""}" loading="lazy">`).join("")}</div>` : ""}
+    <div class="caso__texto">
+      <p class="caso__num">${String(i + 1).padStart(2, "0")}</p>
+      <h3>${esc(c.titulo || "")}</h3>
+      ${paragrafos(c.texto || "")}
+    </div>
+  </article>`;
+  }).join("\n  ")}
+</section>` : "";
+write("restauro/index.html", page({
+  title: "Restauro", url: "/restauro/", current: "/restauro/",
+  body: `<section class="secao texto">${restauroFotos[0]?.foto ? `<img class="texto__img" src="${esc(thumb(restauroFotos[0].foto, 1600))}" alt="">` : ""}<div class="texto__corpo"><h1 class="titulo-pagina">Restauro</h1>${paragrafos(site.restauro)}</div></section>${casosHtml}`,
+}));
 textoPagina("politica-de-devolucao/index.html", "Política de devolução", site.devolucao, "");
 
 write("contato/index.html", page({

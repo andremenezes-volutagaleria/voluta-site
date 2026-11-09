@@ -44,7 +44,7 @@
   ],
   "whatsapp_exibicao": "+55 31 98253-9291",
   "cidade": "Belo Horizonte, Minas Gerais – Brasil",
-  "restauro": "Peças com décadas de uso pedem cuidado. Para nós, restaurar não é apagar o tempo: é devolver à peça a dignidade com que foi concebida.\n\n## Marcenaria e tapeçaria de época\nTrabalhamos com marcenaria tradicional e tapeçaria especializada, usando técnicas e materiais compatíveis com o período de cada peça. Madeiras como jacarandá, caviúna e imbuia são tratadas para preservar pátina e cor. Estruturas são revisadas peça por peça, e os estofados recebem couros e tecidos coerentes com o desenho original.\n\n## Cada intervenção é documentada\nRegistramos o que foi feito, o que foi mantido e o que foi substituído. Esse registro acompanha a peça vendida como parte da sua procedência.\n\n## Poltrona MP-97, Percival Lafer\nRestauro integral de estrutura, sustentação e couro: estrutura recuperada, percintas trocadas, espuma ajustada e couro substituído em tom bordô.\n\n## Poltrona Móveis CIMO \"Pé de Foguete\"\nPeça dos anos 1960 em imbuia maciça, desmontada para revisão completa da estrutura e revestida em bouclé verde de textura discreta.\n\n## Poltrona MP-97, Percival Lafer\nDo desmonte à camurça verde: verniz antigo removido, madeira relixada à mão, ferragens originais mantidas, percintas novas e revestimento em camurça verde-oliva.",
+  "restauro": "Peças com décadas de uso pedem cuidado. Para nós, restaurar não é apagar o tempo: é devolver à peça a dignidade com que foi concebida.\n\n## Marcenaria e tapeçaria de época\nTrabalhamos com marcenaria tradicional e tapeçaria especializada, usando técnicas e materiais compatíveis com o período de cada peça. Madeiras como jacarandá, caviúna e imbuia são tratadas para preservar pátina e cor. Estruturas são revisadas peça por peça, e os estofados recebem couros e tecidos coerentes com o desenho original.\n\n## Cada intervenção é documentada\nRegistramos o que foi feito, o que foi mantido e o que foi substituído. Esse registro acompanha a peça vendida como parte da sua procedência.",
   "designers": [
     {
       "nome": "Sérgio Rodrigues",
@@ -310,6 +310,27 @@
     {
       "foto": "/uploads/home/8.png",
       "descricao_foto": "Livro de design apoiado em poltrona de couro"
+    }
+  ],
+  "restauro_casos": [
+    {
+      "titulo": "Poltrona MP-97, Percival Lafer",
+      "texto": "Restauro integral de estrutura, sustentação e couro: estrutura recuperada, percintas trocadas, espuma ajustada e couro substituído em tom bordô.",
+      "fotos": []
+    },
+    {
+      "titulo": "Poltrona Móveis CIMO “Pé de Foguete”",
+      "texto": "Peça dos anos 1960 em imbuia maciça, desmontada para revisão completa da estrutura e revestida em bouclé verde de textura discreta.",
+      "fotos": []
+    },
+    {
+      "titulo": "Poltrona MP-97, Percival Lafer",
+      "texto": "Do desmonte à camurça verde: verniz antigo removido, madeira relixada à mão, ferragens originais mantidas, percintas novas e revestimento em camurça verde-oliva.",
+      "fotos": [
+        "https://static-assets.artlogic.net/w_2400,h_2400,c_limit,f_auto,fl_lossy,q_auto/artlogicstorage/voluta/images/view/5b7feb2d53bb4eb361b38c471c256e37p/voluta-percival-lafer-poltrona-mp-97-1970.png",
+        "https://static-assets.artlogic.net/w_2400,h_2400,c_limit,f_auto,fl_lossy,q_auto/artlogicstorage/voluta/images/view/515805f3bc4f7307b2e861c41804cdbfp/voluta-percival-lafer-poltrona-mp-97-1970.png",
+        "https://static-assets.artlogic.net/w_2400,h_2400,c_limit,f_auto,fl_lossy,q_auto/artlogicstorage/voluta/images/view/32e3596377145363a4a88ec1a2339e90p/voluta-percival-lafer-poltrona-mp-97-1970.png"
+      ]
     }
   ],
   "restauro_resumo": "Marcenaria tradicional e tapeçaria de época, com madeiras tratadas para preservar pátina e cor. Cada intervenção é documentada e acompanha a peça como parte da sua procedência."

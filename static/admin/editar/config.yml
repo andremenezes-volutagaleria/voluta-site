@@ -170,6 +170,22 @@ collections:
               - { name: cronologia, label: Cronologia, label_singular: Data, widget: list, required: false, summary: "{{fields.ano}} · {{fields.fato}}", fields: [ { name: ano, label: Ano, widget: string }, { name: fato, label: Fato, widget: string } ] }
           - { name: sobre, label: Texto da página Sobre, widget: markdown }
           - { name: restauro, label: Texto da página Restauro, widget: markdown }
+          - name: restauro_casos
+            label: "Página Restauro: exemplos"
+            label_singular: Exemplo
+            widget: list
+            summary: "{{fields.titulo}}"
+            hint: "Cada exemplo aparece abaixo do texto da página Restauro. Coloque as fotos na ordem antes → depois."
+            fields:
+              - { name: titulo, label: "Peça", widget: string, hint: "Ex.: Poltrona MP-97, Percival Lafer" }
+              - { name: texto, label: "O que foi feito", widget: text }
+              - name: fotos
+                label: Fotos
+                label_singular: Foto
+                widget: list
+                required: false
+                hint: "Até 4. Sugestão: 1ª = antes, última = depois."
+                field: { name: foto, label: Foto, widget: image }
           - { name: devolucao, label: Política de devolução, widget: markdown }
 
   - name: exposicoes
