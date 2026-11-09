@@ -514,9 +514,9 @@ const restauroCasos = (site.restauro_casos || []).filter(c => c && (c.titulo || 
 const casosHtml = restauroCasos.length ? `<section class="casos" aria-labelledby="casos-titulo">
   <div class="casos__cab"><h2 id="casos-titulo">Exemplos de restauro</h2></div>
   ${restauroCasos.map((c, i) => {
-    const fotos = (c.fotos || []).map(f => typeof f === "string" ? f : f?.foto).filter(Boolean).slice(0, 4);
+    const fotos = (c.fotos || []).map(f => typeof f === "string" ? f : f?.foto).filter(Boolean).slice(0, 8);
     return `<article class="caso${fotos.length ? "" : " caso--sem-foto"}">
-    ${fotos.length ? `<div class="caso__fotos caso__fotos--${fotos.length}">${fotos.map((f, j) => `<img src="${esc(thumb(f, j === 0 ? 1600 : 1000))}" alt="${esc(c.titulo || "")}${fotos.length > 1 ? ` — foto ${j + 1}` : ""}" loading="lazy">`).join("")}</div>` : ""}
+    ${fotos.length ? `<div class="caso__fotos caso__fotos--${fotos.length}${fotos.length > 1 && fotos.length % 2 === 0 ? " caso__fotos--fecha" : ""}">${fotos.map((f, j) => `<img src="${esc(thumb(f, j === 0 ? 1600 : 1000))}" alt="${esc(c.titulo || "")}${fotos.length > 1 ? ` — foto ${j + 1}` : ""}" loading="lazy">`).join("")}</div>` : ""}
     <div class="caso__texto">
       <p class="caso__num">${String(i + 1).padStart(2, "0")}</p>
       <h3>${esc(c.titulo || "")}</h3>

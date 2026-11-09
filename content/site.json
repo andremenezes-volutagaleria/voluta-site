@@ -316,7 +316,13 @@
     {
       "titulo": "Poltrona MP-97, Percival Lafer",
       "texto": "Restauro integral de estrutura, sustentação e couro: estrutura recuperada, percintas trocadas, espuma ajustada e couro substituído em tom bordô.",
-      "fotos": []
+      "fotos": [
+        "/uploads/restauro/mp97-bordo-01-chegada.jpg",
+        "/uploads/restauro/mp97-bordo-02-antes-lateral.jpg",
+        "/uploads/restauro/mp97-bordo-03-antes-frente.jpg",
+        "/uploads/restauro/mp97-bordo-04-estrutura-e-couro.jpg",
+        "/uploads/restauro/mp97-bordo-05-resultado.jpg"
+      ]
     },
     {
       "titulo": "Poltrona Móveis CIMO “Pé de Foguete”",
@@ -327,9 +333,14 @@
       "titulo": "Poltrona MP-97, Percival Lafer",
       "texto": "Do desmonte à camurça verde: verniz antigo removido, madeira relixada à mão, ferragens originais mantidas, percintas novas e revestimento em camurça verde-oliva.",
       "fotos": [
-        "https://static-assets.artlogic.net/w_2400,h_2400,c_limit,f_auto,fl_lossy,q_auto/artlogicstorage/voluta/images/view/5b7feb2d53bb4eb361b38c471c256e37p/voluta-percival-lafer-poltrona-mp-97-1970.png",
-        "https://static-assets.artlogic.net/w_2400,h_2400,c_limit,f_auto,fl_lossy,q_auto/artlogicstorage/voluta/images/view/515805f3bc4f7307b2e861c41804cdbfp/voluta-percival-lafer-poltrona-mp-97-1970.png",
-        "https://static-assets.artlogic.net/w_2400,h_2400,c_limit,f_auto,fl_lossy,q_auto/artlogicstorage/voluta/images/view/32e3596377145363a4a88ec1a2339e90p/voluta-percival-lafer-poltrona-mp-97-1970.png"
+        "/uploads/restauro/mp97-camurca-verde-01-antes.jpg",
+        "/uploads/restauro/mp97-camurca-verde-02-no-estado.jpg",
+        "/uploads/restauro/mp97-camurca-verde-03-desmonte.jpg",
+        "/uploads/restauro/mp97-camurca-verde-04-percintas.jpg",
+        "/uploads/restauro/mp97-camurca-verde-05-parafusos.jpg",
+        "/uploads/restauro/mp97-camurca-verde-06-jatoba.jpg",
+        "/uploads/restauro/mp97-camurca-verde-07-estrutura.jpg",
+        "/uploads/restauro/mp97-camurca-verde-08-resultado.jpg"
       ]
     }
   ],
