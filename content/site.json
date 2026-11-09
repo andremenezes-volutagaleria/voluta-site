@@ -1,4 +1,9 @@
 {
+  "manifesto": {
+    "sobretitulo": "Mobiliário modernista brasileiro",
+    "titulo": "O Brasil está fadado ao modernismo.",
+    "texto": "Uma galeria dedicada ao design brasileiro de 1950 a 1980. Cada peça é pesquisada, autenticada e restaurada com técnicas de época antes de entrar no acervo."
+  },
   "ga4_id": "G-VBR7W55Y8V",
   "categorias": [
     {
@@ -45,6 +50,23 @@
   "whatsapp_exibicao": "+55 31 98253-9291",
   "cidade": "Belo Horizonte, Minas Gerais – Brasil",
   "restauro": "Peças com décadas de uso pedem cuidado. Para nós, restaurar não é apagar o tempo: é devolver à peça a dignidade com que foi concebida.\n\n## Marcenaria e tapeçaria de época\nTrabalhamos com marcenaria tradicional e tapeçaria especializada, usando técnicas e materiais compatíveis com o período de cada peça. Madeiras como jacarandá, caviúna e imbuia são tratadas para preservar pátina e cor. Estruturas são revisadas peça por peça, e os estofados recebem couros e tecidos coerentes com o desenho original.\n\n## Cada intervenção é documentada\nRegistramos o que foi feito, o que foi mantido e o que foi substituído. Esse registro acompanha a peça vendida como parte da sua procedência.",
+  "selecao": [
+    {
+      "peca": "geraldo-de-barros-par-de-poltronas-geraldo-barros-hobjeto"
+    },
+    {
+      "peca": "novo-rumo-mesa-de-centro-em-veludo-e-jacaranda"
+    },
+    {
+      "peca": "sergio-rodrigues-poltrona-tete"
+    },
+    {
+      "peca": "par-de-mesas-laterais-em-madeira-nobre"
+    },
+    {
+      "peca": "jean-gillon-mesa-de-centro-com-base-em-jacaranda"
+    }
+  ],
   "designers": [
     {
       "nome": "Sérgio Rodrigues",
@@ -170,8 +192,28 @@
   "meta_pixel_id": "",
   "devolucao": "Cada peça do nosso acervo é única, e seguimos o Código de Defesa do Consumidor.\n\n## Direito de arrependimento\nVocê tem 7 dias corridos, a partir da data de recebimento, para solicitar a devolução.\n\n## Como solicitar\nPelos nossos canais oficiais: WhatsApp, e-mail ou formulário de contato.\n\n## Condições da peça\nA peça deve retornar exatamente nas mesmas condições em que foi entregue, sem novo uso, danos ou alterações no restauro e na estrutura original.\n\n## Reembolso integral\nDepois de recebida e conferida pela nossa equipe, devolvemos o valor integral, na mesma forma de pagamento da compra.\n\n## Coleta especializada\nComo trabalhamos com mobiliário modernista e cerâmicas delicadas, nossa equipe orienta e coordena a coleta para o transporte de retorno.",
   "url": "https://volutagaleria.com.br",
+  "capa": {
+    "foto": "/uploads/home/1.png",
+    "descricao_foto": "Poltrona do acervo à luz da manhã, com o cachorro da casa deitado no piso de madeira",
+    "credito": "Acervo Voluta, Belo Horizonte"
+  },
+  "restauro_resumo": "Marcenaria tradicional e tapeçaria de época, com madeiras tratadas para preservar pátina e cor. Cada intervenção é documentada e acompanha a peça como parte da sua procedência.",
   "whatsapp": "5531982539291",
   "instagram": "voluta.traco",
+  "restauro_fotos": [
+    {
+      "foto": "/uploads/home/10.png",
+      "descricao_foto": "Detalhe de etiqueta de fabricante na madeira"
+    },
+    {
+      "foto": "/uploads/home/6.png",
+      "descricao_foto": "Detalhe de couro e madeira"
+    },
+    {
+      "foto": "/uploads/home/8.png",
+      "descricao_foto": "Livro de design apoiado em poltrona de couro"
+    }
+  ],
   "galeria": [
     {
       "foto": "/uploads/home/dupla-mp-97.png",
@@ -271,47 +313,6 @@
       "foto": "/uploads/home/13.png"
     }
   ],
-  "capa": {
-    "foto": "/uploads/home/1.png",
-    "descricao_foto": "Poltrona do acervo à luz da manhã, com o cachorro da casa deitado no piso de madeira",
-    "credito": "Acervo Voluta, Belo Horizonte"
-  },
-  "manifesto": {
-    "sobretitulo": "Mobiliário modernista brasileiro",
-    "titulo": "O Brasil está fadado ao modernismo.",
-    "texto": "Uma galeria dedicada ao design brasileiro de 1950 a 1980. Cada peça é pesquisada, autenticada e restaurada com técnicas de época antes de entrar no acervo."
-  },
-  "selecao": [
-    {
-      "peca": "geraldo-de-barros-par-de-poltronas-geraldo-barros-hobjeto"
-    },
-    {
-      "peca": "percival-lafer-poltrona-mp-71"
-    },
-    {
-      "peca": "banco-ripado"
-    },
-    {
-      "peca": "sergio-rodrigues-poltrona-cimba-par"
-    },
-    {
-      "peca": "jean-gillon-mesa-de-centro-com-base-em-jacaranda"
-    }
-  ],
-  "restauro_fotos": [
-    {
-      "foto": "/uploads/home/10.png",
-      "descricao_foto": "Detalhe de etiqueta de fabricante na madeira"
-    },
-    {
-      "foto": "/uploads/home/6.png",
-      "descricao_foto": "Detalhe de couro e madeira"
-    },
-    {
-      "foto": "/uploads/home/8.png",
-      "descricao_foto": "Livro de design apoiado em poltrona de couro"
-    }
-  ],
   "restauro_casos": [
     {
       "titulo": "Poltrona MP-97, Percival Lafer",
@@ -350,6 +351,5 @@
         "/uploads/restauro/mp97-camurca-verde-08-resultado.jpg"
       ]
     }
-  ],
-  "restauro_resumo": "Marcenaria tradicional e tapeçaria de época, com madeiras tratadas para preservar pátina e cor. Cada intervenção é documentada e acompanha a peça como parte da sua procedência."
+  ]
 }
