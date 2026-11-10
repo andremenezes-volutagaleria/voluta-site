@@ -203,13 +203,13 @@ const cartaoExpo = e => `<li class="expo-card"><a href="/exposicoes/${e.slug}/">
   <p class="ensaio__resumo">${esc([e.subtitulo, periodo(e)].filter(Boolean).join(" · "))}</p>
 </a></li>`;
 // Fotos editoriais: grandes, em sequência; duas seguidas sem legenda ficam lado a lado
-const sequenciaFotos = (fotos, w = 1800) => {
+const sequenciaFotos = (fotos, w = 1800, parComLegenda = false) => {
   const lista = (fotos || []).map(f => typeof f === "string" ? { foto: f } : f).filter(f => f && f.foto);
   const html = []; let i = 0;
   while (i < lista.length) {
     const a = lista[i], b = lista[i + 1];
     const fig = (f, cls = "") => `<figure class="foto${cls}"><img src="${esc(thumb(f.foto, w))}" alt="${esc(f.legenda || f.descricao_foto || "")}" loading="lazy">${f.legenda ? `<figcaption>${esc(f.legenda)}</figcaption>` : ""}</figure>`;
-    if (i > 0 && b && !a.legenda && !b.legenda) { html.push(`<div class="fotos-par">${fig(a)}${fig(b)}</div>`); i += 2; }
+    if (i > 0 && b && (parComLegenda || (!a.legenda && !b.legenda))) { html.push(`<div class="fotos-par">${fig(a)}${fig(b)}</div>`); i += 2; }
     else { html.push(fig(a, " foto--larga")); i += 1; }
   }
   return html.join("\n");
@@ -497,7 +497,7 @@ if (diario.length) {
 </section>
 ${d.capa ? `<img class="editorial__capa" src="${esc(thumb(d.capa, 2560))}" alt="" fetchpriority="high">` : ""}
 <section class="editorial__corpo texto-longo">${paragrafos(d.texto || "")}</section>
-${(d.fotos || []).length ? `<section class="editorial__fotos">${sequenciaFotos(d.fotos)}</section>` : ""}
+${(d.fotos || []).length ? `<section class="editorial__fotos editorial__fotos--inteiras">${sequenciaFotos(d.fotos, 1800, true)}</section>` : ""}
 ${lista.length ? `<section class="secao">${cab("Peças citadas")}<ul class="grade grade--3">${lista.map(p => card(p)).join("")}</ul></section>` : ""}
 ${diario.length > 1 ? `<section class="secao">${cab("Outros ensaios", "/diario/", "Todos os ensaios")}<ul class="ensaios">${diario.filter(x => x !== d).slice(0, 3).map(cartaoDiario).join("")}</ul></section>` : ""}`,
     }));
