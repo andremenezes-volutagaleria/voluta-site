@@ -21,7 +21,7 @@ const brl = n => "R$ " + Number(n).toLocaleString("pt-BR", { maximumFractionDigi
 const NETLIFY = !!process.env.NETLIFY;
 const thumb = (url, w = 900) => {
   if (!url) return "";
-  if (url.includes("static-assets.artlogic.net")) return url.replace(/w_\d+,h_\d+,c_limit/, `w_${w},h_${w},c_limit`);
+  if (url.includes("static-assets.artlogic.net")) return url.replace(/w_\d+,h_\d+,c_limit/, `w_${Math.min(w, 1600)},h_${Math.min(w, 1600)},c_limit`); // acima de 1600 o Artlogic não serve a imagem
   if (NETLIFY) return `/.netlify/images?url=${encodeURIComponent(url)}&w=${w}&q=80`;
   return url;
 };
