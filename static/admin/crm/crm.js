@@ -657,25 +657,53 @@
   }
 
   // ---------- Despesas ----------
-  // Categorias fixas de despesa (aparecem mesmo sem nenhum lançamento ainda); as outras vêm dos próprios lançamentos.
+  // A lista de categorias e subcategorias fica salva no próprio despesas.json (campo "categorias")
+  // e é editada no botão "Categorias". Enquanto não houver lista salva, ela é montada com as
+  // categorias abaixo mais as que já aparecem nos lançamentos.
   const CAT_DESPESA = {
     "Embalagem": ["Filme stretch", "Plástico bolha", "Papelão", "Fitas e etiquetas", "Cobertores e mantas", "Mão de obra"],
     "Restauro": ["Tecidos", "Verniz", "Tinta", "Outros materiais"],
     "Loja Reforma": ["Tinta", "Material", "Placa de inox", "Cortina", "Mão de obra", "Pedreiro", "Pintura", "Estrutura", "Parede de gesso"],
   };
-  const catsDespesa = () => [...new Set([...Object.keys(CAT_DESPESA), ...unicos(D.despesas.itens, d => d.categoria)])];
+  const igual = (a, b) => norm(String(a || "").trim()) === norm(String(b || "").trim());
+  function arvore() {
+    if (!Array.isArray(D.despesas.categorias)) {
+      const lista = Object.entries(CAT_DESPESA).map(([nome, subs]) => ({ nome, subs: [...subs] }));
+      D.despesas.itens.forEach(d => { if (d.categoria) garantir(d.categoria, d.subcategoria, lista); });
+      D.despesas.categorias = lista;
+    }
+    return D.despesas.categorias;
+  }
+  // Coloca na lista a categoria/subcategoria digitada num lançamento, se ainda não estiver lá
+  function garantir(cat, sub, lista = arvore()) {
+    if (!cat) return;
+    let c = lista.find(x => igual(x.nome, cat));
+    if (!c) lista.push(c = { nome: cat, subs: [] });
+    if (sub && !c.subs.some(s => igual(s, sub))) c.subs.push(sub);
+  }
+  const catsDespesa = () => [...new Set([...arvore().map(c => c.nome), ...unicos(D.despesas.itens, d => d.categoria)])];
   const subsDespesa = cat => {
-    const daCat = [...(CAT_DESPESA[cat] || []), ...D.despesas.itens.filter(d => d.categoria === cat).map(d => d.subcategoria)].filter(Boolean);
-    return [...new Set(daCat.length ? daCat : [...Object.values(CAT_DESPESA).flat(), ...unicos(D.despesas.itens, d => d.subcategoria)])];
+    const c = arvore().find(x => igual(x.nome, cat));
+    const daCat = [...(c?.subs || []), ...D.despesas.itens.filter(d => igual(d.categoria, cat)).map(d => d.subcategoria)].filter(Boolean);
+    return [...new Set(daCat.length ? daCat : arvore().flatMap(x => x.subs))];
   };
+  // Usa o nome já cadastrado quando a pessoa digita com outra caixa ou sem acento ("fotografia" → "Fotografia")
+  const nomeCat = cat => arvore().find(x => igual(x.nome, cat))?.nome || cat;
+  const nomeSub = (cat, sub) => arvore().find(x => igual(x.nome, cat))?.subs.find(s => igual(s, sub)) || sub;
+
+  const selDesp = new Set();       // despesas marcadas para mudança em lote
   function despesas() {
+    arvore();
+    for (const d of selDesp) if (!D.despesas.itens.includes(d)) selDesp.delete(d);
     const cats = catsDespesa(), anos = unicos(D.despesas.itens, d => (d.data || "").slice(0, 4)).reverse();
     tabela({
       linhas: () => D.despesas.itens, chaveInicial: "data", dirInicial: -1, totais: true, nomeCsv: "voluta-despesas", aoClicar: formDespesa,
-      filtros: `<select id="fcat" aria-label="Categoria"><option value="">Todas as categorias</option>${opts(cats)}</select><select id="fano" aria-label="Ano"><option value="">Todos os anos</option>${opts(anos)}</select>`,
-      aplicar: d => (!document.getElementById("fcat").value || d.categoria === document.getElementById("fcat").value) && (!document.getElementById("fano").value || (d.data || "").startsWith(document.getElementById("fano").value)),
-      botoes: `<button class="bt bt--prim bt--peq" id="nova" type="button">+ Nova despesa</button>`,
+      filtros: `<select id="fcat" aria-label="Categoria"><option value="">Todas as categorias</option>${opts(cats)}</select><select id="fsub" aria-label="Subcategoria"><option value="">Todas as subcategorias</option></select><select id="fano" aria-label="Ano"><option value="">Todos os anos</option>${opts(anos)}</select>`,
+      aplicar: d => { const c = document.getElementById("fcat").value, s = document.getElementById("fsub").value, a = document.getElementById("fano").value;
+        return (!c || d.categoria === c) && (!s || (s === "__vazio" ? !d.subcategoria : d.subcategoria === s)) && (!a || (d.data || "").startsWith(a)); },
+      botoes: `<button class="bt bt--peq" id="gerir-cats" type="button">Categorias</button><button class="bt bt--prim bt--peq" id="nova" type="button">+ Nova despesa</button>`,
       colunas: [
+        { oculto: "Selecionar", cls: "td-ed td-sel", h: d => `<input type="checkbox" class="sel" ${selDesp.has(d) ? "checked" : ""} aria-label="Selecionar ${e(d.descricao || d.id)}">` },
         { r: "Data", k: "data", v: d => d.data, h: d => dataBR(d.data) || '<span class="cinza">—</span>', cls: "num" },
         { r: "Categoria", v: d => d.categoria },
         { r: "Subcategoria", v: d => d.subcategoria },
@@ -684,7 +712,71 @@
       ],
     });
     document.getElementById("nova").addEventListener("click", () => formDespesa(null));
+    document.getElementById("gerir-cats").addEventListener("click", gerirCategorias);
+
+    // Filtro de subcategoria acompanha a categoria escolhida
+    const fcat = document.getElementById("fcat"), fsub = document.getElementById("fsub");
+    const encherSub = () => {
+      const c = fcat.value, atual = fsub.value;
+      const subs = c ? subsDespesa(c) : unicos(D.despesas.itens, d => d.subcategoria);
+      fsub.innerHTML = `<option value="">Todas as subcategorias</option>${opts(subs)}<option value="__vazio">Sem subcategoria</option>`;
+      fsub.value = [...fsub.options].some(o => o.value === atual) ? atual : "";
+    };
+    fcat.addEventListener("change", () => { encherSub(); fsub.dispatchEvent(new Event("input")); });
+    encherSub();
+
+    // Barra de seleção em lote, logo acima da tabela
+    const barra = document.createElement("div");
+    barra.className = "lote"; barra.setAttribute("role", "status");
+    conteudo().querySelector(".rolagem").before(barra);
+    const corpo = document.getElementById("corpo");
+    const visiveis = () => corpo._linhas || [];
+    const th = conteudo().querySelector('th[data-i="0"]');
+    th.innerHTML = `<input type="checkbox" id="sel-todas" aria-label="Selecionar todas as despesas visíveis">`;
+    th.classList.add("th-sel");
+    const selTodas = th.querySelector("input");
+    const atualizar = () => {
+      const vis = visiveis(), marcadasVis = vis.filter(d => selDesp.has(d)).length;
+      selTodas.checked = vis.length > 0 && marcadasVis === vis.length;
+      selTodas.indeterminate = marcadasVis > 0 && marcadasVis < vis.length;
+      const tot = [...selDesp].reduce((s, d) => s + n(d.valor), 0);
+      barra.innerHTML = selDesp.size
+        ? `<b>${selDesp.size} ${selDesp.size === 1 ? "despesa selecionada" : "despesas selecionadas"}</b> <span class="cinza">· ${R(tot)}</span>
+           <button class="bt bt--prim bt--peq" type="button" data-lote="mudar">Mudar categoria / subcategoria</button>
+           <button class="bt bt--peq" type="button" data-lote="limpar">Limpar seleção</button>`
+        : `<span class="cinza">Marque as caixinhas para mudar várias despesas de uma vez. Dica: segure Shift para marcar um intervalo, ou filtre e marque a caixa do cabeçalho.</span>`;
+    };
+    barra.addEventListener("click", ev => {
+      const a = ev.target.closest("[data-lote]")?.dataset.lote;
+      if (a === "limpar") { selDesp.clear(); corpo.querySelectorAll("input.sel").forEach(i => { i.checked = false; }); atualizar(); }
+      if (a === "mudar") mudarEmLote();
+    });
+    selTodas.addEventListener("change", () => {
+      visiveis().forEach(d => selTodas.checked ? selDesp.add(d) : selDesp.delete(d));
+      corpo.querySelectorAll("input.sel").forEach(i => { i.checked = selTodas.checked; });
+      atualizar();
+    });
+    let ultima = null;
+    const marcar = (tr, valor, shift) => {
+      const vis = visiveis(), i = +tr.dataset.l;
+      const [de, ate] = shift && ultima != null ? [Math.min(ultima, i), Math.max(ultima, i)] : [i, i];
+      for (let k = de; k <= ate; k++) {
+        if (!vis[k]) continue;
+        valor ? selDesp.add(vis[k]) : selDesp.delete(vis[k]);
+        const cx = corpo.querySelector(`tr[data-l="${k}"] input.sel`); if (cx) cx.checked = valor;
+      }
+      ultima = i; atualizar();
+    };
+    corpo.addEventListener("click", ev => {
+      const td = ev.target.closest("td.td-sel"); if (!td) return;
+      const cx = td.querySelector("input.sel"), tr = td.closest("tr[data-l]");
+      if (ev.target !== cx) cx.checked = !cx.checked;      // clicar ao redor da caixinha também marca
+      marcar(tr, cx.checked, ev.shiftKey);
+    });
+    conteudo().querySelectorAll(".filtros input, .filtros select").forEach(x => x.addEventListener("input", () => { ultima = null; atualizar(); }));
+    atualizar();
   }
+
   function formDespesa(d) {
     const nova = !d, x = d || { data: hoje() };
     abrir(`<h2>${nova ? "Nova despesa" : "Despesa"}</h2>
@@ -703,20 +795,168 @@
       });
       raiz.querySelector("#salvar").addEventListener("click", async ev => {
         ev.currentTarget.disabled = true;
-        const y = { ...x, data: val(raiz, "d-data"), categoria: val(raiz, "d-cat"), subcategoria: val(raiz, "d-sub"), descricao: val(raiz, "d-desc"), valor: n(val(raiz, "d-valor")), obs: val(raiz, "d-obs") };
-        const antes = structuredClone(D.despesas.itens);
+        const cat = nomeCat(val(raiz, "d-cat")), sub = nomeSub(cat, val(raiz, "d-sub"));
+        const y = { ...x, data: val(raiz, "d-data"), categoria: cat, subcategoria: sub, descricao: val(raiz, "d-desc"), valor: n(val(raiz, "d-valor")), obs: val(raiz, "d-obs") };
+        const antes = structuredClone(D.despesas);
         try {
           if (!y.valor) throw new Error("Preencha o valor.");
           if (!y.categoria) throw new Error("Escolha ou escreva uma categoria.");
+          garantir(y.categoria, y.subcategoria);
           if (nova) { y.id = proxId(D.despesas.itens, "D"); D.despesas.itens.push(y); } else D.despesas.itens[D.despesas.itens.indexOf(d)] = y;
           await salvar("despesas", `${nova ? "despesa" : "alteração de despesa"} ${y.descricao}`);
+          if (selDesp.delete(d)) selDesp.add(y);
           dlg.close(); montar("Despesa salva.");
-        } catch (err) { D.despesas.itens = antes; erroForm(raiz, err); }
+        } catch (err) { D.despesas = antes; erroForm(raiz, err); }
       });
       confirmarExclusao(raiz, async () => {
-        const antes = structuredClone(D.despesas.itens);
-        try { D.despesas.itens.splice(D.despesas.itens.indexOf(d), 1); await salvar("despesas", `exclusão de despesa ${x.descricao}`); dlg.close(); montar("Despesa excluída."); }
-        catch (err) { D.despesas.itens = antes; erroForm(raiz, err); }
+        const antes = structuredClone(D.despesas);
+        try { D.despesas.itens.splice(D.despesas.itens.indexOf(d), 1); await salvar("despesas", `exclusão de despesa ${x.descricao}`); selDesp.delete(d); dlg.close(); montar("Despesa excluída."); }
+        catch (err) { D.despesas = antes; erroForm(raiz, err); }
+      });
+    });
+  }
+
+  // Muda categoria e/ou subcategoria de todas as despesas selecionadas, num único salvamento
+  function mudarEmLote() {
+    const sel = [...selDesp]; if (!sel.length) return;
+    const cont = new Map(); sel.forEach(d => { const k = `${d.categoria || "Sem categoria"}${d.subcategoria ? " › " + d.subcategoria : ""}`; cont.set(k, (cont.get(k) || 0) + 1); });
+    const atuais = [...cont].sort((a, b) => b[1] - a[1]);
+    abrir(`<h2>Mudar ${sel.length} ${sel.length === 1 ? "despesa" : "despesas"}</h2>
+      <p class="cinza" style="font-size:12px;margin:-8px 0 12px">Hoje estão em: ${atuais.slice(0, 8).map(([k, v]) => `${e(k)} (${v})`).join(", ")}${atuais.length > 8 ? "…" : ""}</p>
+      <div class="campos">
+        ${campo("l-cat", "Nova categoria", "", { lista: catsDespesa(), cls: "campo--2" })}
+        <div class="campo"></div>
+        ${campo("l-sub", "Nova subcategoria", "", { lista: subsDespesa(""), cls: "campo--2" })}
+        <label class="campo campo__flag"><span><input type="checkbox" id="l-limpa"> Deixar sem subcategoria</span></label>
+      </div>
+      <p class="cinza" style="font-size:12px;margin:10px 0 0">Campo em branco = mantém como está. Se escrever um nome novo, ele entra na lista de categorias.</p>
+      <div class="resumo" id="l-prev"></div>
+      ${rodape(false)}`, raiz => {
+      const cat = () => nomeCat(val(raiz, "l-cat")), limpa = () => raiz.querySelector("#l-limpa").checked;
+      const sub = () => limpa() ? "" : nomeSub(cat() || "", val(raiz, "l-sub"));
+      const prev = () => {
+        const c = cat(), s = sub();
+        const muda = sel.filter(d => (c && d.categoria !== c) || (limpa() ? !!d.subcategoria : s && d.subcategoria !== s)).length;
+        raiz.querySelector("#l-prev").innerHTML = !c && !s && !limpa() ? `<span class="cinza">Escolha a categoria, a subcategoria ou as duas.</span>`
+          : `<span>Vai ficar: <b>${e(c || "(categoria de cada uma)")}</b> › <b>${limpa() ? "sem subcategoria" : e(s || "(subcategoria de cada uma)")}</b></span><span>${muda} de ${sel.length} mudam</span>`;
+      };
+      raiz.querySelector("#l-cat").addEventListener("input", () => { raiz.querySelector("#l-sub-l").innerHTML = subsDespesa(cat()).map(o => `<option value="${e(o)}">`).join(""); prev(); });
+      raiz.querySelector("#l-sub").addEventListener("input", prev);
+      raiz.querySelector("#l-limpa").addEventListener("change", () => { raiz.querySelector("#l-sub").disabled = limpa(); prev(); });
+      prev();
+      raiz.querySelector("#salvar").addEventListener("click", async ev => {
+        ev.currentTarget.disabled = true;
+        const c = cat(), s = sub(), antes = structuredClone(D.despesas);
+        try {
+          if (!c && !s && !limpa()) throw new Error("Escolha a nova categoria e/ou subcategoria.");
+          let qtd = 0;
+          for (const d of sel) {
+            const i = D.despesas.itens.indexOf(d); if (i < 0) continue;
+            const y = { ...d };
+            if (c) y.categoria = c;
+            if (limpa()) y.subcategoria = ""; else if (s) y.subcategoria = s;
+            if (y.categoria === d.categoria && y.subcategoria === d.subcategoria) continue;
+            garantir(y.categoria, y.subcategoria);
+            D.despesas.itens[i] = y; qtd++;
+          }
+          if (!qtd) throw new Error("Nada muda: as despesas selecionadas já estão assim.");
+          await salvar("despesas", `${qtd} despesas mudadas para ${c || "mesma categoria"}${s ? " › " + s : ""}`);
+          selDesp.clear(); dlg.close(); montar(`${qtd} ${qtd === 1 ? "despesa mudada" : "despesas mudadas"}.`);
+        } catch (err) { D.despesas = antes; erroForm(raiz, err); }
+      });
+    });
+  }
+
+  // Painel de categorias e subcategorias: criar, renomear, juntar e excluir.
+  // Renomear muda também todas as despesas que usam o nome antigo; renomear para um nome que já existe junta as duas.
+  function gerirCategorias() {
+    const usoCat = nome => D.despesas.itens.filter(d => d.categoria === nome).length;
+    const usoSub = (cat, sub) => D.despesas.itens.filter(d => d.categoria === cat && d.subcategoria === sub).length;
+    // Cópia de trabalho: só vale ao clicar em Salvar. "orig" guarda o nome antigo para levar as despesas junto.
+    const lista = arvore().map(c => ({ orig: c.nome, nome: c.nome, subs: c.subs.map(s => ({ orig: s, nome: s })) }));
+    abrir(`<h2>Categorias de despesa</h2>
+      <p class="cinza" style="font-size:12px;margin:-8px 0 12px">Mudar um nome aqui muda também as despesas que já usam esse nome. Para juntar duas, renomeie uma com o nome exato da outra. Só dá para excluir o que não tem despesa (mova antes pela seleção em lote).</p>
+      <div class="cats" id="cats"></div>
+      <div class="cats__nova"><input id="nova-cat" placeholder="Nova categoria" aria-label="Nova categoria"><button class="bt bt--peq" type="button" id="add-cat">+ Categoria</button></div>
+      ${rodape(false)}`, raiz => {
+      const caixa = raiz.querySelector("#cats");
+      const desenhar = (foco) => {
+        caixa.innerHTML = lista.map((c, i) => {
+          const nCat = c.orig ? usoCat(c.orig) : 0;
+          return `<details class="cat" data-c="${i}" ${c.aberta ? "open" : ""}>
+            <summary><span class="cat__seta" aria-hidden="true"></span><input class="cat__nome" data-c="${i}" value="${e(c.nome)}" aria-label="Nome da categoria">
+              <span class="cat__uso">${nCat} ${nCat === 1 ? "despesa" : "despesas"} · ${c.subs.length} sub</span>
+              <button class="cat__x" type="button" data-del-cat="${i}" ${nCat ? `disabled title="Tem ${nCat} despesas: mova antes de excluir"` : ""} aria-label="Excluir categoria ${e(c.nome)}">Excluir</button></summary>
+            <ul class="subs">${c.subs.map((s, j) => { const nS = c.orig && s.orig ? usoSub(c.orig, s.orig) : 0;
+              return `<li><input class="sub__nome" data-c="${i}" data-s="${j}" value="${e(s.nome)}" aria-label="Subcategoria de ${e(c.nome)}"><span class="cat__uso">${nS || ""}</span>
+                <button class="cat__x" type="button" data-del-sub="${i}:${j}" ${nS ? `disabled title="Tem ${nS} despesas: mova antes de excluir"` : ""} aria-label="Excluir subcategoria ${e(s.nome)}">×</button></li>`; }).join("")}
+              <li class="subs__nova"><input data-nova-sub="${i}" placeholder="Nova subcategoria" aria-label="Nova subcategoria de ${e(c.nome)}"><button class="bt bt--peq" type="button" data-add-sub="${i}">+ Sub</button></li></ul>
+          </details>`;
+        }).join("");
+        if (foco) caixa.querySelector(foco)?.focus();
+      };
+      caixa.addEventListener("toggle", ev => { const d = ev.target.closest("details.cat"); if (d) lista[+d.dataset.c].aberta = d.open; }, true);
+      // Clicar no nome edita em vez de abrir/fechar
+      caixa.addEventListener("click", ev => { if (ev.target.matches("summary input, summary button")) ev.preventDefault(); });
+      caixa.addEventListener("keydown", ev => { if (ev.target.matches("summary input") && (ev.key === " " || ev.key === "Enter")) { ev.stopPropagation(); if (ev.key === "Enter") ev.preventDefault(); } });
+      caixa.addEventListener("input", ev => {
+        const t = ev.target;
+        if (t.matches(".cat__nome")) lista[+t.dataset.c].nome = t.value;
+        if (t.matches(".sub__nome")) lista[+t.dataset.c].subs[+t.dataset.s].nome = t.value;
+      });
+      const addSub = i => {
+        const inp = caixa.querySelector(`[data-nova-sub="${i}"]`), v = inp.value.trim(); if (!v) return;
+        if (!lista[i].subs.some(s => igual(s.nome, v))) lista[i].subs.push({ orig: null, nome: v });
+        lista[i].aberta = true; desenhar(`[data-nova-sub="${i}"]`);
+      };
+      caixa.addEventListener("click", ev => {
+        const b = ev.target.closest("button"); if (!b || b.disabled) return;
+        if (b.dataset.delCat) { lista.splice(+b.dataset.delCat, 1); desenhar(); }
+        if (b.dataset.delSub) { const [i, j] = b.dataset.delSub.split(":").map(Number); lista[i].subs.splice(j, 1); desenhar(); }
+        if (b.dataset.addSub) addSub(+b.dataset.addSub);
+      });
+      caixa.addEventListener("keydown", ev => { if (ev.key === "Enter" && ev.target.dataset.novaSub) { ev.preventDefault(); addSub(+ev.target.dataset.novaSub); } });
+      const addCat = () => {
+        const inp = raiz.querySelector("#nova-cat"), v = inp.value.trim(); if (!v) return;
+        const ja = lista.find(c => igual(c.nome, v));
+        if (ja) ja.aberta = true; else lista.push({ orig: null, nome: v, subs: [], aberta: true });
+        inp.value = ""; desenhar(`[data-nova-sub="${lista.indexOf(ja || lista.at(-1))}"]`);
+      };
+      raiz.querySelector("#add-cat").addEventListener("click", addCat);
+      raiz.querySelector("#nova-cat").addEventListener("keydown", ev => { if (ev.key === "Enter") { ev.preventDefault(); addCat(); } });
+      desenhar();
+
+      raiz.querySelector("#salvar").addEventListener("click", async ev => {
+        ev.currentTarget.disabled = true;
+        const antes = structuredClone(D.despesas);
+        try {
+          for (const c of lista) { c.nome = c.nome.trim(); c.subs.forEach(s => { s.nome = s.nome.trim(); }); }
+          if (lista.some(c => !c.nome)) throw new Error("Tem categoria sem nome.");
+          if (lista.some(c => c.subs.some(s => !s.nome))) throw new Error("Tem subcategoria sem nome (apague com × se não quiser).");
+          // Nova lista, juntando nomes iguais
+          const nova = [];
+          for (const c of lista) {
+            let alvo = nova.find(x => igual(x.nome, c.nome));
+            if (!alvo) nova.push(alvo = { nome: c.nome, subs: [] });
+            c.subs.forEach(s => { if (!alvo.subs.some(x => igual(x, s.nome))) alvo.subs.push(s.nome); });
+          }
+          const canonCat = nome => nova.find(x => igual(x.nome, nome)).nome;
+          const canonSub = (cat, sub) => nova.find(x => igual(x.nome, cat)).subs.find(x => igual(x, sub)) || sub;
+          // Leva os novos nomes para as despesas
+          let mudadas = 0;
+          D.despesas.itens = D.despesas.itens.map(d => {
+            const c = lista.find(x => x.orig && x.orig === d.categoria); if (!c) return d;
+            const s = d.subcategoria ? c.subs.find(x => x.orig && x.orig === d.subcategoria) : null;
+            const cat = canonCat(c.nome), sub = s ? canonSub(cat, s.nome) : d.subcategoria;
+            if (cat === d.categoria && sub === d.subcategoria) return d;
+            mudadas++; return { ...d, categoria: cat, subcategoria: sub };
+          });
+          // Subcategoria usada em despesa mas apagada da lista volta para a lista (não se perde)
+          D.despesas.categorias = nova;
+          D.despesas.itens.forEach(d => garantir(d.categoria, d.subcategoria, nova));
+          await salvar("despesas", `categorias de despesa atualizadas${mudadas ? ` (${mudadas} despesas renomeadas)` : ""}`);
+          selDesp.clear(); dlg.close(); montar(`Categorias salvas${mudadas ? `. ${mudadas} ${mudadas === 1 ? "despesa acompanhou" : "despesas acompanharam"} os novos nomes` : ""}.`);
+        } catch (err) { D.despesas = antes; erroForm(raiz, err); }
       });
     });
   }

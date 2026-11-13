@@ -202,6 +202,34 @@
   .foto-peca__acoes p { flex-basis: 100%; }
   .foto-peca label.bt { font-size: 10.5px; color: var(--vinho); }
   .foto-peca__flag { font-size: 13px; white-space: nowrap; display: flex; align-items: center; gap: 6px; cursor: pointer; }
+  /* Despesas: seleção em lote e painel de categorias */
+  .tabela td.td-sel, .tabela th.th-sel { width: 34px; text-align: center; padding-left: 10px; padding-right: 4px; cursor: pointer; }
+  .tabela input.sel, #sel-todas { width: 15px; height: 15px; accent-color: var(--vinho); cursor: pointer; margin: 0; vertical-align: middle; }
+  .lote { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; min-height: 34px; font-size: 12.5px; margin: -4px 0 10px; }
+  .lote b { font-weight: 500; color: var(--vinho); }
+  .cats { max-height: 52vh; overflow: auto; border: 1px solid #ECE8E4; background: #fff; }
+  .cat { border-bottom: 1px solid #F0ECE8; }
+  .cat:last-child { border-bottom: 0; }
+  .cat summary { display: flex; align-items: center; gap: 8px; padding: 6px 10px; cursor: pointer; list-style: none; }
+  .cat summary::-webkit-details-marker { display: none; }
+  .cat__seta::before { content: "▸"; color: var(--cinza); font-size: 11px; display: inline-block; width: 10px; transition: transform .15s; }
+  .cat[open] .cat__seta::before { transform: rotate(90deg); }
+  .cat__nome, .sub__nome { font: 400 13.5px var(--texto); color: var(--tinta); border: 1px solid transparent; background: none; padding: 5px 7px; flex: 1; min-width: 0; }
+  .cat__nome { font-weight: 500; }
+  .cat__nome:hover, .sub__nome:hover { border-color: var(--linha); }
+  .cat__nome:focus, .sub__nome:focus { outline: 2px solid var(--mostarda); outline-offset: -1px; background: #fff; }
+  .cat__uso { font-size: 11.5px; color: var(--cinza); white-space: nowrap; min-width: 18px; text-align: right; }
+  .cat__x { all: unset; cursor: pointer; font-size: 11.5px; color: #A3283A; padding: 3px 7px; }
+  .cat__x:hover, .cat__x:focus-visible { outline: 1px solid #EBC6CC; }
+  .cat__x[disabled] { color: #CFC6BE; cursor: not-allowed; outline: 0; }
+  .subs { list-style: none; margin: 0; padding: 0 10px 10px 34px; display: grid; gap: 2px; }
+  .subs li { display: flex; align-items: center; gap: 8px; }
+  .subs__nova input, .cats__nova input { font: 300 13px var(--texto); padding: 6px 9px; border: 1px dashed var(--linha); background: #FCFBF9; flex: 1; min-width: 0; }
+  .subs__nova { margin-top: 4px; }
+  .cats__nova { display: flex; gap: 8px; margin-top: 10px; }
+  .campo__flag { justify-content: flex-end; font-size: 12.5px; }
+  .campo__flag span { display: flex; align-items: center; gap: 6px; padding-bottom: 9px; cursor: pointer; }
+  .campo .campo__flag input, .campo__flag input { width: auto; padding: 0; accent-color: var(--vinho); }
   .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
 </style>
 </head>
