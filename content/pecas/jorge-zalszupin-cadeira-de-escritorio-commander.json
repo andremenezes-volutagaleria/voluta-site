@@ -1,0 +1,24 @@
+{
+  "imagens": [
+    "/uploads/pecas/1.png",
+    "/uploads/pecas/2.png",
+    "/uploads/pecas/3.png",
+    "/uploads/pecas/4.png",
+    "/uploads/pecas/5.png",
+    "/uploads/pecas/6.png",
+    "/uploads/pecas/7.png",
+    "/uploads/pecas/8.png"
+  ],
+  "destaque": false,
+  "ano": "1971",
+  "fabricante": "L’Atelier, Brasil",
+  "descricao": "Nos anos 1970, Jorge Zalszupin levou a L’Atelier para além da madeira e passou a explorar o alumínio, o cromado e uma produção mais industrial. A Commander é dessa fase: uma cadeira executiva de presença firme, pensada para o escritório moderno.\n\nA concha estofada em couro preto tem encosto alto e almofada central em relevo, e envolve o corpo com conforto e postura. Os braços em alumínio fundido, revestidos em couro na parte de apoio, terminam em peças cilíndricas que viraram assinatura do desenho. A base de quatro pés em alumínio, com sapatas niveladoras, completa a linguagem técnica e elegante da peça.\n\nA peça é assinada por Jorge Zalszupin.",
+  "ordem": 100,
+  "data": "2026-11-16",
+  "designer": "Jorge Zalszupin",
+  "status": "disponivel",
+  "categoria": "Cadeiras",
+  "codigo": "VLT-131",
+  "titulo": "Cadeira de escritório Commander",
+  "dimensoes": " Altura do encosto 0,90 x altura assento 0,40 x largura 0,70 x profundidade 0,5 x altura do braço 0,59 cm"
+}
