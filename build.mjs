@@ -550,7 +550,6 @@ write("contato/index.html", page({
 
 // Página de links da bio do Instagram (volutagaleria.com.br/links): só os atalhos, sem menu, fora do Google
 {
-  const novas = ordenarData(pecas.filter(p => p.status !== "vendido")).slice(0, 3);
   const msg = "Olá! Vim pelo Instagram da Voluta";
   const botoes = [
     ["/acervo/", "Acervo disponível", true],
@@ -582,10 +581,6 @@ ${analytics()}
     <p class="links__lema">Design Modernista</p>
     <p class="links__frase">“O Brasil está fadado ao modernismo.”</p>
   </header>
-  ${novas.length ? `<section class="links__novas" aria-labelledby="novas-t">
-    <h2 id="novas-t" class="links__rotulo">Recém-chegadas</h2>
-    <ul>${novas.map(p => `<li><a href="/acervo/${p.slug}/"><img src="${esc(thumb(p.imagens[0], 500))}" alt="${esc(p.titulo)}" loading="lazy"><span>${esc(p.titulo)}</span></a></li>`).join("")}</ul>
-  </section>` : ""}
   <nav class="links__lista" aria-label="Atalhos">
     ${botoes.map(([h, t, destaque]) => `<a class="botao ${destaque ? "" : "botao--linha"}${h.startsWith("https://wa.me") ? " com-ico" : ""}" href="${esc(h)}">${h.startsWith("https://wa.me") ? ICONE.wa : ""}<span>${esc(t)}</span></a>`).join("\n    ")}
   </nav>
