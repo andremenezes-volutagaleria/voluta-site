@@ -582,7 +582,7 @@ ${analytics()}
     <p class="links__frase">“O Brasil está fadado ao modernismo.”</p>
   </header>
   <nav class="links__lista" aria-label="Atalhos">
-    ${botoes.map(([h, t, destaque]) => `<a class="botao ${destaque ? "" : "botao--linha"}${h.startsWith("https://wa.me") ? " com-ico" : ""}" href="${esc(h)}">${h.startsWith("https://wa.me") ? ICONE.wa : ""}<span>${esc(t)}</span></a>`).join("\n    ")}
+    ${botoes.map(([h, t, destaque]) => `<a class="botao botao--linha${h.startsWith("https://wa.me") ? " com-ico" : ""}" href="${esc(h)}">${h.startsWith("https://wa.me") ? ICONE.wa : ""}<span>${esc(t)}</span></a>`).join("\n    ")}
   </nav>
   <footer class="links__rodape">
     <nav class="links__redes" aria-label="Redes">

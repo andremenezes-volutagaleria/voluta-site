@@ -410,3 +410,6 @@ a.com-ico:not(.botao):hover { color: var(--vinho); }
 .links__redes a:hover { color: var(--jacaranda); }
 .links__redes .ico { width: 26px; height: 26px; }
 .links__rodape p { margin: 0; }
+.links__lista .botao--linha { transition: background-color .25s, color .25s; }
+.links__lista .botao--linha:hover, .links__lista .botao--linha:active, .links__lista .botao--linha:focus-visible { background: var(--vinho); border-color: var(--vinho); color: var(--fundo); }
+.links__lista .botao--linha.com-ico:hover .ico, .links__lista .botao--linha.com-ico:active .ico { color: var(--fundo); }
