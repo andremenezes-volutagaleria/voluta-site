@@ -1,0 +1,24 @@
+{
+  "imagens": [
+    "/uploads/pecas/1.png",
+    "/uploads/pecas/2.png",
+    "/uploads/pecas/3.png",
+    "/uploads/pecas/4.png",
+    "/uploads/pecas/5.png",
+    "/uploads/pecas/6.png",
+    "/uploads/pecas/7.png",
+    "/uploads/pecas/8.png",
+    "/uploads/pecas/9.png",
+    "/uploads/pecas/10.png"
+  ],
+  "destaque": false,
+  "ano": "1960",
+  "descricao": "As cadeiras fazem par com o buffet de portas de palhinha e repetem a mesma linguagem: madeira de linhas retas e palhinha natural em recortes de cantos arredondados.\n\nO desenho é quase arquitetônico. As laterais formam molduras retangulares que descem até o chão, como pequenos trenós, e sustentam o assento e o encosto. O encosto em palhinha parece flutuar dentro da estrutura, solto das laterais por um vão que deixa a luz passar. Os parafusos de fixação aparentes nas laterais deixam a construção à mostra e viram detalhe do desenho.\n\nAssento e encosto em palhinha natural deixam a cadeira leve, fresca e confortável. Um conjunto feito para a mesa de jantar.",
+  "ordem": 100,
+  "data": "2026-11-16",
+  "designer": "Anonimo",
+  "status": "disponivel",
+  "categoria": "Cadeiras",
+  "codigo": "VLT-118",
+  "titulo": "Conjunto de 6 cadeiras com palhinha"
+}
