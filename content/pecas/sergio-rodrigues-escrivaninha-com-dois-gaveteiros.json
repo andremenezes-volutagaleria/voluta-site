@@ -1,0 +1,23 @@
+{
+  "imagens": [
+    "/uploads/pecas/1.png",
+    "/uploads/pecas/2.png",
+    "/uploads/pecas/3.png",
+    "/uploads/pecas/4.png",
+    "/uploads/pecas/5.png",
+    "/uploads/pecas/6.png",
+    "/uploads/pecas/7.png",
+    "/uploads/pecas/8.png"
+  ],
+  "restauro_mantido": "A escrivaninha passou por restauro completo. A madeira foi tratada para recuperar o brilho e a profundidade dos veios, os gaveteiros e as corrediças foram revisados, os gabinetes receberam couro verde novo e os detalhes em metal foram recromados. Tudo foi feito respeitando o desenho original de Sergio Rodrigues.",
+  "destaque": false,
+  "ano": "1960",
+  "descricao": "Na escrivaninha, Sergio Rodrigues aplica a linguagem que tornou seu trabalho inconfundível: madeira nobre maciça, desenho robusto e detalhes que mostram como a peça é construída. As pernas de seção quadrada terminam no alto em topos arredondados que avançam sobre o tampo, e as travessas laterais deixam a estrutura à vista, como uma moldura.\n\nOs dois gaveteiros, cada um com duas gavetas, ficam suspensos entre as pernas e soltos do chão, o que deixa a peça leve apesar da presença. As laterais dos gabinetes são revestidas em couro verde e contrastam com o tom quente da madeira. Os botões em metal cromado nas laterais fazem o acabamento.",
+  "ordem": 100,
+  "data": "2026-11-16",
+  "designer": "Sergio Rodrigues",
+  "status": "disponivel",
+  "categoria": "Escrivaninhas",
+  "codigo": "VLT-125",
+  "titulo": "Escrivaninha com dois gaveteiros"
+}
