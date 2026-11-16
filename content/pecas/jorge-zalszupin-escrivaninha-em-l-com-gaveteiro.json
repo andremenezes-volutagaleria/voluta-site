@@ -1,0 +1,23 @@
+{
+  "imagens": [
+    "/uploads/pecas/1.png",
+    "/uploads/pecas/2.png",
+    "/uploads/pecas/3.png",
+    "/uploads/pecas/4.png",
+    "/uploads/pecas/5.png",
+    "/uploads/pecas/6.png",
+    "/uploads/pecas/7.png"
+  ],
+  "restauro_mantido": "A escrivaninha e o gaveteiro passaram por restauro completo. O jacarandá foi tratado para recuperar o brilho e a profundidade dos veios taqueados, os puxadores em metal foram recromados e os painéis receberam couro novo. Tudo foi feito respeitando o desenho original de Zalszupin.",
+  "destaque": false,
+  "ano": "1960",
+  "fabricante": "Jorge Zalszupin - L'Atelier - Brasil",
+  "descricao": "Jorge Zalszupin desenhou essa escrivaninha para a L’Atelier com a lógica de quem era arquiteto antes de ser designer: volumes claros, encaixes precisos e uma composição que organiza o espaço de trabalho. O tampo principal se apoia em uma estrutura de pernas retas, e a ele se junta um retorno em L com gaveteiro e chave, que parece suspenso ao lado da peça.\n\nA madeira é jacarandá taqueado, técnica que marcou a produção da L’Atelier. A madeira é montada em blocos, e por isso cada frente de gaveta mostra uma sequência de veios em tons de mel, cobre e chocolate. Os puxadores em metal, de desenho simples e curvo, contrastam com a riqueza da madeira. Ao fundo, os painéis em couro escuro fecham a peça e trazem textura ao conjunto.\n\nAcompanha gaveteiro volante sobre rodízios, no mesmo jacarandá, com gaveta superior e painéis em couro.\n\nA peça é assinada por Jorge Zalszupin.",
+  "ordem": 100,
+  "data": "2026-11-16",
+  "designer": "Jorge Zalszupin",
+  "status": "disponivel",
+  "categoria": "Escrivaninhas",
+  "codigo": "VLT-132",
+  "titulo": "Escrivaninha em L com gaveteiro"
+}
