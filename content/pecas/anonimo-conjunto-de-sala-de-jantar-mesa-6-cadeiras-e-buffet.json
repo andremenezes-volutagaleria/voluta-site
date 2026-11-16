@@ -1,0 +1,19 @@
+{
+  "imagens": [
+    "/uploads/pecas/1.png",
+    "/uploads/pecas/2.png",
+    "/uploads/pecas/3.png",
+    "/uploads/pecas/4.png",
+    "/uploads/pecas/5.png"
+  ],
+  "destaque": false,
+  "ano": "1960",
+  "descricao": "Um conjunto completo de sala de jantar, pensado como um só projeto. Mesa, cadeiras e buffet falam a mesma língua: madeira de linhas retas, construção aparente e palhinha natural em recortes de cantos arredondados.\n\nA mesa tem desenho sóbrio e preciso. O tampo retangular mostra veios longos e tons quentes de mel, e se apoia em pernas maciças de seção quadrada, alinhadas aos cantos. É uma base firme e discreta, que deixa as cadeiras e o buffet aparecerem.\n\nAs seis cadeiras têm laterais em molduras retangulares que descem até o chão, como pequenos trenós. O encosto em palhinha parece flutuar dentro da estrutura, e os parafusos de fixação aparentes viram detalhe do desenho. Assento e encosto em palhinha deixam a cadeira leve e confortável.\n\nO buffet retoma a palhinha nas quatro portas, com três gavetas ao centro e puxadores quadrados em metal escuro. Ele se apoia sobre pés maciços ligados por travessas.\n\nConjuntos completos como este, com todas as peças originais do mesmo projeto, são cada vez mais raros.",
+  "ordem": 100,
+  "data": "2026-11-16",
+  "designer": "Anonimo",
+  "status": "disponivel",
+  "categoria": "Mesas de jantar",
+  "codigo": "VLT-118",
+  "titulo": "Conjunto de sala de jantar — mesa, 6 cadeiras e buffet"
+}
