@@ -1,0 +1,26 @@
+{
+  "imagens": [
+    "/uploads/pecas/1.png",
+    "/uploads/pecas/2.png",
+    "/uploads/pecas/3.png",
+    "/uploads/pecas/4.png",
+    "/uploads/pecas/5.png",
+    "/uploads/pecas/6.png",
+    "/uploads/pecas/7.png",
+    "/uploads/pecas/8.png",
+    "/uploads/pecas/9.png",
+    "/uploads/pecas/10.png",
+    "/uploads/pecas/11.png"
+  ],
+  "destaque": false,
+  "ano": "1978",
+  "descricao": "Sergio Rodrigues desenhou a linha Tajá em 1978, pensando em móveis para varanda: peças para o ar livre, para o descanso e para a vida ao redor da casa. Alguns protótipos da linha foram feitos para a varanda de um hotel em Mônaco.\n\nA Leve Tajá traduz esse espírito em madeira maciça e ripas largas. O encosto se abre em lâminas recortadas, cada uma com a ponta levemente arredondada, e os braços largos repousam sobre uma estrutura de pernas inclinadas, de encaixes aparentes. O desenho é generoso e rústico, com a escala baixa e acolhedora que Sergio dominava como ninguém. É uma poltrona para sentar sem pressa.\n\nAs peças são assinadas por Sergio Rodrigues.",
+  "ordem": 100,
+  "data": "2026-11-16",
+  "designer": "Sergio Rodrigues",
+  "status": "disponivel",
+  "categoria": "Poltronas",
+  "codigo": "VLT-114",
+  "titulo": "Conjunto Poltronas Tajá",
+  "dimensoes": "62 x 63 x 73 cm de altura"
+}
