@@ -585,7 +585,12 @@ ${analytics()}
     ${botoes.map(([h, t, destaque]) => `<a class="botao ${destaque ? "" : "botao--linha"}${h.startsWith("https://wa.me") ? " com-ico" : ""}" href="${esc(h)}">${h.startsWith("https://wa.me") ? ICONE.wa : ""}<span>${esc(t)}</span></a>`).join("\n    ")}
   </nav>
   <footer class="links__rodape">
-    <a href="https://www.instagram.com/${site.instagram}/">@${site.instagram}</a> · ${esc(site.cidade)}
+    <nav class="links__redes" aria-label="Redes">
+      <a href="/" aria-label="Site da Voluta"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M3 12h18M12 3c2.6 2.5 3.9 5.5 3.9 9s-1.3 6.5-3.9 9c-2.6-2.5-3.9-5.5-3.9-9S9.4 5.5 12 3Z" fill="none" stroke="currentColor" stroke-width="1.5"/></svg></a>
+      <a href="https://www.instagram.com/${site.instagram}/" aria-label="Instagram @${site.instagram}">${ICONE.ig}</a>
+      <a href="${esc(wa("Olá! Vim pelo Instagram da Voluta"))}" aria-label="WhatsApp">${ICONE.wa}</a>
+    </nav>
+    <p>${esc(site.cidade)}</p>
   </footer>
 </main>
 </body>

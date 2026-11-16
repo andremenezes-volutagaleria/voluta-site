@@ -405,3 +405,8 @@ a.com-ico:not(.botao):hover { color: var(--vinho); }
 .links__lista .botao--linha.com-ico .ico { color: var(--vinho); width: 18px; height: 18px; }
 .links__rodape { margin-top: 36px; font-size: 12px; color: var(--cinza); }
 .links__rodape a { text-decoration: none; }
+.links__redes { display: flex; justify-content: center; gap: 30px; margin-bottom: 18px; }
+.links__redes a { color: var(--vinho); display: inline-flex; }
+.links__redes a:hover { color: var(--jacaranda); }
+.links__redes .ico { width: 26px; height: 26px; }
+.links__rodape p { margin: 0; }
