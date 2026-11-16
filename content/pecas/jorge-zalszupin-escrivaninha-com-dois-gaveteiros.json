@@ -1,0 +1,27 @@
+{
+  "imagens": [
+    "/uploads/pecas/1.png",
+    "/uploads/pecas/2.png",
+    "/uploads/pecas/3.png",
+    "/uploads/pecas/4.png",
+    "/uploads/pecas/5.png",
+    "/uploads/pecas/6.png",
+    "/uploads/pecas/7.png",
+    "/uploads/pecas/8.png",
+    "/uploads/pecas/9.png",
+    "/uploads/pecas/10.png",
+    "/uploads/pecas/11.png"
+  ],
+  "restauro_mantido": "A escrivaninha passou por restauro completo. O jacarandá foi tratado para recuperar o brilho e a profundidade dos veios, as gavetas e as corrediças foram revisadas e os puxadores em metal foram recromados. O couro caramelo original foi preservado, limpo e hidratado, assim como a plaqueta do BANERJ, que segue como parte da história da peça.",
+  "destaque": false,
+  "ano": "1970",
+  "fabricante": "L’Atelier, Brasil",
+  "descricao": "Desenhada por Jorge Zalszupin e produzida pela L’Atelier, essa escrivaninha é da fase em que a empresa equipava os grandes escritórios do país com mobiliário moderno de alto padrão. A estrutura de jacarandá maciço desenha uma moldura de linhas retas: pernas de seção quadrada, travessas laterais aparentes e um tampo que parece repousar sobre o conjunto.\n\nO tampo é revestido em folheado de jacarandá, com veios longos em tons de cobre e chocolate. Os dois gaveteiros, cada um com duas gavetas, ficam suspensos dentro da estrutura e têm puxadores em metal de desenho simples. Ao fundo, o painel em couro caramelo fecha a peça e aquece o conjunto.\n\nA escrivaninha guarda ainda um registro da sua história: a plaqueta de patrimônio do BANERJ, o antigo Banco do Estado do Rio de Janeiro, onde ela serviu. É um documento discreto de como o design moderno brasileiro ocupou as instituições do país.",
+  "ordem": 100,
+  "data": "2026-11-16",
+  "designer": "Jorge Zalszupin",
+  "status": "disponivel",
+  "categoria": "Escrivaninhas",
+  "codigo": "VLT-130",
+  "titulo": "Escrivaninha com dois gaveteiros"
+}
