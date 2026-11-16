@@ -548,6 +548,55 @@ write("contato/index.html", page({
 </div></section>`,
 }));
 
+// Página de links da bio do Instagram (volutagaleria.com.br/links): só os atalhos, sem menu, fora do Google
+{
+  const novas = ordenarData(pecas.filter(p => p.status !== "vendido")).slice(0, 3);
+  const msg = "Olá! Vim pelo Instagram da Voluta";
+  const botoes = [
+    ["/acervo/", "Acervo disponível", true],
+    ...(atual ? [[`/exposicoes/${atual.slug}/`, `Exposição · ${atual.titulo}`]] : []),
+    [wa(msg), "Falar no WhatsApp"],
+    ["/restauro/", "Restauro"],
+    ...(diario.length ? [["/diario/", "Diário"]] : []),
+    [VENDA, "Venda sua peça à Voluta"],
+  ];
+  write("links/index.html", `<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Voluta | Design Modernista</title>
+<meta name="description" content="${esc(site.descricao)}">
+<meta name="robots" content="noindex">
+<link rel="canonical" href="${site.url}/links/">
+<meta property="og:title" content="Voluta | Design Modernista">
+<meta property="og:description" content="${esc(site.descricao)}">
+<link rel="icon" href="/favicon.ico" sizes="48x48"><link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32"><link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="stylesheet" href="/css/site.css?v=${V_CSS}">
+${analytics()}
+</head>
+<body class="links">
+<main class="links__in">
+  <header class="links__cab">
+    <a class="marca links__marca" href="/">Voluta</a>
+    <p class="links__lema">Design Modernista</p>
+    <p class="links__frase">“O Brasil está fadado ao modernismo.”</p>
+  </header>
+  ${novas.length ? `<section class="links__novas" aria-labelledby="novas-t">
+    <h2 id="novas-t" class="links__rotulo">Recém-chegadas</h2>
+    <ul>${novas.map(p => `<li><a href="/acervo/${p.slug}/"><img src="${esc(thumb(p.imagens[0], 500))}" alt="${esc(p.titulo)}" loading="lazy"><span>${esc(p.titulo)}</span></a></li>`).join("")}</ul>
+  </section>` : ""}
+  <nav class="links__lista" aria-label="Atalhos">
+    ${botoes.map(([h, t, destaque]) => `<a class="botao ${destaque ? "" : "botao--linha"}${h.startsWith("https://wa.me") ? " com-ico" : ""}" href="${esc(h)}">${h.startsWith("https://wa.me") ? ICONE.wa : ""}<span>${esc(t)}</span></a>`).join("\n    ")}
+  </nav>
+  <footer class="links__rodape">
+    <a href="https://www.instagram.com/${site.instagram}/">@${site.instagram}</a> · ${esc(site.cidade)}
+  </footer>
+</main>
+</body>
+</html>`);
+}
+
 write("404.html", page({ title: "Página não encontrada", body: `<section class="secao texto"><div class="texto__corpo"><h1 class="titulo-pagina">Esta página não existe mais</h1><p>A peça pode ter sido vendida ou mudado de endereço.</p><p><a class="botao" href="/acervo/">Ver o acervo</a></p></div></section>` }));
 
 // SEO: sitemap, robots
