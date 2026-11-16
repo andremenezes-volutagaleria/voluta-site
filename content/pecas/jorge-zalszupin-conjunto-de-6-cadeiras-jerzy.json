@@ -1,0 +1,26 @@
+{
+  "imagens": [
+    "/uploads/pecas/1.png",
+    "/uploads/pecas/2.png",
+    "/uploads/pecas/3.png",
+    "/uploads/pecas/4.png",
+    "/uploads/pecas/5.png",
+    "/uploads/pecas/6.png",
+    "/uploads/pecas/7.png",
+    "/uploads/pecas/8.png",
+    "/uploads/pecas/9.png",
+    "/uploads/pecas/10.png",
+    "/uploads/pecas/11.png"
+  ],
+  "destaque": false,
+  "ano": "1960",
+  "fabricante": "L’Atelier, Brasil",
+  "descricao": "Jorge Zalszupin desenhou essa cadeira para a L’Atelier no fim dos anos 1950, quando a marca ajudava a definir o que viria a ser o mobiliário moderno brasileiro. O desenho se apoia em duas conchas de jacarandá curvado, uma no assento e outra no encosto. Elas se abrem como lâminas sobre uma estrutura maciça de linhas retas, e a curvatura faz os veios da madeira correrem de ponta a ponta, mudando de tom conforme a luz.\n\nA cadeira tem presença forte e conforto raro para uma peça de jantar. O assento e o encosto são estofados em couro caramelo, que aquece o tom escuro do jacarandá e dá à peça a elegância discreta típica de Zalszupin.\n\nHoje ela é conhecida como Jerzy, a forma polonesa de Jorge, em referência às origens do arquiteto, que nasceu em Varsóvia e adotou o Brasil.",
+  "ordem": 100,
+  "data": "2026-11-15",
+  "designer": "Jorge Zalszupin",
+  "status": "disponivel",
+  "categoria": "Cadeiras",
+  "codigo": "VLT-122",
+  "titulo": "Conjunto de 6 cadeiras Jerzy "
+}
