@@ -114,7 +114,7 @@
     } catch {}
   }
   // Marcadores de acompanhamento da peça (bolinhas na tabela e caixas no formulário)
-  const MARCAS = [["em_restauro", "Em restauro"], ["entregue", "Entregue"], ["foto_tirada", "Foto tirada"], ["foto_postada", "Foto postada"]];
+  const MARCAS = [["em_restauro", "Em restauro"], ["entregue", "Entregue"], ["foto_tirada", "Foto tirada"], ["disponivel_site", "Disponível no site"], ["foto_postada", "Foto postada"]];
   // Data de hoje no fuso do computador (a postagem das 22h fica no dia certo, não no dia seguinte)
   const hojeLocal = () => { const d = new Date(); return new Date(d - d.getTimezoneOffset() * 6e4).toISOString().slice(0, 10); };
   const linhaDe = el => document.getElementById("corpo")?._linhas?.[+el.closest("tr")?.dataset.l];
@@ -360,7 +360,7 @@
       <select id="fst" aria-label="Status"><option value="">Todos os status</option><option value="disponivel">Disponível</option><option value="reservado">Reservado</option><option value="vendido">Vendido</option></select>
       <select id="fcat" aria-label="Categoria"><option value="">Todas as categorias</option>${opts(cats)}</select>
       <select id="forig" aria-label="Origem"><option value="">Leilão e direto</option><option>Leilão</option><option>Direto</option></select>
-      ${MARCAS.map(([k, r]) => `<select class="fmarca" data-k="${k}" aria-label="${r}"><option value="">${r}: todos</option><option value="1">${r}: sim</option><option value="0">${{ em_restauro: "Fora do restauro", entregue: "Não entregue", foto_tirada: "Falta tirar foto", foto_postada: "Falta postar" }[k]}</option></select>`).join("")}
+      ${MARCAS.map(([k, r]) => `<select class="fmarca" data-k="${k}" aria-label="${r}"><option value="">${r}: todos</option><option value="1">${r}: sim</option><option value="0">${{ em_restauro: "Fora do restauro", entregue: "Não entregue", foto_tirada: "Falta tirar foto", disponivel_site: "Fora do site", foto_postada: "Falta postar" }[k]}</option></select>`).join("")}
       <button type="button" class="bt bt--peq" id="flimpa">Limpar filtros</button>
       <label><input type="checkbox" id="fdet"> Mostrar NF, leiloeiro e custo op.</label>`;
     const montarTabela = () => {
