@@ -1213,6 +1213,7 @@
   const addMes = (m, k) => { let [y, mm] = m.split("-").map(Number); mm += k; while (mm > 12) { mm -= 12; y++; } while (mm < 1) { mm += 12; y--; } return `${y}-${String(mm).padStart(2, "0")}`; };
   const difMeses = (a, b) => { const [ya, ma] = a.split("-").map(Number), [yb, mb] = b.split("-").map(Number); return (yb - ya) * 12 + (mb - ma); };
   let graficoContas = null, filaContas = Promise.resolve(), timerContas = null, verPagos = false, mesContas = "todos";
+  const selConta = new Set();      // ids das contas marcadas para excluir em lote
   try { mesContas = localStorage.getItem("crm-mes-contas") || "todos"; } catch {}
   function guardarContas(msg = "contas") {
     const st = document.getElementById("salvo-contas"); if (st) { st.textContent = "Salvando…"; st.className = "cont"; }
@@ -1287,8 +1288,8 @@
         <tbody>${pr.map(x => `<tr data-mes="${x.m}" class="${x.m === mesContas ? "lin-sel" : ""}" title="Ver só ${rotMes(x.m)}"><td>${rotMes(x.m)}${x.m === hj.slice(0, 7) ? ' <span class="cinza" style="font-size:11px">(inclui atrasadas)</span>' : ""}</td><td class="n num">${R(x.ent)}</td><td class="n num">${R(x.sai)}</td><td class="n num" title="${e(x.fixos.map(f => `${f.nome}: ${R(f.valor)}`).join("\n"))}">${R(x.fx)}</td>${pr.some(y => y.vari) ? `<td class="n num">${R(x.vari)}</td>` : ""}<td class="n num ${x.res < 0 ? "neg" : ""}">${R(x.res)}</td><td class="n num ${x.saldo < 0 ? "neg" : ""}"><b>${R(x.saldo)}</b></td></tr>`).join("")}</tbody></table></div>
       </div>
       <div class="graficos" style="margin-top:14px">
-        <div class="graf"><h3>A pagar${nomeMes}</h3><p class="sub">Clique numa conta para editar · ✓ marca como paga e desconta do saldo${todos ? "" : " · os custos fixos do mês aparecem aqui também"}</p><div id="l-saida"></div></div>
-        <div class="graf"><h3>A receber${nomeMes}</h3><p class="sub">✓ marca como recebida e soma no saldo</p><div id="l-entrada"></div></div>
+        <div class="graf"><h3>A pagar${nomeMes}</h3><p class="sub">Clique numa conta para editar · ✓ marca como paga e desconta do saldo${todos ? "" : " · os custos fixos do mês aparecem aqui também"}</p><div class="lote" id="lote-saida"></div><div id="l-saida"></div></div>
+        <div class="graf"><h3>A receber${nomeMes}</h3><p class="sub">✓ marca como recebida e soma no saldo</p><div class="lote" id="lote-entrada"></div><div id="l-entrada"></div></div>
         <div class="graf"><h3>Custos fixos do mês</h3><p class="sub">Entram sozinhos em todo mês da previsão. Se você lançar a conta do mês (como o aluguel), ligue ela ao custo fixo para não contar duas vezes.</p><div id="l-fixos"></div></div>
         <div class="graf"><h3>Custos variáveis</h3><p class="sub">Anúncios, embalagem e outros gastos que mudam todo mês. Se quiser, coloque uma estimativa mensal para entrar na previsão.</p>
           <div class="campos" style="grid-template-columns:1fr"><div class="campo"><label for="vari">Estimativa por mês (R$)</label><input id="vari" class="cel" style="width:160px;text-align:left" inputmode="decimal" value="${e(numCel(c.variavel))}" placeholder="0">
@@ -1315,17 +1316,61 @@
       const feito = tipo === "saida" ? "pago" : "recebido";
       const fixosMes = tipo === "saida" && !todos ? linhaMes.fixos : [];
       const diaFixo = f => `${mesContas}-${String(Math.min(28, n(f.dia) || 1)).padStart(2, "0")}`;
-      const linhasFixos = fixosMes.map(f => `<tr class="lin-fixo" style="cursor:default"><td class="num">${dataBR(diaFixo(f))}</td><td class="larga">${e(f.nome)}<br><span class="cinza" style="font-size:11px">Custo fixo</span></td><td class="n num">${R(f.valor)}</td>
+      const linhasFixos = fixosMes.map(f => `<tr class="lin-fixo" style="cursor:default"><td></td><td class="num">${dataBR(diaFixo(f))}</td><td class="larga">${e(f.nome)}<br><span class="cinza" style="font-size:11px">Custo fixo</span></td><td class="n num">${R(f.valor)}</td>
         <td><button type="button" class="ok" data-ok-fixo="${e(f.id)}" title="Marcar como pago" aria-label="Marcar ${e(f.nome)} como pago">✓</button></td></tr>`).join("");
       const totPend = ls.filter(l => l.status === "pendente").reduce((s, l) => s + n(l.valor), 0) + fixosMes.reduce((s, f) => s + n(f.valor), 0);
-      document.getElementById("l-" + tipo).innerHTML = ls.length || fixosMes.length ? `<div class="rolagem" style="max-height:420px"><table class="tabela"><thead><tr><th>Data</th><th>O quê</th><th class="n">Valor</th><th><span class="visually-hidden">Situação</span></th></tr></thead><tbody>
+      document.getElementById("l-" + tipo).innerHTML = ls.length || fixosMes.length ? `<div class="rolagem" style="max-height:420px"><table class="tabela"><thead><tr><th class="th-sel">${ls.length ? `<input type="checkbox" class="sel-todas-c" data-tipo="${tipo}" aria-label="Selecionar todas desta lista">` : ""}</th><th>Data</th><th>O quê</th><th class="n">Valor</th><th><span class="visually-hidden">Situação</span></th></tr></thead><tbody>
         ${ls.map(l => { const atras = l.status === "pendente" && l.data < hj; return `<tr data-l="${e(l.id)}" class="${l.status !== "pendente" ? "lin-paga" : ""}">
-          <td class="num">${dataBR(l.data)}${atras ? ' <span class="st st--atraso">atrasada</span>' : ""}</td><td class="larga">${e(l.descricao)}${l.categoria || l.quem ? `<br><span class="cinza" style="font-size:11px">${e([l.categoria, l.quem].filter(Boolean).join(" · "))}</span>` : ""}</td>
+          <td class="td-sel"><input type="checkbox" class="sel-c" data-id="${e(l.id)}" ${selConta.has(l.id) ? "checked" : ""} aria-label="Selecionar ${e(l.descricao)}"></td><td class="num">${dataBR(l.data)}${atras ? ' <span class="st st--atraso">atrasada</span>' : ""}</td><td class="larga">${e(l.descricao)}${l.categoria || l.quem ? `<br><span class="cinza" style="font-size:11px">${e([l.categoria, l.quem].filter(Boolean).join(" · "))}</span>` : ""}</td>
           <td class="n num">${R(l.valor)}</td><td><button type="button" class="ok ${l.status !== "pendente" ? "ok--feito" : ""}" data-ok="${e(l.id)}" title="${l.status === "pendente" ? `Marcar como ${feito}` : "Voltar para pendente"}" aria-label="${l.status === "pendente" ? `Marcar como ${feito}` : "Voltar para pendente"}">✓</button></td></tr>`; }).join("")}${linhasFixos}
-        </tbody><tfoot><tr><td>Total pendente</td><td></td><td class="n num">${R(totPend)}</td><td></td></tr></tfoot></table></div>`
+        </tbody><tfoot><tr><td></td><td>Total pendente</td><td></td><td class="n num">${R(totPend)}</td><td></td></tr></tfoot></table></div>`
         : `<div class="vazio" style="height:80px">Nada pendente</div>`;
     }
+    // Seleção em lote: marcar várias contas e excluir de uma vez
+    for (const id of selConta) if (!c.lancamentos.some(l => l.id === id)) selConta.delete(id);
+    const visTipo = tipo => [...document.querySelectorAll(`#l-${tipo} input.sel-c`)].map(i => i.dataset.id);
+    const barraLote = tipo => {
+      const barra = document.getElementById("lote-" + tipo), vis = visTipo(tipo);
+      const marc = c.lancamentos.filter(l => l.tipo === tipo && selConta.has(l.id));
+      const todas = document.querySelector(`#l-${tipo} .sel-todas-c`);
+      if (todas) { const k = vis.filter(id => selConta.has(id)).length; todas.checked = vis.length > 0 && k === vis.length; todas.indeterminate = k > 0 && k < vis.length; }
+      barra.innerHTML = marc.length
+        ? `<b>${marc.length} ${marc.length === 1 ? "selecionada" : "selecionadas"}</b> <span class="cinza">· ${R(marc.reduce((s2, l) => s2 + n(l.valor), 0))}</span>
+           <button class="bt bt--peq" type="button" data-lote-ex="${tipo}">Excluir selecionadas</button>
+           <button class="bt bt--peq" type="button" data-lote-limpa="${tipo}">Limpar seleção</button>`
+        : (vis.length ? `<span class="cinza">Marque as caixinhas para excluir várias de uma vez.</span>` : "");
+    };
+    ["saida", "entrada"].forEach(barraLote);
+    for (const tipo of ["saida", "entrada"]) {
+      const barra = document.getElementById("lote-" + tipo);
+      barra.addEventListener("click", async ev => {
+        if (ev.target.closest("[data-lote-limpa]")) { c.lancamentos.filter(l => l.tipo === tipo).forEach(l => selConta.delete(l.id)); document.querySelectorAll(`#l-${tipo} input.sel-c`).forEach(i => { i.checked = false; }); barraLote(tipo); return; }
+        const b = ev.target.closest("[data-lote-ex]"); if (!b || b.dataset.rodando) return;
+        const marc = c.lancamentos.filter(l => l.tipo === tipo && selConta.has(l.id));
+        if (!marc.length) return;
+        if (!b.dataset.conf) { b.dataset.conf = Date.now(); b.textContent = `Confirmar: excluir ${marc.length}`; b.classList.add("bt--prim"); return; }
+        if (Date.now() - Number(b.dataset.conf) < 500) return;
+        b.dataset.rodando = "1"; b.disabled = true;
+        const antes = structuredClone(c);
+        const feitas = marc.filter(l => l.status !== "pendente");
+        const sinal = tipo === "entrada" ? 1 : -1;
+        if (feitas.length) c.saldo = { valor: n(c.saldo.valor) - sinal * feitas.reduce((s2, l) => s2 + n(l.valor), 0), data: hoje() };
+        c.lancamentos = c.lancamentos.filter(l => !marc.includes(l));
+        if (await guardarContas(`exclusão em lote: ${marc.length} ${tipo === "entrada" ? "a receber" : "a pagar"}`)) {
+          marc.forEach(l => selConta.delete(l.id)); contas();
+          alertaOk(`${marc.length} ${marc.length === 1 ? "conta excluída" : "contas excluídas"}.${feitas.length ? " O saldo foi ajustado pelas que já estavam pagas ou recebidas." : ""}`);
+        } else { D.contas = antes; contas(); alertaFaixa("Não foi possível excluir. Recarregue a página e tente de novo."); }
+      });
+      const box = document.getElementById("l-" + tipo);
+      box.addEventListener("change", ev => {
+        const t = ev.target.closest(".sel-todas-c");
+        if (t) { visTipo(tipo).forEach(id => t.checked ? selConta.add(id) : selConta.delete(id)); box.querySelectorAll("input.sel-c").forEach(i => { i.checked = t.checked; }); return barraLote(tipo); }
+        const i = ev.target.closest("input.sel-c"); if (!i) return;
+        i.checked ? selConta.add(i.dataset.id) : selConta.delete(i.dataset.id); barraLote(tipo);
+      });
+    }
     conteudo().querySelectorAll("#l-saida, #l-entrada").forEach(box => box.addEventListener("click", ev => {
+      if (ev.target.closest("input.sel-c, .sel-todas-c, .td-sel, .th-sel")) return;
       const okF = ev.target.closest("[data-ok-fixo]");
       if (okF) {   // paga um custo fixo do mês: vira uma conta paga ligada a ele (e sai da previsão daquele mês)
         const f = c.fixos.find(x => x.id === okF.dataset.okFixo); if (!f) return;
