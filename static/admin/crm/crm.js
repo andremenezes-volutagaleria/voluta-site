@@ -414,11 +414,17 @@
   const val = (raiz, id) => raiz.querySelector("#" + id)?.value.trim() ?? "";
   const rodape = (excluir) => `<p class="form__msg" id="msg" role="status"></p><div class="form__pe"><div>${excluir ? `<button class="bt bt--perigo" type="button" id="excluir">Excluir</button>` : ""}</div><div><button class="bt" type="button" data-fechar>Cancelar</button><button class="bt bt--prim" type="button" id="salvar">Salvar</button></div></div>`;
   const erroForm = (raiz, err) => { const m = raiz.querySelector("#msg"); m.className = "form__msg neg"; m.textContent = err.message || String(err); raiz.querySelector("#salvar").disabled = false; };
-  const confirmarExclusao = (raiz, acao) => raiz.querySelector("#excluir")?.addEventListener("click", ev => {
+  // Excluir pede confirmação e roda uma vez só: clique duplo não pode apagar outro item.
+  const confirmarExclusao = (raiz, acao) => raiz.querySelector("#excluir")?.addEventListener("click", async ev => {
     const b = ev.currentTarget;
-    if (b.dataset.conf) return acao();
-    b.dataset.conf = "1"; b.textContent = "Confirmar exclusão"; b.classList.add("bt--prim");
+    if (b.dataset.rodando) return;
+    if (!b.dataset.conf) { b.dataset.conf = Date.now(); b.textContent = "Confirmar exclusão"; b.classList.add("bt--prim"); return; }
+    if (Date.now() - Number(b.dataset.conf) < 500) return;          // segundo clique de um duplo-clique no "Excluir"
+    b.dataset.rodando = "1"; b.disabled = true;
+    try { await acao(); } finally { if (b.isConnected) { delete b.dataset.rodando; b.disabled = false; } }
   });
+  // Tira um item da lista só se ele ainda estiver lá (splice com -1 apagaria o último)
+  const tirar = (lista, item) => { const i = lista.indexOf(item); if (i < 0) throw new Error("Esse item já não está na lista. Recarregue a página."); lista.splice(i, 1); return i; };
 
   function formPeca(p) {
     const novo = !p, x = p || { codigo: proxCodigo(), origem: "Direto", status: "disponivel", custo_op: par().custo_op, data_compra: hoje() };
@@ -526,13 +532,13 @@
         } catch (err) { erroForm(raiz, err); }
       });
       confirmarExclusao(raiz, async () => {
-        const lista = pecas(), i = lista.indexOf(p);
-        lista.splice(i, 1);
+        const lista = pecas(), i = tirar(lista, p);
         try { await salvar("inventario", `exclusão ${x.codigo}`); dlg.close(); montar(`${x.codigo} excluído do CRM. A ficha do site, se existir, continua lá.`); }
         catch (err) { lista.splice(i, 0, p); erroForm(raiz, err); }
       });
     });
   }
+  const alertaOk = txt => { const a = document.createElement("div"); a.className = "aviso-crm aviso-crm--ok"; a.setAttribute("role", "status"); a.textContent = txt; conteudo().before(a); setTimeout(() => a.remove(), 6000); };
   const alertaFaixa = txt => conteudo().insertAdjacentHTML("beforebegin", `<div class="aviso-crm aviso-crm--erro" role="alert">${e(txt)}</div>`);
 
   // ---------- Vendas ----------
@@ -646,7 +652,7 @@
       confirmarExclusao(raiz, async () => {
         const antesV = structuredClone(D.vendas.itens), antesI = structuredClone(D.inventario.itens);
         try {
-          D.vendas.itens.splice(D.vendas.itens.indexOf(v), 1);
+          tirar(D.vendas.itens, v);
           const p = peca(x.codigo), volta = p && p.status === "vendido" && !D.vendas.itens.some(o => o.codigo === x.codigo);
           await salvar("vendas", `exclusão de venda ${x.codigo || x.descricao}`);
           if (volta) { p.status = "disponivel"; await salvar("inventario", `${x.codigo} voltou a disponível`); await refletirNoSite([x.codigo]); }
@@ -810,7 +816,7 @@
       });
       confirmarExclusao(raiz, async () => {
         const antes = structuredClone(D.despesas);
-        try { D.despesas.itens.splice(D.despesas.itens.indexOf(d), 1); await salvar("despesas", `exclusão de despesa ${x.descricao}`); selDesp.delete(d); dlg.close(); montar("Despesa excluída."); }
+        try { tirar(D.despesas.itens, d); await salvar("despesas", `exclusão de despesa ${x.descricao}`); selDesp.delete(d); dlg.close(); montar("Despesa excluída."); }
         catch (err) { D.despesas = antes; erroForm(raiz, err); }
       });
     });
@@ -1416,16 +1422,21 @@
             const delta = (feito(base.status) ? base.valor : 0) - (feito(x.status) ? n(x.valor) : 0);
             if (delta) c.saldo = { valor: n(c.saldo.valor) + sinal * delta, data: hoje() };
             if (feito(base.status) && !feito(x.status)) base.pago_em = hoje();
-            c.lancamentos[c.lancamentos.indexOf(l)] = base;
+            const iL = c.lancamentos.indexOf(l); if (iL < 0) throw new Error("Essa conta não está mais na lista. Recarregue a página.");
+            c.lancamentos[iL] = base;
           }
           if (!(await guardarContas(`${novo ? "nova conta" : "alteração"}: ${base.descricao}`))) throw new Error("Não foi possível salvar. Recarregue a página.");
+          const nCriadas = novo ? Math.max(1, Math.min(60, parseInt(val(raiz, "k-parc")) || 1)) : 1;
+          if (nCriadas > 1 && mesContas !== "todos") { mesContas = "todos"; try { localStorage.setItem("crm-mes-contas", "todos"); } catch {} }
           dlg.close(); contas();
+          if (nCriadas > 1) alertaOk(`${nCriadas} parcelas criadas, de ${dataBR(base.data)} em diante. Mostrando todos os meses.`);
         } catch (err) { D.contas = antes; erroForm(raiz, err); }
       });
       confirmarExclusao(raiz, async () => {
         const antes = structuredClone(c);
+        if (!c.lancamentos.includes(l)) { erroForm(raiz, new Error("Essa conta já foi excluída. Recarregue a página.")); return; }
         if (l.status !== "pendente") c.saldo = { valor: n(c.saldo.valor) - (l.tipo === "entrada" ? 1 : -1) * n(l.valor), data: hoje() };
-        c.lancamentos.splice(c.lancamentos.indexOf(l), 1);
+        tirar(c.lancamentos, l);
         if (await guardarContas(`exclusão: ${l.descricao}`)) { dlg.close(); contas(); } else { D.contas = antes; erroForm(raiz, new Error("Não foi possível excluir.")); }
       });
     });
