@@ -1,4 +1,4 @@
-// CRM da Voluta: custos, vendas, despesas e clientes.
+// CRM da Voluta: custos, vendas, despesas, clientes e follow-ups.
 // Os dados financeiros ficam no repositório PRIVADO voluta-crm (nunca no voluta-site, que é público).
 // O status das peças é ligado ao site pelo código VLT: o que muda no site aparece aqui,
 // e uma venda registrada aqui marca a ficha do site como Vendido (fica esperando o botão "Publicar site").
@@ -58,13 +58,14 @@
   }
 
   // ---------- Estado ----------
-  const D = { inventario: { meta: {}, itens: [] }, vendas: { itens: [] }, despesas: { itens: [] }, clientes: { itens: [] } };
+  const D = { inventario: { meta: {}, itens: [] }, vendas: { itens: [] }, despesas: { itens: [] }, clientes: { itens: [] }, followups: { itens: [] } };
   const SHA = {};
   let fichas = [];                 // fichas do site: { arquivo, dados }
   let fichaDe = {};                // código VLT -> ficha
   let aba = "painel", periodo = "tudo";
   const graficos = [];
   try { aba = localStorage.getItem("crm-aba") || "painel"; periodo = localStorage.getItem("crm-periodo") || "tudo"; } catch {}
+  if (location.hash === "#followups") { aba = "followups"; try { localStorage.setItem("crm-aba", aba); } catch {} history.replaceState(null, "", location.pathname); }   // botão "Follow-ups" do painel do site abre direto nesta aba
 
   const par = () => ({ ...PADRAO, ...(D.inventario.meta?.parametros || {}), taxas: { ...PADRAO.taxas, ...(D.inventario.meta?.parametros?.taxas || {}) } });
   const pecas = () => D.inventario.itens;
@@ -205,7 +206,8 @@
       const repoOk = await gh(CRM, "");
       if (repoOk.status === 401) throw new Error("login");
       if (repoOk.status === 404) return avisoTela(`Não encontrei o repositório privado <b>voluta-crm</b>.<br>Confira se ele foi criado na conta ${e(CRM.dono)}. Se já existe, saia e entre de novo no painel para renovar a permissão.`, `<a class="bt" href="/admin/editar/">Abrir o painel</a>`);
-      const [, painelSalvo, contasSalvo, ...arqs] = await Promise.all([carregarFichas(), ler(CRM, "dashboard.json").catch(() => null), ler(CRM, "contas.json").catch(() => null), ...ARQUIVOS.map(a => ler(CRM, `${a}.json`))]);
+      const [, painelSalvo, contasSalvo, fuSalvo, ...arqs] = await Promise.all([carregarFichas(), ler(CRM, "dashboard.json").catch(() => null), ler(CRM, "contas.json").catch(() => null), ler(CRM, "followups.json").catch(() => null), ...ARQUIVOS.map(a => ler(CRM, `${a}.json`))]);
+      if (fuSalvo?.json?.itens) { D.followups = fuSalvo.json; SHA.followups = fuSalvo.sha; }
       if (contasSalvo?.json?.lancamentos) { D.contas = contasSalvo.json; SHA.contas = contasSalvo.sha; } else D.contas = { saldo: { valor: 0, data: hoje() }, variavel: null, horizonte: "fim", fixos: [], lancamentos: [] };
       if (arqs.every(x => !x)) return telaImportar();
       if (painelSalvo?.json?.widgets) { D.dashboard = painelSalvo.json; SHA.dashboard = painelSalvo.sha; } else D.dashboard = painelExemplo();
@@ -242,14 +244,14 @@
     app.innerHTML = `
       ${faixa ? `<div class="aviso-crm aviso-crm--ok" role="status">${e(faixa)}</div>` : ""}
       <div class="abas" role="tablist">
-        ${[["painel", "Painel"], ["montar", "Montar painel"], ["inventario", "Inventário"], ["vendas", "Vendas"], ["despesas", "Despesas"], ["contas", "Contas"], ["clientes", "Clientes"]].map(([k, r]) =>
+        ${[["painel", "Painel"], ["montar", "Montar painel"], ["inventario", "Inventário"], ["vendas", "Vendas"], ["despesas", "Despesas"], ["contas", "Contas"], ["clientes", "Clientes"], ["followups", "Follow-ups"]].map(([k, r]) =>
           `<button role="tab" data-aba="${k}" aria-selected="${aba === k}">${r}</button>`).join("")}
       </div>
       <div id="conteudo"></div>`;
     app.querySelectorAll("[data-aba]").forEach(b => b.addEventListener("click", () => { aba = b.dataset.aba; try { localStorage.setItem("crm-aba", aba); } catch {} montar(); }));
     // Espera as fontes para os gráficos medirem os rótulos com a letra certa
     if (aba === "painel" || aba === "montar" || aba === "contas") Promise.all([document.fonts?.load?.(`400 12px ${getComputedStyle(document.body).fontFamily}`), document.fonts?.ready].map(x => Promise.resolve(x).catch(() => {}))).then(() => { if (aba === "painel") painel(); else if (aba === "montar") montarPainel(); else if (aba === "contas") contas(); });
-    else ({ inventario, vendas, despesas, clientes })[aba]?.();
+    else ({ inventario, vendas, despesas, clientes, followups })[aba]?.();
   }
   const conteudo = () => document.getElementById("conteudo");
 
@@ -1013,6 +1015,102 @@
         const antes = structuredClone(D.clientes.itens);
         try { D.clientes.itens.splice(D.clientes.itens.indexOf(c), 1); await salvar("clientes", `exclusão de cliente ${x.nome}`); dlg.close(); montar("Cliente excluído."); }
         catch (err) { D.clientes.itens = antes; erroForm(raiz, err); }
+      });
+    });
+  }
+
+  // ---------- Follow-ups ----------
+  // Quem perguntou de uma peça e ainda não comprou. Fica em followups.json no repositório privado
+  // (nome e WhatsApp são dados pessoais: nunca no voluta-site, que é público).
+  const ST_FU = [["aguardando", "Aguardando follow-up"], ["conversa", "Em conversa"], ["comprou", "Comprou"], ["desistiu", "Desistiu"]];
+  const ROT_FU = Object.fromEntries(ST_FU);
+  const COR_FU = { aguardando: "reservado", conversa: "disponivel", comprou: "vendido", desistiu: "" };
+  const soDigitos = s => String(s || "").replace(/\D/g, "");
+  const zap = t => { let d = soDigitos(t); if (!d) return ""; if (d.length <= 11) d = "55" + d; return `https://wa.me/${d}`; };
+  const arroba = s => String(s || "").trim().replace(/^https?:\/\/(www\.)?instagram\.com\//i, "").replace(/^@/, "").replace(/\/.*$/, "");
+  const nomePeca = cod => { const p = peca(cod); return p ? `${p.codigo} · ${p.peca}` : cod; };
+  const rotPeca = f => f.codigo ? nomePeca(f.codigo) : (f.peca || "");
+  const parado = f => dias(f.ultimo || f.data, hojeLocal()) ?? 0;
+  let verFechados = false;
+  let filaFU = Promise.resolve();
+  const guardarFU = msg => (filaFU = filaFU.then(() => salvar("followups", msg)));
+
+  function followups() {
+    const ativo = f => f.status === "aguardando" || f.status === "conversa";
+    const atrasados = D.followups.itens.filter(f => ativo(f) && parado(f) >= 7).length;
+    const redesenhar = tabela({
+      linhas: () => D.followups.itens, aplicar: f => verFechados || ativo(f), chaveInicial: "parado", dirInicial: -1, nomeCsv: "voluta-followups", aoClicar: formFollowup,
+      filtros: `<label><input type="checkbox" id="fu-fechados" ${verFechados ? "checked" : ""}> Mostrar quem comprou ou desistiu</label>
+        ${atrasados ? `<span class="cont neg">${atrasados} sem contato há 7 dias ou mais</span>` : ""}`,
+      botoes: `<button class="bt bt--prim bt--peq" id="novo-fu" type="button">+ Novo follow-up</button>`,
+      colunas: [
+        { r: "Nome", v: f => f.nome },
+        { r: "Contato", v: f => f.whatsapp || (f.instagram ? "@" + arroba(f.instagram) : ""),
+          h: f => f.whatsapp ? `<a class="lk" href="${e(zap(f.whatsapp))}" target="_blank" rel="noopener">WhatsApp ${e(f.whatsapp)}</a>`
+            : f.instagram ? `<a class="lk" href="https://ig.me/m/${e(arroba(f.instagram))}" target="_blank" rel="noopener">@${e(arroba(f.instagram))}</a>` : '<span class="cinza">—</span>' },
+        { r: "Peça", v: rotPeca, cls: "larga" },
+        { r: "Status", v: f => ROT_FU[f.status] || f.status, h: f => `<span class="st st--${COR_FU[f.status] || ""}">${e(ROT_FU[f.status] || f.status)}</span>` },
+        { r: "Primeiro contato", n: 1, v: f => f.data || "", h: f => dataBR(f.data) },
+        { r: "Último contato", n: 1, v: f => f.ultimo || f.data || "", h: f => dataBR(f.ultimo || f.data) },
+        { r: "Parado há", k: "parado", n: 1, v: f => ativo(f) ? parado(f) : -1,
+          h: f => !ativo(f) ? '<span class="cinza">—</span>' : `<span class="${parado(f) >= 7 ? "neg" : ""}">${parado(f)} ${parado(f) === 1 ? "dia" : "dias"}</span>` },
+        { oculto: "Marcar follow-up feito", v: () => "", cls: "td-ed",
+          h: f => ativo(f) ? `<button class="bt bt--peq" type="button" data-feito title="Marca que você falou com a pessoa hoje">Fiz follow-up hoje</button>` : "" },
+      ],
+    });
+    document.getElementById("novo-fu").addEventListener("click", () => formFollowup(null));
+    document.getElementById("fu-fechados").addEventListener("change", ev => { verFechados = ev.target.checked; followups(); });
+    document.getElementById("corpo").addEventListener("click", async ev => {
+      const b = ev.target.closest("[data-feito]"); if (!b) return;
+      ev.stopPropagation();
+      const f = D.followups.itens.find(x => x.id === linhaDe(b)?.id); if (!f) return;
+      const antes = { ultimo: f.ultimo, status: f.status, n: f.followups };
+      f.ultimo = hojeLocal(); f.followups = (f.followups || 0) + 1;
+      b.disabled = true; b.textContent = "Salvando…";
+      try { await guardarFU(`follow-up feito: ${f.nome}`); redesenhar(); alertaOk(`Follow-up com ${f.nome} registrado.`); }
+      catch (err) { Object.assign(f, { ultimo: antes.ultimo, status: antes.status, followups: antes.n }); redesenhar(); alertaFaixa(err.message); }
+    });
+  }
+
+  function formFollowup(f) {
+    const novo = !f, x = f || { status: "aguardando", data: hojeLocal() };
+    const lista = [...pecas()].sort((a, b) => (a.status === "vendido") - (b.status === "vendido") || a.codigo.localeCompare(b.codigo)).map(p => `${p.codigo} · ${p.peca}`);
+    abrir(`<h2>${novo ? "Novo follow-up" : e(x.nome)}</h2>
+      <div class="campos">
+        ${campo("fu-nome", "Nome", x.nome, { cls: "campo--3" })}
+        ${campo("fu-zap", "WhatsApp (se tiver)", x.whatsapp, { tipo: "tel" })}
+        ${campo("fu-insta", "Instagram (se não tiver WhatsApp)", x.instagram ? "@" + arroba(x.instagram) : "", { cls: "campo--2" })}
+        ${campo("fu-peca", "Peça de interesse", rotPeca(x), { lista, cls: "campo--3" })}
+        ${campo("fu-status", "Status", "", { tipo: "select", extra: ST_FU.map(([k, r]) => `<option value="${k}" ${k === x.status ? "selected" : ""}>${r}</option>`).join("") })}
+        ${campo("fu-data", "Primeiro contato", x.data, { tipo: "date" })}
+        ${campo("fu-ultimo", "Último contato", x.ultimo || x.data, { tipo: "date" })}
+        ${campo("fu-obs", "Observações (o que perguntou, objeção, próximo passo…)", x.obs, { tipo: "textarea", cls: "campo--3" })}
+      </div>
+      ${rodape(!novo)}`, raiz => {
+      raiz.querySelector("#salvar").addEventListener("click", async ev => {
+        ev.currentTarget.disabled = true;
+        const txtPeca = val(raiz, "fu-peca"), cod = codigosDe(txtPeca)[0];
+        const y = { ...x, nome: val(raiz, "fu-nome"), whatsapp: val(raiz, "fu-zap"), instagram: arroba(val(raiz, "fu-insta")),
+          codigo: cod && peca(cod) ? cod : "", peca: cod && peca(cod) ? "" : txtPeca,
+          status: val(raiz, "fu-status"), data: val(raiz, "fu-data") || hojeLocal(), obs: val(raiz, "fu-obs") };
+        y.ultimo = val(raiz, "fu-ultimo") || y.data;
+        if (!y.nome) return erroForm(raiz, new Error("Preencha o nome."));
+        if (!y.whatsapp && !y.instagram) return erroForm(raiz, new Error("Preencha o WhatsApp ou o Instagram."));
+        if (!txtPeca) return erroForm(raiz, new Error("Escolha a peça de interesse."));
+        const antes = structuredClone(D.followups.itens);
+        try {
+          const i = D.followups.itens.findIndex(z => z.id === x.id);
+          if (novo) { y.id = proxId(D.followups.itens, "F"); D.followups.itens.push(y); }
+          else if (i < 0) throw new Error("Esse follow-up já não está na lista. Recarregue a página.");
+          else D.followups.itens[i] = y;
+          await guardarFU(`${novo ? "follow-up" : "alteração de follow-up"} ${y.nome}`);
+          dlg.close(); montar(novo ? "Follow-up adicionado." : "Follow-up salvo.");
+        } catch (err) { D.followups.itens = antes; erroForm(raiz, err); }
+      });
+      confirmarExclusao(raiz, async () => {
+        const antes = structuredClone(D.followups.itens);
+        try { tirar(D.followups.itens, D.followups.itens.find(z => z.id === x.id)); await guardarFU(`exclusão de follow-up ${x.nome}`); dlg.close(); montar("Follow-up excluído."); }
+        catch (err) { D.followups.itens = antes; erroForm(raiz, err); }
       });
     });
   }
