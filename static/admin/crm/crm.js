@@ -74,9 +74,10 @@
   const custoTotal = p => custoPeca(p) + n(p.custo_op);
   const lucroPrev = p => n(p.preco_pix) - custoTotal(p);
   // Parcelado em 5x na Rede: a Voluta paga a taxa (7,32%), então o total no cartão é o Pix ÷ (1 − taxa),
-  // para que o líquido recebido seja o mesmo do Pix. A parcela é arredondada para cima, em reais inteiros.
+  // para que o líquido recebido seja o mesmo do Pix. A parcela é arredondada para um número redondo
+  // (de 50 em 50 a partir de R$ 2.000, de 10 em 10 abaixo disso), para cima ou para baixo, o que ficar mais perto.
   const TAXA_5X = 0.0732;
-  const parcelado5x = pix => { pix = n(pix); if (!pix) return null; const parcela = Math.ceil(pix / (1 - TAXA_5X) / 5); return { parcela, total: parcela * 5 }; };
+  const parcelado5x = pix => { pix = n(pix); if (!pix) return null; const bruta = pix / (1 - TAXA_5X) / 5, passo = bruta >= 2000 ? 50 : 10, parcela = Math.max(passo, Math.round(bruta / passo) * passo); return { parcela, total: parcela * 5 }; };
   // Texto para o WhatsApp: valor no cartão primeiro (vira a referência), Pix como vantagem, e fecha com uma pergunta
   const textoPreco = y => {
     const c = parcelado5x(y.preco_pix); if (!c) return "";
