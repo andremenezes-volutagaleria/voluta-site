@@ -77,9 +77,14 @@
   // para que o líquido recebido seja o mesmo do Pix. A parcela é arredondada para cima, em reais inteiros.
   const TAXA_5X = 0.0732;
   const parcelado5x = pix => { pix = n(pix); if (!pix) return null; const parcela = Math.ceil(pix / (1 - TAXA_5X) / 5); return { parcela, total: parcela * 5 }; };
+  // Texto para o WhatsApp: valor no cartão primeiro (vira a referência), Pix como vantagem, e fecha com uma pergunta
   const textoPreco = y => {
     const c = parcelado5x(y.preco_pix); if (!c) return "";
-    return [y.peca + (y.designer ? ` · ${y.designer}` : ""), "", `À vista no Pix: ${R(y.preco_pix)}`, `Ou em até 5x sem juros de ${R(c.parcela)} no cartão (total ${R(c.total)})`, "", "— Consultas por mensagem"].join("\n");
+    const f = fichaDe[y.codigo]?.dados || {};
+    const anon = s => !s || /^an[oô]nimo$/i.test(String(s).trim());
+    const titulo = [f.titulo || y.peca, anon(y.designer) ? "" : y.designer, f.ano ? `déc. ${String(f.ano).slice(0, 3)}0` : ""].filter(Boolean).join(" · ");
+    const dim = /cm/i.test(y.dimensoes || "") ? y.dimensoes : "";
+    return [titulo, dim, "", `${R(c.total)} em até 5x sem juros de ${R(c.parcela)}`, `ou ${R(y.preco_pix)} à vista no Pix`, "", "Quer que eu te mande mais fotos dos detalhes?"].filter((l, k, a) => l || a[k - 1] !== "").join("\n");
   };
   const liquido = v => n(v.valor) * (1 - n(v.taxa));
   const lucroVenda = v => liquido(v) - n(v.custo) - n(v.custo_op);
