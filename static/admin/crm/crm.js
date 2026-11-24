@@ -7,7 +7,7 @@
   const CRM = { dono: "andremenezes-volutagaleria", nome: "voluta-crm", ramo: "main" };
   const ARQUIVOS = ["inventario", "vendas", "despesas", "clientes"];
   const CATEGORIAS = ["Poltronas", "Cadeiras", "Sofás", "Mesas de centro", "Mesas laterais", "Mesas de jantar", "Bancos", "Aparadores/Buffet", "Escrivaninhas", "Iluminação", "Objetos"];
-  const PADRAO = { custo_op: 100, nf: 0.04, leiloeiro: 0.05, taxas: { "Pix / à vista": 0, "Crédito à vista": 0.042, "2x": 0.0609, "3x": 0.0701, "4x": 0.0791, "5x": 0.088, "6x": 0.0967, "7x": 0.1259, "8x": 0.1342, "9x": 0.1425, "10x": 0.1506, "11x": 0.1587, "12x": 0.1666, "Permuta": 0 } };
+  const PADRAO = { custo_op: 100, nf: 0.04, leiloeiro: 0.05, taxas: { "Pix / à vista": 0, "Crédito à vista": 0.042, "2x": 0.0609, "3x": 0.0701, "4x": 0.0791, "5x": 0.0732, "6x": 0.0967, "7x": 0.1259, "8x": 0.1342, "9x": 0.1425, "10x": 0.1506, "11x": 0.1587, "12x": 0.1666, "Permuta": 0 } };
   const COR = { vinho: "#9E3A4E", mostarda: "#BF9A2F", azul: "#2a78d6", verde: "#1baf7a", barro: "#BD4513", grade: "#EFEBE7", eixo: "#7A6E70" };
 
   const app = document.getElementById("app");
@@ -73,6 +73,14 @@
   const custoPeca = p => n(p.compra) + n(p.frete) + n(p.restauro) + n(p.nf) + n(p.leiloeiro);       // sem o custo operacional
   const custoTotal = p => custoPeca(p) + n(p.custo_op);
   const lucroPrev = p => n(p.preco_pix) - custoTotal(p);
+  // Parcelado em 5x na Rede: a Voluta paga a taxa (7,32%), então o total no cartão é o Pix ÷ (1 − taxa),
+  // para que o líquido recebido seja o mesmo do Pix. A parcela é arredondada para cima, em reais inteiros.
+  const TAXA_5X = 0.0732;
+  const parcelado5x = pix => { pix = n(pix); if (!pix) return null; const parcela = Math.ceil(pix / (1 - TAXA_5X) / 5); return { parcela, total: parcela * 5 }; };
+  const textoPreco = y => {
+    const c = parcelado5x(y.preco_pix); if (!c) return "";
+    return [y.peca + (y.designer ? ` · ${y.designer}` : ""), "", `À vista no Pix: ${R(y.preco_pix)}`, `Ou em até 5x sem juros de ${R(c.parcela)} no cartão (total ${R(c.total)})`, "", "— Consultas por mensagem"].join("\n");
+  };
   const liquido = v => n(v.valor) * (1 - n(v.taxa));
   const lucroVenda = v => liquido(v) - n(v.custo) - n(v.custo_op);
   const codigosDe = s => (String(s || "").toUpperCase().match(/VLT\s*-?\s*\d+/g) || []).map(c => "VLT-" + c.match(/\d+/)[0]);
@@ -470,6 +478,10 @@
         </div>
       </div>
       <div class="resumo" id="resumo"></div>
+      <div class="parc5" id="parc5" hidden>
+        <div class="parc5__topo"><span>Parcelado em até 5x: <span id="parc5-val"></span></span><button type="button" class="bt bt--peq" id="parc5-copiar">Copiar texto</button></div>
+        <textarea id="parc5-txt" readonly rows="6" aria-label="Texto pronto com o preço"></textarea>
+      </div>
       ${rodape(!novo)}`, raiz => {
       // Foto: a nova só sobe para o GitHub quando clicar em Salvar
       let fotoNova = null, tirarFoto = false;
@@ -505,7 +517,15 @@
         custo_op: n(val(raiz, "f-op")), preco_pix: n(val(raiz, "f-preco")), mercado: n(val(raiz, "f-mercado")), dimensoes: val(raiz, "f-dim"), obs: val(raiz, "f-obs"),
         link_leilao: val(raiz, "f-origem") === "Leilão" ? val(raiz, "f-link") : "", ...Object.fromEntries(MARCAS.map(([k]) => [k, raiz.querySelector("#f-m-" + k).checked])),
         data_postagem: raiz.querySelector("#f-m-foto_postada").checked ? (val(raiz, "f-postagem") || hojeLocal()) : "" });
-      const resumo = () => { const y = ler(); raiz.querySelector("#resumo").innerHTML = `<span>Custo total <b>${R(custoTotal(y))}</b></span><span>Lucro <b class="${lucroPrev(y) < 0 ? "neg" : ""}">${R(lucroPrev(y))}</b></span><span>Margem real <b>${y.preco_pix ? P(lucroPrev(y) / y.preco_pix) : "—"}</b></span><span>Markup <b>${custoTotal(y) ? P(y.preco_pix / custoTotal(y) - 1) : "—"}</b></span>`; };
+      const resumo = () => { const y = ler(); raiz.querySelector("#resumo").innerHTML = `<span>Custo total <b>${R(custoTotal(y))}</b></span><span>Lucro <b class="${lucroPrev(y) < 0 ? "neg" : ""}">${R(lucroPrev(y))}</b></span><span>Margem real <b>${y.preco_pix ? P(lucroPrev(y) / y.preco_pix) : "—"}</b></span><span>Markup <b>${custoTotal(y) ? P(y.preco_pix / custoTotal(y) - 1) : "—"}</b></span>`;
+        const c = parcelado5x(y.preco_pix), cx = raiz.querySelector("#parc5");
+        cx.hidden = !c;
+        if (c) { raiz.querySelector("#parc5-val").innerHTML = `5x de <b>${R(c.parcela)}</b> · total <b>${R(c.total)}</b> <span class="cinza">(taxa Rede ${(TAXA_5X * 100).toFixed(2).replace(".", ",")}% inclusa, você recebe ${R(c.total * (1 - TAXA_5X))})</span>`; raiz.querySelector("#parc5-txt").value = textoPreco(y); } };
+      raiz.querySelector("#parc5-copiar").addEventListener("click", async ev => {
+        const t = raiz.querySelector("#parc5-txt"), b = ev.currentTarget;
+        try { await navigator.clipboard.writeText(t.value); } catch { t.select(); document.execCommand("copy"); }
+        b.textContent = "Copiado"; setTimeout(() => { b.textContent = "Copiar texto"; }, 1800);
+      });
       raiz.querySelectorAll("input,select,textarea").forEach(i => i.addEventListener("input", resumo));
       raiz.querySelectorAll("[data-pct]").forEach(b => b.addEventListener("click", () => { raiz.querySelector(`#f-${b.dataset.pct}`).value = (n(val(raiz, "f-compra")) * par()[b.dataset.pct]).toFixed(2); resumo(); }));
       resumo();
