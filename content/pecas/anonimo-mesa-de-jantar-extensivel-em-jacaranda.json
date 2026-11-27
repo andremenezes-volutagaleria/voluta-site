@@ -1,4 +1,13 @@
 {
+  "titulo": "Mesa de jantar extensível em jacarandá",
+  "designer": "Anonimo",
+  "ano": "1960",
+  "categoria": "Mesas de jantar",
+  "status": "vendido",
+  "dimensoes": "Comprimento 1,60 x Comprimento estendida 2,00 x Altura 0,76 x Profundidade 0,88cm",
+  "descricao": "A mesa sustenta o tampo sobre quatro pernas torneadas, abertas em ângulo e afinadas até a ponta. É um desenho que parece tocar o chão o mínimo possível. As pernas se unem duas a duas em uma junção esculpida em “V” e se ligam por uma prateleira inferior que corre ao longo da peça, dando estrutura sem pesar a leitura. A linguagem é a do modernismo brasileiro do pós-guerra: madeira nobre, geometria tensa e uma leveza quase aérea para uma peça desse porte.\n\nO tampo em jacarandá tem veios marcados e tons que vão do mel ao chocolate. Ele se abre ao meio e revela uma extensão embutida no próprio corpo da mesa, que amplia a superfície sem peças avulsas para guardar. O mecanismo original segue funcionando.\n\nA peça passou por restauro completo, feito com respeito à madeira e ao desenho original.",
+  "estado": "Restaurada",
+  "restauro_mantido": "A mesa passou por restauro completo. A madeira foi tratada com cuidado para recuperar o brilho natural do jacarandá e a profundidade dos veios, sem apagar as marcas de tempo que contam a história da peça. Estrutura, encaixes e o mecanismo de extensão foram revisados e seguem funcionando como no projeto original. É uma peça pronta para mais algumas décadas à mesa.",
   "imagens": [
     "/uploads/pecas/anonimo-mesa-de-jantar-extensivel-em-jacaranda/1.png",
     "/uploads/pecas/anonimo-mesa-de-jantar-extensivel-em-jacaranda/5.png",
@@ -15,17 +24,8 @@
     "/uploads/pecas/anonimo-mesa-de-jantar-extensivel-em-jacaranda/13.png",
     "/uploads/pecas/anonimo-mesa-de-jantar-extensivel-em-jacaranda/14.png"
   ],
-  "restauro_mantido": "A mesa passou por restauro completo. A madeira foi tratada com cuidado para recuperar o brilho natural do jacarandá e a profundidade dos veios, sem apagar as marcas de tempo que contam a história da peça. Estrutura, encaixes e o mecanismo de extensão foram revisados e seguem funcionando como no projeto original. É uma peça pronta para mais algumas décadas à mesa.",
-  "destaque": false,
-  "ano": "1960",
-  "estado": "Restaurada",
-  "descricao": "A mesa sustenta o tampo sobre quatro pernas torneadas, abertas em ângulo e afinadas até a ponta. É um desenho que parece tocar o chão o mínimo possível. As pernas se unem duas a duas em uma junção esculpida em “V” e se ligam por uma prateleira inferior que corre ao longo da peça, dando estrutura sem pesar a leitura. A linguagem é a do modernismo brasileiro do pós-guerra: madeira nobre, geometria tensa e uma leveza quase aérea para uma peça desse porte.\n\nO tampo em jacarandá tem veios marcados e tons que vão do mel ao chocolate. Ele se abre ao meio e revela uma extensão embutida no próprio corpo da mesa, que amplia a superfície sem peças avulsas para guardar. O mecanismo original segue funcionando.\n\nA peça passou por restauro completo, feito com respeito à madeira e ao desenho original.",
-  "ordem": 100,
   "data": "2026-11-15",
-  "designer": "Anonimo",
-  "status": "disponivel",
-  "categoria": "Mesas de jantar",
   "codigo": "VLT-111",
-  "titulo": "Mesa de jantar extensível em jacarandá",
-  "dimensoes": "Comprimento 1,60 x Comprimento estendida 2,00 x Altura 0,76 x Profundidade 0,88cm"
+  "destaque": false,
+  "ordem": 100
 }
